@@ -1,0 +1,52 @@
+## ---------- .NET ----------
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## ---------- Visual Studio / Rider / VS Code ----------
+.vs/
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*~
+
+## ---------- ملفات المستخدمين المرفوعة (بيانات فعلية) ----------
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+SchoolSys/wwwroot/uploads/*
+!SchoolSys/wwwroot/uploads/.gitkeep
+
+## ---------- الإعدادات المحلية والأسرار ----------
+appsettings.Development.local.json
+appsettings.Production.json
+*.pfx
+*.key
+secrets.json
+
+## ---------- قواعد البيانات المحلية ----------
+*.mdf
+*.ldf
+*.ndf
+
+## ---------- السجلات والملفات المؤقتة ----------
+logs/
+*.log
+*.tmp
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+## ---------- النشر ----------
+publish/
+*.publishsettings
+PublishProfiles/

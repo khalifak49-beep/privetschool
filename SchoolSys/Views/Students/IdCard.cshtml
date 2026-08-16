@@ -1,0 +1,82 @@
+@model Student
+@{
+    ViewData["Title"] = "بطاقة الطالب";
+    var settings = ViewBag.Settings as SchoolSetting;
+    var qr = ViewBag.QrDataUrl as string;
+}
+
+<div class="page-head no-print">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">الطلاب</a></span>
+            <span class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.FullName</a></span>
+            <span class="breadcrumb-item active">بطاقة الطالب</span>
+        </nav>
+        <h1>بطاقة الطالب</h1>
+        <p class="sub">بطاقة تعريفية تحمل رمز QR لتسجيل الحضور والانصراف</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+    </div>
+</div>
+
+<div class="d-flex justify-content-center">
+    <div class="id-card">
+        <div class="idc-head">
+            <div class="fw-bold" style="font-size:1.05rem">@(settings?.SchoolName ?? "المدرسة")</div>
+            <div style="font-size:.72rem;opacity:.85">@(settings?.SchoolNameEn ?? "")</div>
+            <div style="font-size:.7rem;opacity:.75;margin-top:.15rem">بطاقة طالب — STUDENT ID</div>
+        </div>
+
+        <div class="p-3">
+            <div class="d-flex gap-3">
+                <div class="avatar lg" style="width:82px;height:82px;border-radius:12px;flex-shrink:0">
+                    @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                    {
+                        <img src="@Model.PhotoPath" alt="" />
+                    }
+                    else
+                    {
+                        @ViewHelpers.Initials(Model.FullName)
+                    }
+                </div>
+                <div class="min-w-0 flex-grow-1">
+                    <div class="fw-bold" style="font-size:.95rem;line-height:1.4">@Model.FullName</div>
+                    <div class="fs-xs text-muted-2 num">@Model.StudentNo</div>
+                    <div class="fs-xs text-muted-2 mt-1">
+                        @if (Model.CurrentSection is not null)
+                        {
+                            <text>@Model.CurrentSection.Grade.Name - @Model.CurrentSection.Name</text>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider my-3"></div>
+
+            <div class="d-flex justify-content-between align-items-center gap-2">
+                <div class="fs-xs lh-lg">
+                    <div><span class="text-muted-3">الجنس:</span> <b>@Model.Gender.Display()</b></div>
+                    <div><span class="text-muted-3">تاريخ الميلاد:</span> <b class="num">@ViewHelpers.Date(Model.BirthDate)</b></div>
+                    <div><span class="text-muted-3">فصيلة الدم:</span> <b>@(Model.BloodType ?? "—")</b></div>
+                    <div><span class="text-muted-3">الالتحاق:</span> <b class="num">@ViewHelpers.Date(Model.EnrollmentDate)</b></div>
+                </div>
+                <div class="text-center">
+                    <img src="@qr" alt="QR" style="width:96px;height:96px" />
+                    <div class="fs-xs text-muted-3 mt-1">امسح للحضور</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background:var(--surface-2);border-top:1px solid var(--line);padding:.55rem .9rem;font-size:.68rem;color:var(--text-3);text-align:center">
+            @(settings?.Phone ?? "") @(string.IsNullOrEmpty(settings?.Website) ? "" : " · " + settings.Website)
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        body { background: #fff; }
+        .id-card { box-shadow: none; border: 1px solid #999; }
+    }
+</style>

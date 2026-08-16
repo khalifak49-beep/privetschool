@@ -1,0 +1,207 @@
+@model TeacherDashboardViewModel
+@{
+    ViewData["Title"] = "لوحة المعلم";
+}
+
+<div class="page-head">
+    <div>
+        <h1>مرحباً، @Model.TeacherName</h1>
+        <p class="sub">ملخص يومك الدراسي وشعبك ومهامك</p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        <a class="btn btn-primary" asp-controller="Attendance" asp-action="Index">
+            <i class="bi bi-calendar-check me-1"></i> تسجيل الحضور
+        </a>
+        <a class="btn btn-light" asp-controller="Homework" asp-action="Create">
+            <i class="bi bi-plus-lg me-1"></i> واجب جديد
+        </a>
+        <a class="btn btn-light" asp-controller="Exams" asp-action="Create">
+            <i class="bi bi-journal-plus me-1"></i> اختبار جديد
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico tone-brand"><i class="bi bi-building"></i></div>
+            <div><div class="value num">@Model.SectionsCount</div><div class="label">الشعب المسندة</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico tone-accent"><i class="bi bi-mortarboard"></i></div>
+            <div><div class="value num">@Model.StudentsCount</div><div class="label">إجمالي الطلاب</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico tone-purple"><i class="bi bi-book"></i></div>
+            <div><div class="value num">@Model.SubjectsCount</div><div class="label">المواد التي أدرّسها</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico tone-warn"><i class="bi bi-pencil-square"></i></div>
+            <div><div class="value num">@Model.PendingHomework</div><div class="label">واجبات بانتظار التصحيح</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-clock me-1"></i> حصص اليوم</h2>
+                <a class="btn btn-sm btn-light" asp-controller="Timetable" asp-action="Index">الجدول الكامل</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.TodayLessons.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-cup-hot"></i>لا توجد حصص مجدولة اليوم</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                            <tr>
+                                <th style="width:70px">الحصة</th>
+                                <th>المادة</th>
+                                <th>الشعبة</th>
+                                <th>الوقت</th>
+                                <th style="width:130px"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var l in Model.TodayLessons)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="chip tone-brand num">@l.PeriodNo</span>
+                                    </td>
+                                    <td class="fw-semibold">@l.Subject</td>
+                                    <td class="text-muted-2">
+                                        @l.Section
+                                        @if (!string.IsNullOrEmpty(l.Room))
+                                        {
+                                            <span class="fs-xs text-muted-3">· قاعة @l.Room</span>
+                                        }
+                                    </td>
+                                    <td class="num fs-sm">@ViewHelpers.Time(l.StartTime) — @ViewHelpers.Time(l.EndTime)</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-controller="Attendance" asp-action="Index" asp-route-sectionId="@l.SectionId">
+                                            <i class="bi bi-check2-square"></i> الحضور
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><h2><i class="bi bi-people me-1"></i> شعبي</h2></div>
+            <div class="card-body p-0">
+                @if (Model.Sections.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-inbox"></i>لم يتم إسناد شعب بعد</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                            <tr><th>الشعبة</th><th>المواد</th><th>الطلاب</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var s in Model.Sections)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@s.Name</td>
+                                    <td class="fs-xs text-muted-2">@s.Subject</td>
+                                    <td class="num">@s.Students</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-light"
+                                           asp-controller="Students" asp-action="Index" asp-route-sectionId="@s.SectionId">
+                                            <i class="bi bi-list-ul"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-journal-check me-1"></i> اختباراتي القادمة</h2>
+                <a class="btn btn-sm btn-light" asp-controller="Exams" asp-action="Index">الكل</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.UpcomingExams.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-calendar-x"></i>لا توجد اختبارات قادمة</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>الاختبار</th><th>المادة</th><th>الشعبة</th><th>التاريخ</th></tr></thead>
+                            <tbody>
+                            @foreach (var e in Model.UpcomingExams)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@e.Title</td>
+                                    <td>@e.Subject</td>
+                                    <td class="text-muted-2">@e.Section</td>
+                                    <td>
+                                        <span class="num fs-sm">@ViewHelpers.Date(e.ExamDate)</span>
+                                        <span class="chip @(e.DaysLeft <= 2 ? "tone-danger" : "tone-info")">
+                                            @(e.DaysLeft == 0 ? "اليوم" : $"بعد {e.DaysLeft} يوم")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><h2><i class="bi bi-megaphone me-1"></i> إعلانات تهمك</h2></div>
+            <div class="card-body">
+                @if (Model.Announcements.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-megaphone"></i>لا توجد إعلانات</div>
+                }
+                else
+                {
+                    @foreach (var a in Model.Announcements)
+                    {
+                        <div class="py-2 @(a != Model.Announcements.Last() ? "border-bottom" : "")">
+                            <div class="fw-semibold fs-sm">@a.Title</div>
+                            <div class="fs-xs text-muted-2">@a.Body</div>
+                            <div class="fs-xs text-muted-3">@ViewHelpers.Date(a.PublishDate)</div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

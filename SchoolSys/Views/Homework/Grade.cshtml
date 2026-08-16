@@ -1,0 +1,145 @@
+@model HomeworkGradeViewModel
+@{
+    ViewData["Title"] = "تصحيح الواجب";
+    var canGrade = User.Can(Permissions.HomeworkGrade);
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">الواجبات</a></span>
+            <span class="breadcrumb-item active">التصحيح</span>
+        </nav>
+        <h1>@Model.Title</h1>
+        <p class="sub">
+            @Model.Subject · @Model.Section · التسليم @ViewHelpers.Date(Model.DueDate) ·
+            الدرجة العظمى <b class="num">@Model.MaxScore.ToString("0.##")</b>
+        </p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Description) || !string.IsNullOrEmpty(Model.AttachmentPath))
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="fs-sm">@Model.Description</div>
+            }
+            @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+            {
+                <a class="btn btn-sm btn-light mt-2" href="@Model.AttachmentPath" target="_blank">
+                    <i class="bi bi-paperclip me-1"></i> مرفق الواجب
+                </a>
+            }
+        </div>
+    </div>
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-4">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-people"></i></div>
+            <div><div class="value num">@Model.Entries.Count</div><div class="label">إجمالي الطلاب</div></div></div>
+    </div>
+    <div class="col-4">
+        <div class="stat-card"><div class="ico tone-info"><i class="bi bi-upload"></i></div>
+            <div><div class="value num">@Model.SubmittedCount</div><div class="label">سلّموا الواجب</div></div></div>
+    </div>
+    <div class="col-4">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check2-all"></i></div>
+            <div><div class="value num">@Model.GradedCount</div><div class="label">تم تصحيحهم</div></div></div>
+    </div>
+</div>
+
+<form asp-action="SaveGrades" method="post">
+    <input type="hidden" name="homeworkId" value="@Model.HomeworkId" />
+
+    <div class="table-wrap">
+        <div class="card-header"><h2>تسليمات الطلاب</h2></div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th style="width:44px">#</th>
+                    <th>الطالب</th>
+                    <th>الحالة</th>
+                    <th>تاريخ التسليم</th>
+                    <th>المرفق</th>
+                    <th style="width:130px">الدرجة (من @Model.MaxScore.ToString("0.##"))</th>
+                    <th>ملاحظات المعلم</th>
+                </tr>
+                </thead>
+                <tbody>
+                @for (var i = 0; i < Model.Entries.Count; i++)
+                {
+                    var e = Model.Entries[i];
+                    <tr>
+                        <td class="num text-muted-3">@(i + 1)</td>
+                        <td>
+                            <input type="hidden" name="entries[@i].StudentId" value="@e.StudentId" />
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar sm">
+                                    @if (!string.IsNullOrEmpty(e.PhotoPath))
+                                    {
+                                        <img src="@e.PhotoPath" alt="" />
+                                    }
+                                    else
+                                    {
+                                        @ViewHelpers.Initials(e.StudentName)
+                                    }
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-truncate">@e.StudentName</div>
+                                    <div class="fs-xs text-muted-3 num">@e.StudentNo</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>@e.Status.Badge()</td>
+                        <td class="num fs-sm">@ViewHelpers.DateTimeShort(e.SubmittedAt)</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(e.FilePath))
+                            {
+                                <a class="btn btn-sm btn-light" href="@e.FilePath" target="_blank"><i class="bi bi-file-earmark"></i></a>
+                            }
+                            else if (!string.IsNullOrEmpty(e.AnswerText))
+                            {
+                                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="popover"
+                                        data-bs-content="@e.AnswerText" data-bs-trigger="focus" title="إجابة الطالب">
+                                    <i class="bi bi-card-text"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted-3">—</span>
+                            }
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" max="@Model.MaxScore"
+                                   name="entries[@i].Score" value="@(e.Score?.ToString("0.##"))"
+                                   class="form-control form-control-sm num text-center" disabled="@(!canGrade)" />
+                        </td>
+                        <td>
+                            <input name="entries[@i].Feedback" value="@e.Feedback"
+                                   class="form-control form-control-sm" placeholder="—" disabled="@(!canGrade)" />
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        @if (canGrade)
+        {
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ الدرجات</button>
+            </div>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
+            new bootstrap.Popover(el);
+        });
+    </script>
+}

@@ -1,0 +1,139 @@
+@model RolePermissionsViewModel
+@{
+    ViewData["Title"] = $"صلاحيات {Model.DisplayName}";
+    var canManage = User.Can(SchoolSys.Security.Permissions.RolesManage);
+    var isSuper = Model.RoleName == RoleNames.SuperAdmin;
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">الأدوار</a></span>
+            <span class="breadcrumb-item active">@Model.DisplayName</span>
+        </nav>
+        <h1>صلاحيات دور «@Model.DisplayName»</h1>
+        <p class="sub">
+            @Model.UsersCount مستخدم بهذا الدور ·
+            <span class="chip tone-brand num" id="grantedCount">@Model.Granted.Count</span>
+            من @Model.TotalPermissions صلاحية
+        </p>
+    </div>
+    @if (canManage && !isSuper)
+    {
+        <div class="actions d-flex gap-2">
+            <button class="btn btn-light" onclick="selectAll(true)"><i class="bi bi-check-all me-1"></i> تحديد الكل</button>
+            <button class="btn btn-light" onclick="selectAll(false)"><i class="bi bi-x-lg me-1"></i> إلغاء الكل</button>
+        </div>
+    }
+</div>
+
+@if (isSuper)
+{
+    <div class="alert alert-info d-flex gap-2">
+        <i class="bi bi-shield-fill-check"></i>
+        <div>
+            دور <b>مسؤول النظام</b> يملك جميع الصلاحيات تلقائياً ويتجاوز كل فحوصات الصلاحيات — لا يمكن تعديله.
+        </div>
+    </div>
+}
+
+<form asp-action="Permissions" method="post">
+    <input type="hidden" name="roleId" value="@Model.RoleId" />
+
+    <div class="row g-3">
+        @foreach (var group in Model.Groups)
+        {
+            var groupGranted = group.Items.Count(i => Model.Granted.Contains(i.Value));
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h2><i class="bi @group.Icon me-1"></i> @group.Name</h2>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="chip tone-brand num group-count">@groupGranted / @group.Items.Count</span>
+                            @if (canManage && !isSuper)
+                            {
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input group-toggle" type="checkbox"
+                                           data-group="@group.Name.GetHashCode()"
+                                           checked="@(groupGranted == group.Items.Count)" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var item in group.Items)
+                        {
+                            var granted = Model.Granted.Contains(item.Value) || isSuper;
+                            <div class="form-check d-flex align-items-start gap-2 py-2 @(item != group.Items.Last() ? "border-bottom" : "")">
+                                <input class="form-check-input perm-check mt-1" type="checkbox"
+                                       name="permissions" value="@item.Value" id="p-@item.Value.Replace('.', '-')"
+                                       data-group="@group.Name.GetHashCode()"
+                                       checked="@granted" disabled="@(!canManage || isSuper)" />
+                                <label class="form-check-label flex-grow-1" for="p-@item.Value.Replace('.', '-')">
+                                    <div class="fs-sm fw-semibold">@item.Name</div>
+                                    <div class="fs-xs text-muted-3" dir="ltr">@item.Value</div>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (canManage && !isSuper)
+    {
+        <div class="card mt-3">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="fs-sm text-muted-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    تسري التغييرات على المستخدمين خلال 5 دقائق أو عند إعادة تسجيل الدخول.
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ الصلاحيات</button>
+                    <a class="btn btn-light" asp-action="Index">رجوع</a>
+                </div>
+            </div>
+        </div>
+    }
+</form>
+
+@section Scripts {
+    <script>
+        function refreshCounts() {
+            document.getElementById('grantedCount').textContent =
+                document.querySelectorAll('.perm-check:checked').length;
+
+            document.querySelectorAll('.card').forEach(function (card) {
+                const checks = card.querySelectorAll('.perm-check');
+                if (!checks.length) return;
+                const on = card.querySelectorAll('.perm-check:checked').length;
+                const label = card.querySelector('.group-count');
+                if (label) label.textContent = on + ' / ' + checks.length;
+                const toggle = card.querySelector('.group-toggle');
+                if (toggle) toggle.checked = on === checks.length;
+            });
+        }
+
+        document.querySelectorAll('.perm-check').forEach(function (el) {
+            el.addEventListener('change', refreshCounts);
+        });
+
+        document.querySelectorAll('.group-toggle').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                const card = toggle.closest('.card');
+                card.querySelectorAll('.perm-check').forEach(function (c) {
+                    if (!c.disabled) c.checked = toggle.checked;
+                });
+                refreshCounts();
+            });
+        });
+
+        function selectAll(state) {
+            document.querySelectorAll('.perm-check').forEach(function (c) {
+                if (!c.disabled) c.checked = state;
+            });
+            refreshCounts();
+        }
+    </script>
+}

@@ -1,0 +1,84 @@
+@model GuardianFormViewModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "تعديل بيانات ولي أمر" : "إضافة ولي أمر";
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">أولياء الأمور</a></span>
+            <span class="breadcrumb-item active">@ViewData["Title"]</span>
+        </nav>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <form asp-action="@(Model.IsEdit ? "Edit" : "Create")" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="NationalId" class="form-label"></label>
+                            <input asp-for="NationalId" class="form-control num" dir="ltr" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control num" dir="ltr" />
+                            <span asp-validation-for="Phone" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="AltPhone" class="form-label"></label>
+                            <input asp-for="AltPhone" class="form-control num" dir="ltr" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" dir="ltr" />
+                            <span asp-validation-for="Email" class="text-danger fs-xs"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Job" class="form-label"></label>
+                            <input asp-for="Job" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Workplace" class="form-label"></label>
+                            <input asp-for="Workplace" class="form-control" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Address" class="form-label"></label>
+                            <input asp-for="Address" class="form-control" />
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ</button>
+                    <a class="btn btn-light" asp-action="Index">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

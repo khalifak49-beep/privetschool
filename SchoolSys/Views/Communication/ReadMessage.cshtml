@@ -1,0 +1,70 @@
+@model Message
+@{
+    ViewData["Title"] = Model.Subject;
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Messages">الرسائل</a></span>
+            <span class="breadcrumb-item active">@Model.Subject</span>
+        </nav>
+        <h1>@Model.Subject</h1>
+    </div>
+    <div class="actions">
+        <a class="btn btn-light" asp-action="Messages"><i class="bi bi-arrow-right me-1"></i> رجوع</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="avatar sm">@ViewHelpers.Initials(Model.Sender.FullName)</div>
+                    <div>
+                        <div class="fw-bold fs-sm">@Model.Sender.FullName</div>
+                        <div class="fs-xs text-muted-3">@ViewHelpers.DateTimeShort(Model.SentAt)</div>
+                    </div>
+                </div>
+                <span class="chip tone-brand">@Model.Recipients.Count مستلم</span>
+            </div>
+            <div class="card-body">
+                <div style="white-space:pre-line;line-height:1.9">@Model.Body</div>
+
+                @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                {
+                    <div class="divider"></div>
+                    <a class="btn btn-light" href="@Model.AttachmentPath" target="_blank">
+                        <i class="bi bi-paperclip me-1"></i> تنزيل المرفق
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="card">
+            <div class="card-header"><h2>المستلمون</h2></div>
+            <div class="card-body" style="max-height:420px;overflow:auto">
+                @foreach (var r in Model.Recipients.Take(50))
+                {
+                    <div class="d-flex align-items-center gap-2 py-1">
+                        <div class="avatar sm">@ViewHelpers.Initials(r.Recipient.FullName)</div>
+                        <div class="min-w-0 flex-grow-1">
+                            <div class="fs-sm text-truncate">@r.Recipient.FullName</div>
+                        </div>
+                        @if (r.IsRead)
+                        {
+                            <i class="bi bi-check2-all text-success" title="مقروءة"></i>
+                        }
+                    </div>
+                }
+                @if (Model.Recipients.Count > 50)
+                {
+                    <div class="fs-xs text-muted-3 pt-2">و @(Model.Recipients.Count - 50) مستلم آخر…</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

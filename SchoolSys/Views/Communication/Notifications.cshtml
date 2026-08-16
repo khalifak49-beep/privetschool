@@ -1,0 +1,104 @@
+@model NotificationsViewModel
+@{
+    ViewData["Title"] = "الإشعارات";
+
+    string Tone(NotificationSeverity s) => s switch
+    {
+        NotificationSeverity.Success => "ok",
+        NotificationSeverity.Warning => "warn",
+        NotificationSeverity.Danger => "danger",
+        _ => "info"
+    };
+
+    string Icon(NotificationType t) => t switch
+    {
+        NotificationType.Attendance => "bi-calendar-check",
+        NotificationType.Grades => "bi-journal-check",
+        NotificationType.Fees => "bi-cash-coin",
+        NotificationType.Homework => "bi-pencil-square",
+        NotificationType.Transport => "bi-bus-front",
+        NotificationType.Message => "bi-chat-dots",
+        NotificationType.Announcement => "bi-megaphone",
+        _ => "bi-bell"
+    };
+}
+
+<div class="page-head">
+    <div>
+        <h1>الإشعارات</h1>
+        <p class="sub">
+            @if (Model.UnreadCount > 0)
+            {
+                <span class="chip tone-danger">@Model.UnreadCount غير مقروء</span>
+            }
+            else
+            {
+                <text>لا توجد إشعارات غير مقروءة</text>
+            }
+        </p>
+    </div>
+    <div class="actions d-flex gap-2">
+        <a class="btn btn-light @(Model.OnlyUnread ? "" : "active")" asp-action="Notifications">الكل</a>
+        <a class="btn btn-light @(Model.OnlyUnread ? "active" : "")" asp-action="Notifications" asp-route-onlyUnread="true">
+            غير المقروءة
+        </a>
+        <button class="btn btn-primary" id="markAll"><i class="bi bi-check2-all me-1"></i> تعليم الكل كمقروء</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Items.TotalCount == 0)
+        {
+            <div class="empty-state"><i class="bi bi-bell-slash"></i>لا توجد إشعارات</div>
+        }
+        @foreach (var n in Model.Items.Items)
+        {
+            <div class="d-flex gap-3 py-3 @(n != Model.Items.Items.Last() ? "border-bottom" : "")"
+                 style="@(n.IsRead ? "" : "background:var(--brand-050);border-radius:10px;padding-inline:.7rem")">
+                <div class="ico tone-@Tone(n.Severity)"
+                     style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex-shrink:0">
+                    <i class="bi @Icon(n.NotificationType)"></i>
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-semibold">@n.Title</span>
+                        @if (!n.IsRead)
+                        {
+                            <span class="chip tone-danger">جديد</span>
+                        }
+                        <span class="chip tone-brand">@n.NotificationType.Display()</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(n.Body))
+                    {
+                        <div class="fs-sm text-muted-2">@n.Body</div>
+                    }
+                    <div class="fs-xs text-muted-3">@ViewHelpers.DateTimeShort(n.CreatedAt) · @ViewHelpers.Ago(n.CreatedAt)</div>
+                </div>
+                <div class="d-flex align-items-start gap-1">
+                    @if (!string.IsNullOrEmpty(n.Link))
+                    {
+                        <a class="btn btn-sm btn-light" href="@n.Link"><i class="bi bi-box-arrow-up-left"></i></a>
+                    }
+                    @if (!n.IsRead)
+                    {
+                        <form asp-action="MarkRead" method="post">
+                            <input type="hidden" name="id" value="@n.Id" />
+                            <button class="btn btn-sm btn-light" title="تعليم كمقروء"><i class="bi bi-check2"></i></button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    <partial name="_Pager" model="Model.Items" />
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('markAll').addEventListener('click', function () {
+            fetch('@Url.Action("MarkAllRead")', { method: 'POST' })
+                .then(() => location.reload());
+        });
+    </script>
+}

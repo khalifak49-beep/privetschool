@@ -1,0 +1,185 @@
+@model ReceiptViewModel
+@{
+    ViewData["Title"] = "سند قبض";
+    var p = Model.Payment;
+    var cur = Model.Settings.Currency;
+}
+
+<div class="page-head no-print">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Payments">المدفوعات</a></span>
+            <span class="breadcrumb-item active">@p.ReceiptNo</span>
+        </nav>
+        <h1>سند قبض</h1>
+        <p class="sub">@Model.Student.FullName · @p.Amount.ToString("N2") @cur</p>
+    </div>
+    <div class="actions d-flex gap-2">
+        <a class="btn btn-light" asp-action="InvoiceDetails" asp-route-id="@Model.Invoice.Id">
+            <i class="bi bi-receipt me-1"></i> الفاتورة
+        </a>
+        <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+    </div>
+</div>
+
+<div class="d-flex justify-content-center">
+    <div class="receipt">
+        @if (p.IsCancelled)
+        {
+            <div class="cancel-stamp">ملغى</div>
+        }
+
+        <div class="rc-head">
+            <div>
+                <div class="rc-school">@Model.Settings.SchoolName</div>
+                @if (!string.IsNullOrEmpty(Model.Settings.SchoolNameEn))
+                {
+                    <div class="rc-school-en">@Model.Settings.SchoolNameEn</div>
+                }
+                <div class="rc-contact">
+                    @Model.Settings.Address
+                    @if (!string.IsNullOrEmpty(Model.Settings.Phone))
+                    {
+                        <text> · @Model.Settings.Phone</text>
+                    }
+                </div>
+            </div>
+            <div class="rc-badge">
+                <div class="rc-badge-title">سند قبض</div>
+                <div class="rc-no num">@p.ReceiptNo</div>
+                <div class="rc-date num">@p.PaymentDate.ToString("yyyy/MM/dd")</div>
+            </div>
+        </div>
+
+        <div class="rc-amount">
+            <div>
+                <div class="rc-label">المبلغ المستلم</div>
+                <div class="rc-value num">@p.Amount.ToString("N2") <span class="rc-cur">@cur</span></div>
+            </div>
+            <div class="rc-words">@Model.AmountInWords</div>
+        </div>
+
+        <table class="rc-table">
+            <tr>
+                <th>استلمنا من</th>
+                <td>@(Model.GuardianName ?? Model.Student.FullName)</td>
+                <th>الطالب</th>
+                <td>@Model.Student.FullName</td>
+            </tr>
+            <tr>
+                <th>الرقم الطلابي</th>
+                <td class="num">@Model.Student.StudentNo</td>
+                <th>الصف / الشعبة</th>
+                <td>@(Model.Section ?? "—")</td>
+            </tr>
+            <tr>
+                <th>رقم الفاتورة</th>
+                <td class="num">@Model.Invoice.InvoiceNo</td>
+                <th>طريقة الدفع</th>
+                <td>@p.Method.Display()</td>
+            </tr>
+            <tr>
+                <th>المرجع</th>
+                <td>@(p.Reference ?? "—")</td>
+                <th>وذلك عن</th>
+                <td>الرسوم الدراسية</td>
+            </tr>
+        </table>
+
+        <div class="rc-summary">
+            <div><span>إجمالي الفاتورة</span><b class="num">@Model.Invoice.NetAmount.ToString("N2") @cur</b></div>
+            <div><span>إجمالي المسدد</span><b class="num text-success">@Model.Invoice.PaidAmount.ToString("N2") @cur</b></div>
+            <div><span>المتبقي</span><b class="num @(Model.RemainingAfter > 0 ? "text-danger" : "text-success")">@Model.RemainingAfter.ToString("N2") @cur</b></div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(p.Notes))
+        {
+            <div class="rc-notes"><b>ملاحظات:</b> @p.Notes</div>
+        }
+
+        @if (p.IsCancelled && !string.IsNullOrEmpty(p.CancelReason))
+        {
+            <div class="rc-notes text-danger"><b>سبب الإلغاء:</b> @p.CancelReason</div>
+        }
+
+        <div class="rc-sign">
+            <div>
+                <div class="rc-line"></div>
+                <div>المحاسب</div>
+            </div>
+            <div>
+                <div class="rc-line"></div>
+                <div>المستلم</div>
+            </div>
+        </div>
+
+        <div class="rc-footer">
+            هذا السند صالح كإيصال رسمي — يرجى الاحتفاظ به · طُبع في @DateTime.Now.ToString("yyyy/MM/dd HH:mm")
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .receipt {
+            width: 760px; max-width: 100%;
+            background: #fff; border: 1px solid var(--line-strong); border-radius: 12px;
+            padding: 1.8rem; position: relative; overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cancel-stamp {
+            position: absolute; top: 42%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-22deg);
+            font-size: 4.5rem; font-weight: 900; color: rgba(220, 38, 38, .14);
+            border: 8px solid rgba(220, 38, 38, .14); border-radius: 18px;
+            padding: .3rem 3rem; pointer-events: none; z-index: 1;
+        }
+
+        .rc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+                   border-bottom: 2px solid var(--brand-700); padding-bottom: 1rem; }
+        .rc-school { font-size: 1.3rem; font-weight: 800; color: var(--brand-800); }
+        .rc-school-en { font-size: .8rem; color: var(--text-3); }
+        .rc-contact { font-size: .76rem; color: var(--text-2); margin-top: .3rem; }
+
+        .rc-badge { text-align: center; background: var(--brand-050); border: 1px solid var(--brand-100);
+                    border-radius: 12px; padding: .6rem 1.1rem; min-width: 160px; }
+        .rc-badge-title { font-weight: 800; color: var(--brand-700); font-size: .95rem; }
+        .rc-no { font-size: 1.02rem; font-weight: 700; }
+        .rc-date { font-size: .78rem; color: var(--text-2); }
+
+        .rc-amount { display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+                     background: linear-gradient(135deg, var(--brand-050), #fff);
+                     border: 1px solid var(--brand-100); border-radius: 12px;
+                     padding: 1rem 1.3rem; margin: 1.3rem 0; }
+        .rc-label { font-size: .78rem; color: var(--text-2); }
+        .rc-value { font-size: 2rem; font-weight: 800; color: var(--brand-800); line-height: 1.2; }
+        .rc-cur { font-size: 1rem; font-weight: 600; color: var(--text-2); }
+        .rc-words { font-size: .85rem; color: var(--text); font-weight: 600; text-align: left; max-width: 55%; }
+
+        .rc-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+        .rc-table th { background: var(--surface-2); color: var(--text-2); font-weight: 600;
+                       padding: .55rem .8rem; border: 1px solid var(--line); width: 15%; white-space: nowrap; }
+        .rc-table td { padding: .55rem .8rem; border: 1px solid var(--line); font-weight: 600; }
+
+        .rc-summary { display: flex; gap: 1rem; margin-top: 1.2rem; }
+        .rc-summary > div { flex: 1; background: var(--surface-2); border: 1px solid var(--line);
+                            border-radius: 10px; padding: .65rem .9rem; display: flex;
+                            justify-content: space-between; align-items: center; font-size: .84rem; }
+        .rc-summary span { color: var(--text-2); }
+
+        .rc-notes { margin-top: 1rem; font-size: .82rem; color: var(--text-2); }
+
+        .rc-sign { display: flex; justify-content: space-between; margin-top: 2.6rem; font-size: .84rem; text-align: center; }
+        .rc-sign > div { flex: 1; }
+        .rc-line { border-top: 1px solid var(--line-strong); margin: 0 2.2rem .4rem; }
+
+        .rc-footer { margin-top: 1.6rem; padding-top: .7rem; border-top: 1px dashed var(--line-strong);
+                     font-size: .72rem; color: var(--text-3); text-align: center; }
+
+        @@media print {
+            .receipt { border: none; box-shadow: none; width: 100%; padding: 0; }
+            @@page { size: A4; margin: 12mm; }
+        }
+    </style>
+}

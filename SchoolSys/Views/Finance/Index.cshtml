@@ -1,0 +1,198 @@
+@model FinanceOverviewViewModel
+@{
+    ViewData["Title"] = "الشؤون المالية";
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <h1>الشؤون المالية</h1>
+        <p class="sub">نظرة عامة على الرسوم والتحصيل — @Model.YearName</p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        @if (User.Can(Permissions.FinanceInvoices))
+        {
+            <a class="btn btn-primary" asp-action="GenerateInvoices"><i class="bi bi-receipt-cutoff me-1"></i> إصدار فواتير</a>
+        }
+        @if (User.Can(Permissions.FinanceReports))
+        {
+            <a class="btn btn-light" asp-action="Reports"><i class="bi bi-graph-up me-1"></i> التقارير المالية</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-receipt"></i></div>
+            <div><div class="value num">@Model.TotalInvoiced.ToString("N0")</div>
+                <div class="label">إجمالي المستحق (@cur)</div>
+                <div class="trend text-muted-3">@Model.InvoiceCount.ToString("N0") فاتورة</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-cash-stack"></i></div>
+            <div><div class="value num">@Model.TotalCollected.ToString("N0")</div>
+                <div class="label">إجمالي المحصّل</div>
+                <div class="trend text-success">@Model.CollectionRate.ToString("0.#")% نسبة التحصيل</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="value num">@Model.TotalOutstanding.ToString("N0")</div>
+                <div class="label">المتبقي</div>
+                <div class="trend text-muted-3">@Model.UnpaidInvoices فاتورة غير مسددة</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-exclamation-triangle"></i></div>
+            <div><div class="value num">@Model.OverdueAmount.ToString("N0")</div>
+                <div class="label">متأخرات مستحقة</div>
+                <div class="trend text-danger">@Model.OverdueStudents طالب</div></div></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2>الإيرادات الشهرية</h2>
+                <span class="chip tone-ok">هذا الشهر: @Model.CollectedThisMonth.ToString("N2") @cur</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-box" style="height:290px"><canvas id="revChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><h2>طرق الدفع</h2></div>
+            <div class="card-body">
+                @if (Model.PaymentMethods.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-pie-chart"></i>لا توجد بيانات</div>
+                }
+                else
+                {
+                    <div class="chart-box" style="height:250px"><canvas id="methodChart"></canvas></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-calendar-event me-1"></i> أقساط مستحقة خلال 30 يوماً</h2>
+                <a class="btn btn-sm btn-light" asp-action="Overdue">المتأخرات</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.UpcomingInstallments.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-check2-circle"></i>لا توجد أقساط مستحقة قريباً</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>الطالب</th><th>القسط</th><th>الاستحقاق</th><th>المتبقي</th></tr></thead>
+                            <tbody>
+                            @foreach (var i in Model.UpcomingInstallments)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-controller="Students" asp-action="Details" asp-route-id="@i.StudentId" class="fw-semibold text-reset">@i.StudentName</a>
+                                        <div class="fs-xs text-muted-3">@i.Section</div>
+                                    </td>
+                                    <td class="fs-sm">@i.Name</td>
+                                    <td class="num fs-sm">@ViewHelpers.Date(i.DueDate)</td>
+                                    <td class="num fw-bold">@i.Remaining.ToString("N2")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-receipt me-1"></i> آخر المدفوعات</h2>
+                <a class="btn btn-sm btn-light" asp-action="Payments">الكل</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RecentPayments.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-cash"></i>لا توجد مدفوعات</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>الإيصال</th><th>الطالب</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+                            <tbody>
+                            @foreach (var p in Model.RecentPayments)
+                            {
+                                <tr>
+                                    <td><a asp-action="Receipt" asp-route-id="@p.Id" class="num fs-xs">@p.ReceiptNo</a></td>
+                                    <td class="fw-semibold fs-sm">@p.StudentName</td>
+                                    <td class="num fw-bold text-success">@p.Amount.ToString("N2")</td>
+                                    <td class="num fs-xs text-muted-2">@ViewHelpers.Date(p.PaymentDate)</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script>
+        Chart.defaults.font.family = "'Segoe UI', Tahoma, sans-serif";
+        Chart.defaults.color = '#5a6883';
+
+        new Chart(document.getElementById('revChart'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenue.Select(p => p.Label))),
+                datasets: [{
+                    label: 'الإيرادات',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenue.Select(p => p.Value))),
+                    backgroundColor: '#1b3a80', borderRadius: 8, maxBarThickness: 38
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#e6eaf2' }, ticks: { callback: v => v.toLocaleString() } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        const mEl = document.getElementById('methodChart');
+        if (mEl) {
+            new Chart(mEl, {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethods.Select(p => p.Label))),
+                    datasets: [{
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethods.Select(p => p.Value))),
+                        backgroundColor: ['#1b3a80', '#0f9d8f', '#7c3aed', '#d97706', '#0284c7'],
+                        borderWidth: 0, hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyle: 'circle', boxWidth: 8 } } }
+                }
+            });
+        }
+    </script>
+}

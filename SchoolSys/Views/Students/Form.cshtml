@@ -1,0 +1,225 @@
+@model StudentFormViewModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "تعديل بيانات طالب" : "تسجيل طالب جديد";
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">الطلاب</a></span>
+            <span class="breadcrumb-item active">@ViewData["Title"]</span>
+        </nav>
+        <h1>@ViewData["Title"]</h1>
+        <p class="sub">@(Model.IsEdit ? $"الرقم الطلابي: {Model.StudentNo}" : "أدخل بيانات الطالب الأساسية وبيانات ولي الأمر")</p>
+    </div>
+</div>
+
+<form asp-action="@(Model.IsEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="PhotoPath" />
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header"><h2><i class="bi bi-person-vcard me-1"></i> البيانات الشخصية</h2></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="StudentNo" class="form-label"></label>
+                            <input asp-for="StudentNo" class="form-control num" readonly="@Model.IsEdit" />
+                            <span asp-validation-for="StudentNo" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" placeholder="مثال: أحمد سالم محمد الحارثي" />
+                            <span asp-validation-for="FullName" class="text-danger fs-xs"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="FullNameEn" class="form-label"></label>
+                            <input asp-for="FullNameEn" class="form-control" dir="ltr" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="NationalId" class="form-label"></label>
+                            <input asp-for="NationalId" class="form-control num" dir="ltr" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Gender" class="form-label"></label>
+                            <select asp-for="Gender" class="form-select">
+                                @foreach (var (v, t) in ViewHelpers.Options<Gender>())
+                                {
+                                    <option value="@((int)v)" selected="@(Model.Gender == v)">@t</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="BirthDate" class="form-label"></label>
+                            <input asp-for="BirthDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="BirthPlace" class="form-label"></label>
+                            <input asp-for="BirthPlace" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Nationality" class="form-label"></label>
+                            <input asp-for="Nationality" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Religion" class="form-label"></label>
+                            <input asp-for="Religion" class="form-control" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Address" class="form-label"></label>
+                            <input asp-for="Address" class="form-control" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control num" dir="ltr" />
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" dir="ltr" />
+                            <span asp-validation-for="Email" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="BloodType" class="form-label"></label>
+                            <select asp-for="BloodType" class="form-select">
+                                <option value="">— غير محدد —</option>
+                                @foreach (var b in new[] { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" })
+                                {
+                                    <option value="@b" selected="@(Model.BloodType == b)">@b</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><h2><i class="bi bi-mortarboard me-1"></i> البيانات الدراسية</h2></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label asp-for="CurrentSectionId" class="form-label"></label>
+                            <select asp-for="CurrentSectionId" class="form-select" asp-items="Model.Sections">
+                                <option value="">— اختر الشعبة —</option>
+                            </select>
+                            <span asp-validation-for="CurrentSectionId" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="EnrollmentDate" class="form-label"></label>
+                            <input asp-for="EnrollmentDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select">
+                                @foreach (var (v, t) in ViewHelpers.Options<StudentStatus>())
+                                {
+                                    <option value="@((int)v)" selected="@(Model.Status == v)">@t</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PreviousSchool" class="form-label"></label>
+                            <input asp-for="PreviousSchool" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="HealthNotes" class="form-label"></label>
+                            <input asp-for="HealthNotes" class="form-control" placeholder="حساسية، أمراض مزمنة، أدوية..." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!Model.IsEdit)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h2><i class="bi bi-people me-1"></i> ولي الأمر</h2>
+                        <span class="fs-xs text-muted-3">اختياري — يمكن ربطه لاحقاً</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label asp-for="GuardianName" class="form-label"></label>
+                                <input asp-for="GuardianName" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="GuardianPhone" class="form-label"></label>
+                                <input asp-for="GuardianPhone" class="form-control num" dir="ltr" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="GuardianRelation" class="form-label"></label>
+                                <select asp-for="GuardianRelation" class="form-select">
+                                    @foreach (var r in new[] { "الأب", "الأم", "الأخ", "العم", "الخال", "الجد", "ولي أمر" })
+                                    {
+                                        <option value="@r" selected="@(Model.GuardianRelation == r)">@r</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header"><h2><i class="bi bi-image me-1"></i> الصورة الشخصية</h2></div>
+                <div class="card-body text-center">
+                    <div class="avatar xl mx-auto mb-3" id="photoPreviewWrap">
+                        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                        {
+                            <img id="photoPreview" src="@Model.PhotoPath" alt="" />
+                        }
+                        else
+                        {
+                            <img id="photoPreview" src="" alt="" style="display:none" />
+                            <span id="photoInitials"><i class="bi bi-person"></i></span>
+                        }
+                    </div>
+                    <input asp-for="Photo" type="file" class="form-control form-control-sm" accept="image/*" id="photoInput" />
+                    <div class="form-text fs-xs">JPG أو PNG — بحد أقصى 3 ميجابايت</div>
+                    <span asp-validation-for="Photo" class="text-danger fs-xs"></span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-check-lg me-1"></i> @(Model.IsEdit ? "حفظ التعديلات" : "تسجيل الطالب")
+                    </button>
+                    @if (Model.IsEdit)
+                    {
+                        <a class="btn btn-light w-100" asp-action="Details" asp-route-id="@Model.Id">إلغاء</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-light w-100" asp-action="Index">إلغاء</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        document.getElementById('photoInput')?.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const img = document.getElementById('photoPreview');
+            const initials = document.getElementById('photoInitials');
+            img.src = URL.createObjectURL(file);
+            img.style.display = 'block';
+            if (initials) initials.style.display = 'none';
+        });
+    </script>
+}

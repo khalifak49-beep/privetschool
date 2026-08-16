@@ -1,0 +1,193 @@
+@model ScanViewModel
+@{
+    ViewData["Title"] = "تسجيل الحضور بـ QR";
+}
+
+<div class="page-head">
+    <div>
+        <h1>تسجيل الحضور برمز QR</h1>
+        <p class="sub">
+            امسح بطاقة الطالب بالكاميرا أو بجهاز الماسح الضوئي —
+            <span class="chip tone-brand num">@Model.TodayScans عملية مسح اليوم</span>
+        </p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-light" asp-action="Index"><i class="bi bi-list-check me-1"></i> التسجيل اليدوي</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h2><i class="bi bi-upc-scan me-1"></i> إدخال الرمز</h2>
+            </div>
+            <div class="card-body">
+                <label class="form-label">رمز الطالب أو الرقم الطلابي</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
+                    <input id="manualCode" class="form-control form-control-lg num" dir="ltr"
+                           placeholder="امسح البطاقة أو اكتب الرقم..." autocomplete="off" autofocus />
+                </div>
+                <div class="form-text fs-xs">
+                    ضع المؤشر في الحقل ثم امسح البطاقة بجهاز الماسح — سيُسجَّل الحضور تلقائياً.
+                </div>
+
+                <div class="divider"></div>
+
+                <button class="btn btn-primary w-100" id="startCam">
+                    <i class="bi bi-camera-video me-1"></i> تشغيل الكاميرا
+                </button>
+                <button class="btn btn-light w-100 mt-2 d-none" id="stopCam">
+                    <i class="bi bi-stop-circle me-1"></i> إيقاف الكاميرا
+                </button>
+                <div id="reader" class="mt-3 rounded-3 overflow-hidden"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body" id="lastResult">
+                <div class="empty-state"><i class="bi bi-qr-code-scan"></i>بانتظار أول عملية مسح</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>آخر عمليات التسجيل اليوم</h2>
+                <span class="chip tone-info">@ViewHelpers.Date(Model.Date)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="recentTable">
+                    <thead><tr><th>الطالب</th><th>الرقم</th><th>الشعبة</th><th>الحالة</th><th>الوقت</th></tr></thead>
+                    <tbody>
+                    @if (Model.Recent.Count == 0)
+                    {
+                        <tr id="emptyRow"><td colspan="5"><div class="empty-state"><i class="bi bi-clock-history"></i>لا توجد عمليات مسح اليوم</div></td></tr>
+                    }
+                    @foreach (var r in Model.Recent)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@r.Name</td>
+                            <td class="num fs-sm">@r.Code</td>
+                            <td class="text-muted-2 fs-sm">@r.Section</td>
+                            <td>@r.Status.Badge()</td>
+                            <td class="num fs-sm">@ViewHelpers.Time(r.Time)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/html5-qrcode/html5-qrcode.min.js"></script>
+    <script>
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        let busy = false;
+        let lastCode = '';
+        let lastAt = 0;
+
+        async function submitCode(code) {
+            if (!code || busy) return;
+
+            // منع التكرار السريع لنفس الرمز
+            const now = Date.now();
+            if (code === lastCode && now - lastAt < 3000) return;
+            lastCode = code; lastAt = now;
+
+            busy = true;
+            try {
+                const res = await fetch('@Url.Action("ScanRecord")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+                const data = await res.json();
+                render(data);
+                if (data.success) addRow(data);
+            } catch (e) {
+                render({ success: false, message: 'تعذّر الاتصال بالخادم.' });
+            } finally {
+                busy = false;
+            }
+        }
+
+        function render(d) {
+            const box = document.getElementById('lastResult');
+            if (!d.success) {
+                box.innerHTML =
+                    '<div class="text-center py-3">' +
+                    '<div class="mx-auto mb-2 tone-danger" style="width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:1.7rem"><i class="bi bi-x-circle-fill"></i></div>' +
+                    '<div class="fw-bold">' + (d.message || 'فشل التسجيل') + '</div></div>';
+                return;
+            }
+            box.innerHTML =
+                '<div class="text-center py-2">' +
+                '<div class="mx-auto mb-2 tone-ok" style="width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:1.7rem"><i class="bi bi-check-circle-fill"></i></div>' +
+                '<div class="fw-bold" style="font-size:1.05rem">' + d.name + '</div>' +
+                '<div class="fs-sm text-muted-2 num">' + d.code + ' · ' + d.section + '</div>' +
+                '<div class="mt-2"><span class="chip tone-brand">' + d.status + '</span> ' +
+                '<span class="chip tone-info num">' + d.time + '</span></div>' +
+                '<div class="fs-sm text-success mt-2">' + d.message + '</div></div>';
+        }
+
+        function addRow(d) {
+            document.getElementById('emptyRow')?.remove();
+            const tbody = document.querySelector('#recentTable tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td class="fw-semibold">' + d.name + '</td>' +
+                '<td class="num fs-sm">' + d.code + '</td>' +
+                '<td class="text-muted-2 fs-sm">' + d.section + '</td>' +
+                '<td><span class="chip tone-ok">' + d.status + '</span></td>' +
+                '<td class="num fs-sm">' + d.time + '</td>';
+            tbody.prepend(tr);
+        }
+
+        // إدخال يدوي / ماسح ضوئي بلوحة مفاتيح
+        const manual = document.getElementById('manualCode');
+        manual.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitCode(manual.value.trim());
+                manual.value = '';
+            }
+        });
+
+        // الكاميرا
+        let scanner = null;
+        document.getElementById('startCam').addEventListener('click', async function () {
+            if (typeof Html5Qrcode === 'undefined') {
+                alert('مكتبة قراءة الرموز غير متاحة.');
+                return;
+            }
+            scanner = new Html5Qrcode('reader');
+            try {
+                await scanner.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 240, height: 240 } },
+                    function (text) { submitCode(text.trim()); },
+                    function () { /* تجاهل أخطاء الإطار */ }
+                );
+                document.getElementById('startCam').classList.add('d-none');
+                document.getElementById('stopCam').classList.remove('d-none');
+            } catch (err) {
+                alert('تعذّر تشغيل الكاميرا: ' + err);
+            }
+        });
+
+        document.getElementById('stopCam').addEventListener('click', async function () {
+            if (scanner) {
+                await scanner.stop();
+                scanner.clear();
+                scanner = null;
+            }
+            document.getElementById('startCam').classList.remove('d-none');
+            document.getElementById('stopCam').classList.add('d-none');
+        });
+    </script>
+}

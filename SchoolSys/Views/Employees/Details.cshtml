@@ -1,0 +1,182 @@
+@model EmployeeDetailsViewModel
+@{
+    var e = Model.Employee;
+    ViewData["Title"] = e.FullName;
+    var timetable = ViewBag.TimetableByDay as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">الموظفون</a></span>
+            <span class="breadcrumb-item active">@e.FullName</span>
+        </nav>
+        <h1>@e.FullName</h1>
+        <p class="sub"><span class="num">@e.EmployeeNo</span> · @e.EmployeeType.Display() @(e.Specialization is null ? "" : $"· {e.Specialization}")</p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        @if (User.Can(Permissions.EmployeesEdit))
+        {
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@e.Id"><i class="bi bi-pencil me-1"></i> تعديل</a>
+        }
+        @if (!Model.HasAccount && User.Can(Permissions.UsersManage))
+        {
+            <a class="btn btn-light" asp-action="CreateAccount" asp-route-id="@e.Id">
+                <i class="bi bi-person-plus me-1"></i> إنشاء حساب دخول
+            </a>
+        }
+        @if (User.Can(Permissions.EmployeesDelete))
+        {
+            <form asp-action="Delete" asp-route-id="@e.Id" method="post" class="d-inline">
+                <button class="btn btn-light text-danger" data-confirm="حذف هذا الموظف نهائياً؟"><i class="bi bi-trash"></i></button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <div class="avatar xl mx-auto mb-3">
+                    @if (!string.IsNullOrEmpty(e.PhotoPath))
+                    {
+                        <img src="@e.PhotoPath" alt="" />
+                    }
+                    else
+                    {
+                        @ViewHelpers.Initials(e.FullName)
+                    }
+                </div>
+                <h2 class="fw-bold mb-1" style="font-size:1.1rem">@e.FullName</h2>
+                <div class="mb-2">@e.EmployeeType.Badge()</div>
+                @if (e.IsActive)
+                {
+                    <span class="chip tone-ok">على رأس العمل</span>
+                }
+                else
+                {
+                    <span class="chip tone-danger">معطّل</span>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2>البيانات</h2></div>
+            <div class="card-body">
+                <partial name="_InfoRow" model="@(("الرقم الوظيفي", e.EmployeeNo))" />
+                <partial name="_InfoRow" model="@(("رقم الهوية", e.NationalId ?? "—"))" />
+                <partial name="_InfoRow" model="@(("الجنس", e.Gender.Display()))" />
+                <partial name="_InfoRow" model="@(("تاريخ الميلاد", ViewHelpers.Date(e.BirthDate)))" />
+                <partial name="_InfoRow" model="@(("الجوال", e.Phone ?? "—"))" />
+                <partial name="_InfoRow" model="@(("البريد الإلكتروني", e.Email ?? "—"))" />
+                <partial name="_InfoRow" model="@(("العنوان", e.Address ?? "—"))" />
+                <partial name="_InfoRow" model="@(("تاريخ التعيين", ViewHelpers.Date(e.HireDate)))" />
+                <partial name="_InfoRow" model="@(("المؤهل العلمي", e.Qualification ?? "—"))" />
+                <partial name="_InfoRow" model="@(("التخصص", e.Specialization ?? "—"))" />
+                @if (User.Can(Permissions.FinanceView) && e.Salary.HasValue)
+                {
+                    <partial name="_InfoRow" model="@(("الراتب", $"{e.Salary:N2} {Model.Currency}"))" />
+                }
+                <partial name="_InfoRow" model="@(("حساب الدخول", Model.AccountEmail ?? "غير منشأ"))" />
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="row g-3">
+            <div class="col-4">
+                <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check-circle"></i></div>
+                    <div><div class="value num">@Model.AttendancePresent</div><div class="label">أيام حضور</div></div></div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-x-circle"></i></div>
+                    <div><div class="value num">@Model.AttendanceAbsent</div><div class="label">أيام غياب</div></div></div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-clock"></i></div>
+                    <div><div class="value num">@Model.AttendanceLate</div><div class="label">أيام تأخير</div></div></div>
+            </div>
+
+            @if (Model.HomeroomSections.Count > 0)
+            {
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header"><h2>ريادة الفصول</h2></div>
+                        <div class="card-body d-flex flex-wrap gap-2">
+                            @foreach (var s in Model.HomeroomSections)
+                            {
+                                <span class="chip tone-accent"><i class="bi bi-star-fill"></i> @s.Grade.Name - @s.Name</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>النصاب التدريسي</h2>
+                        <span class="chip tone-brand">@Model.TeachingLoad.Count إسناد</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr><th>المادة</th><th>الشعبة</th><th>عدد الطلاب</th><th></th></tr></thead>
+                            <tbody>
+                            @if (Model.TeachingLoad.Count == 0)
+                            {
+                                <tr><td colspan="4"><div class="empty-state"><i class="bi bi-diagram-3"></i>لا يوجد نصاب تدريسي مسند</div></td></tr>
+                            }
+                            @foreach (var t in Model.TeachingLoad)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@t.Subject</td>
+                                    <td class="text-muted-2">@t.Section</td>
+                                    <td class="num">@t.Students</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-light" asp-controller="Students" asp-action="Index" asp-route-sectionId="@t.SectionId">
+                                            <i class="bi bi-people"></i> الطلاب
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header"><h2>الجدول الأسبوعي</h2></div>
+                    <div class="card-body">
+                        @if (!timetable.Any())
+                        {
+                            <div class="empty-state"><i class="bi bi-calendar3"></i>لا يوجد جدول مسجّل</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead><tr><th>اليوم</th><th>الحصة</th><th>المادة</th><th>الشعبة</th><th>الوقت</th></tr></thead>
+                                    <tbody>
+                                    @foreach (var t in timetable)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@ViewHelpers.DayName((int)t.DayOfWeek)</td>
+                                            <td><span class="chip tone-brand num">@t.PeriodNo</span></td>
+                                            <td>@t.Subject</td>
+                                            <td class="text-muted-2">@t.Section</td>
+                                            <td class="num fs-sm">@ViewHelpers.Time((TimeSpan)t.StartTime) — @ViewHelpers.Time((TimeSpan)t.EndTime)</td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,155 @@
+@model List<PortalHomeworkRow>
+@{
+    ViewData["Title"] = "واجباتي";
+    var canSubmit = User.Can(Permissions.HomeworkSubmit);
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">بوابة الطالب</a></span>
+            <span class="breadcrumb-item active">الواجبات</span>
+        </nav>
+        <h1>واجباتي</h1>
+        <p class="sub">
+            @Model.Count(h => h.Status == HomeworkStatus.NotSubmitted) لم تُسلّم ·
+            @Model.Count(h => h.Status == HomeworkStatus.Graded) مصححة
+        </p>
+    </div>
+</div>
+
+<div class="row g-3">
+    @if (Model.Count == 0)
+    {
+        <div class="col-12">
+            <div class="card"><div class="card-body"><div class="empty-state"><i class="bi bi-check2-circle"></i>لا توجد واجبات</div></div></div>
+        </div>
+    }
+    @foreach (var h in Model)
+    {
+        <div class="col-lg-6">
+            <div class="card h-100 @(h.IsOverdue ? "border-danger" : "")">
+                <div class="card-header">
+                    <div>
+                        <h2>@h.Title</h2>
+                        <div class="fs-xs text-muted-3">@h.Subject · @h.Teacher</div>
+                    </div>
+                    @h.Status.Badge()
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(h.Description))
+                    {
+                        <div class="fs-sm text-muted-2 mb-3" style="white-space:pre-line">@h.Description</div>
+                    }
+
+                    <div class="d-flex justify-content-between fs-sm py-1 border-top pt-2">
+                        <span class="text-muted-2">موعد التسليم</span>
+                        <span class="fw-semibold num">
+                            @ViewHelpers.Date(h.DueDate)
+                            @if (h.IsOverdue)
+                            {
+                                <span class="chip tone-danger">متأخر</span>
+                            }
+                            else if (h.DaysLeft >= 0 && h.Status == HomeworkStatus.NotSubmitted)
+                            {
+                                <span class="chip @(h.DaysLeft <= 1 ? "tone-warn" : "tone-info")">
+                                    @(h.DaysLeft == 0 ? "اليوم" : $"بعد {h.DaysLeft} يوم")
+                                </span>
+                            }
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between fs-sm py-1">
+                        <span class="text-muted-2">الدرجة العظمى</span>
+                        <span class="fw-semibold num">@h.MaxScore.ToString("0.##")</span>
+                    </div>
+                    @if (h.SubmittedAt.HasValue)
+                    {
+                        <div class="d-flex justify-content-between fs-sm py-1">
+                            <span class="text-muted-2">تاريخ التسليم</span>
+                            <span class="fw-semibold num">@ViewHelpers.DateTimeShort(h.SubmittedAt)</span>
+                        </div>
+                    }
+                    @if (h.Score.HasValue)
+                    {
+                        <div class="d-flex justify-content-between fs-sm py-1">
+                            <span class="text-muted-2">درجتي</span>
+                            <span>@ViewHelpers.ScoreChip(h.Score, h.MaxScore)</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(h.Feedback))
+                    {
+                        <div class="alert alert-info fs-sm mt-2 mb-0 py-2">
+                            <b>ملاحظة المعلم:</b> @h.Feedback
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        @if (!string.IsNullOrEmpty(h.AttachmentPath))
+                        {
+                            <a class="btn btn-sm btn-light" href="@h.AttachmentPath" target="_blank">
+                                <i class="bi bi-paperclip me-1"></i> مرفق الواجب
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(h.SubmissionFile))
+                        {
+                            <a class="btn btn-sm btn-light" href="@h.SubmissionFile" target="_blank">
+                                <i class="bi bi-file-earmark-check me-1"></i> ملفي المُسلّم
+                            </a>
+                        }
+                        @if (canSubmit && h.Status != HomeworkStatus.Graded)
+                        {
+                            <button class="btn btn-sm btn-primary"
+                                    onclick="openSubmit(@h.SubmissionId, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(h.Title)), @Html.Raw(System.Text.Json.JsonSerializer.Serialize(h.AnswerText ?? "")))">
+                                <i class="bi bi-upload me-1"></i>
+                                @(h.Status == HomeworkStatus.NotSubmitted ? "تسليم الواجب" : "تعديل التسليم")
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (canSubmit)
+{
+    <div class="modal fade" id="submitModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SubmitHomework" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="submissionId" id="sub-id" />
+                <div class="modal-header">
+                    <h5 class="modal-title">تسليم الواجب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info fs-sm" id="sub-title"></div>
+                    <div class="mb-3">
+                        <label class="form-label">إجابة نصية</label>
+                        <textarea name="answerText" id="sub-text" class="form-control" rows="5"
+                                  placeholder="اكتب إجابتك هنا..."></textarea>
+                    </div>
+                    <div>
+                        <label class="form-label">أو أرفق ملفاً</label>
+                        <input name="file" type="file" class="form-control" />
+                        <div class="form-text fs-xs">PDF, Word, صور — بحد أقصى 8 ميجابايت</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary"><i class="bi bi-upload me-1"></i> تسليم</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function openSubmit(id, title, text) {
+            document.getElementById('sub-id').value = id;
+            document.getElementById('sub-title').textContent = title;
+            document.getElementById('sub-text').value = text || '';
+            new bootstrap.Modal(document.getElementById('submitModal')).show();
+        }
+    </script>
+}

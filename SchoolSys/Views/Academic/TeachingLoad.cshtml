@@ -1,0 +1,158 @@
+@model TeachingLoadViewModel
+@{
+    ViewData["Title"] = "توزيع المواد على المعلمين";
+    var canAssign = User.Can(Permissions.AcademicAssignSubjects);
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">البنية الأكاديمية</a></span>
+            <span class="breadcrumb-item active">توزيع المواد</span>
+        </nav>
+        <h1>توزيع المواد على المعلمين</h1>
+        <p class="sub">
+            @Model.TotalAssignments.ToString("N0") إسناد في @Model.CurrentYearName
+            @if (Model.UnassignedSections > 0)
+            {
+                <span class="chip tone-warn">@Model.UnassignedSections شعبة بلا إسناد</span>
+            }
+        </p>
+    </div>
+    @if (canAssign)
+    {
+        <div class="actions">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal">
+                <i class="bi bi-plus-lg me-1"></i> إسناد جديد
+            </button>
+        </div>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">الشعبة</label>
+                <select name="sectionId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">كل الشعب</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">المعلم</label>
+                <select name="teacherId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">كل المعلمين</option>
+                    @foreach (var t in Model.Teachers)
+                    {
+                        <option value="@t.Value" selected="@t.Selected">@t.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">المادة</label>
+                <select name="subjectId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">كل المواد</option>
+                    @foreach (var s in Model.Subjects)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-1">
+                <button class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i> تصفية</button>
+                <a asp-action="TeachingLoad" class="btn btn-sm btn-light">مسح</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr><th>الشعبة</th><th>المادة</th><th>المعلم</th><th>عدد الطلاب</th><th style="width:80px"></th></tr>
+            </thead>
+            <tbody>
+            @if (Model.Assignments.Count == 0)
+            {
+                <tr><td colspan="5"><div class="empty-state"><i class="bi bi-diagram-3"></i>لا توجد إسنادات مطابقة</div></td></tr>
+            }
+            @foreach (var a in Model.Assignments)
+            {
+                <tr>
+                    <td class="fw-semibold">@a.SectionName</td>
+                    <td>@a.SubjectName</td>
+                    <td>
+                        <a asp-controller="Employees" asp-action="Details" asp-route-id="@a.TeacherId" class="text-reset">@a.TeacherName</a>
+                    </td>
+                    <td class="num">@a.Students</td>
+                    <td>
+                        @if (canAssign)
+                        {
+                            <form asp-action="RemoveAssignment" method="post">
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="hidden" name="sectionId" value="@Model.SectionId" />
+                                <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء هذا الإسناد؟"><i class="bi bi-trash"></i></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (canAssign)
+{
+    <div class="modal fade" id="assignModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="AssignSubject" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">إسناد مادة لمعلم</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">الشعبة</label>
+                        <select name="sectionId" class="form-select" required>
+                            <option value="">— اختر الشعبة —</option>
+                            @foreach (var s in Model.Sections)
+                            {
+                                <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المادة</label>
+                        <select name="subjectId" class="form-select" required>
+                            <option value="">— اختر المادة —</option>
+                            @foreach (var s in Model.Subjects)
+                            {
+                                <option value="@s.Value">@s.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">المعلم</label>
+                        <select name="teacherId" class="form-select" required>
+                            <option value="">— اختر المعلم —</option>
+                            @foreach (var t in Model.Teachers)
+                            {
+                                <option value="@t.Value">@t.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">إسناد</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}

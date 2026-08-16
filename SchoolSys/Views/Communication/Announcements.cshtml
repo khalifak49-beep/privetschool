@@ -1,0 +1,131 @@
+@model AnnouncementIndexViewModel
+@{
+    ViewData["Title"] = "الإعلانات";
+    var canManage = User.Can(Permissions.AnnouncementsManage);
+}
+
+<div class="page-head">
+    <div>
+        <h1>الإعلانات المدرسية</h1>
+        <p class="sub">@Model.ActiveCount إعلان فعّال</p>
+    </div>
+    @if (canManage)
+    {
+        <div class="actions">
+            <a class="btn btn-primary" asp-action="CreateAnnouncement"><i class="bi bi-megaphone me-1"></i> إعلان جديد</a>
+        </div>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">بحث</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input name="q" value="@Model.Q" class="form-control" placeholder="عنوان أو محتوى الإعلان..." />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">الفئة المستهدفة</label>
+                <select name="audience" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var (v, t) in ViewHelpers.Options<AnnouncementAudience>())
+                    {
+                        <option value="@((int)v)" selected="@(Model.Audience == v)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-1">
+                <button class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i> بحث</button>
+                <a asp-action="Announcements" class="btn btn-sm btn-light">مسح</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3">
+    @if (Model.Items.TotalCount == 0)
+    {
+        <div class="col-12">
+            <div class="card"><div class="card-body"><div class="empty-state"><i class="bi bi-megaphone"></i>لا توجد إعلانات</div></div></div>
+        </div>
+    }
+    @foreach (var a in Model.Items.Items)
+    {
+        var expired = a.ExpiryDate.HasValue && a.ExpiryDate < DateTime.Today;
+        <div class="col-lg-6">
+            <div class="card h-100 @(a.IsPinned ? "border-warning" : "")">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="ico tone-@(a.IsPinned ? "warn" : "brand")"
+                             style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.2rem;flex-shrink:0">
+                            <i class="bi @(a.IsPinned ? "bi-pin-angle-fill" : "bi-megaphone-fill")"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex align-items-start justify-content-between gap-2">
+                                <div class="fw-bold">@a.Title</div>
+                                @if (canManage)
+                                {
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light py-0 px-1" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
+                                        <ul class="dropdown-menu dropdown-menu-start">
+                                            <li><a class="dropdown-item" asp-action="EditAnnouncement" asp-route-id="@a.Id"><i class="bi bi-pencil me-2"></i>تعديل</a></li>
+                                            <li>
+                                                <form asp-action="DeleteAnnouncement" method="post">
+                                                    <input type="hidden" name="id" value="@a.Id" />
+                                                    <button class="dropdown-item text-danger" data-confirm="حذف هذا الإعلان؟"><i class="bi bi-trash me-2"></i>حذف</button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-1 my-2">
+                                <span class="chip tone-brand">@a.Audience.Display()</span>
+                                @if (a.IsPinned)
+                                {
+                                    <span class="chip tone-warn">مثبّت</span>
+                                }
+                                @if (!a.IsPublished)
+                                {
+                                    <span class="chip tone-danger">غير منشور</span>
+                                }
+                                @if (expired)
+                                {
+                                    <span class="chip tone-danger">منتهي</span>
+                                }
+                            </div>
+
+                            <div class="fs-sm text-muted-2" style="white-space:pre-line">@a.Body</div>
+
+                            @if (!string.IsNullOrEmpty(a.AttachmentPath))
+                            {
+                                <a class="btn btn-sm btn-light mt-2" href="@a.AttachmentPath" target="_blank">
+                                    <i class="bi bi-paperclip me-1"></i> المرفق
+                                </a>
+                            }
+
+                            <div class="fs-xs text-muted-3 mt-2">
+                                <i class="bi bi-calendar3 me-1"></i> نُشر @ViewHelpers.Date(a.PublishDate)
+                                @if (a.ExpiryDate.HasValue)
+                                {
+                                    <text> · ينتهي @ViewHelpers.Date(a.ExpiryDate)</text>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model.Items.TotalPages > 1)
+{
+    <div class="table-wrap mt-3">
+        <partial name="_Pager" model="Model.Items" />
+    </div>
+}

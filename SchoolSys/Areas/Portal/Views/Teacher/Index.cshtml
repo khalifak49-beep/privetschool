@@ -1,0 +1,129 @@
+@model TeacherPortalViewModel
+@{
+    ViewData["Title"] = "بوابة المعلم";
+}
+
+<div class="page-head">
+    <div>
+        <h1>مرحباً، @Model.TeacherName</h1>
+        <p class="sub">ملخص شعبك ومهامك اليومية</p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        <a class="btn btn-primary" asp-controller="Attendance" asp-action="Index" asp-area="">
+            <i class="bi bi-calendar-check me-1"></i> تسجيل الحضور
+        </a>
+        <a class="btn btn-light" asp-controller="Homework" asp-action="Create" asp-area="">
+            <i class="bi bi-plus-lg me-1"></i> واجب جديد
+        </a>
+        <a class="btn btn-light" asp-controller="Exams" asp-action="Create" asp-area="">
+            <i class="bi bi-journal-plus me-1"></i> اختبار جديد
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-building"></i></div>
+            <div><div class="value num">@Model.Sections.Count</div><div class="label">الشعب المسندة</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-accent"><i class="bi bi-mortarboard"></i></div>
+            <div><div class="value num">@Model.StudentsCount</div><div class="label">إجمالي الطلاب</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico @(Model.PendingHomework > 0 ? "tone-warn" : "tone-ok")"><i class="bi bi-pencil-square"></i></div>
+            <div><div class="value num">@Model.PendingHomework</div><div class="label">واجبات للتصحيح</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico @(Model.PendingMarks > 0 ? "tone-danger" : "tone-ok")"><i class="bi bi-journal-check"></i></div>
+            <div><div class="value num">@Model.PendingMarks</div><div class="label">اختبارات بلا درجات</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-clock me-1"></i> حصص اليوم</h2>
+                <a class="btn btn-sm btn-light" asp-controller="Timetable" asp-action="Index" asp-area="">الجدول الكامل</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.TodayLessons.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-cup-hot"></i>لا توجد حصص مجدولة اليوم</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th style="width:60px">الحصة</th><th>المادة</th><th>الشعبة</th><th>الوقت</th><th></th></tr></thead>
+                            <tbody>
+                            @foreach (var l in Model.TodayLessons)
+                            {
+                                <tr>
+                                    <td><span class="chip tone-brand num">@l.PeriodNo</span></td>
+                                    <td class="fw-semibold">@l.Subject</td>
+                                    <td class="text-muted-2 fs-sm">
+                                        @l.Section
+                                        @if (!string.IsNullOrEmpty(l.Room))
+                                        {
+                                            <span class="fs-xs text-muted-3">· قاعة @l.Room</span>
+                                        }
+                                    </td>
+                                    <td class="num fs-sm">@ViewHelpers.Time(l.StartTime) — @ViewHelpers.Time(l.EndTime)</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-controller="Attendance" asp-action="Index" asp-area="" asp-route-sectionId="@l.SectionId">
+                                            <i class="bi bi-check2-square"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><h2><i class="bi bi-people me-1"></i> شعبي</h2></div>
+            <div class="card-body p-0">
+                @if (Model.Sections.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-inbox"></i>لم يتم إسناد شعب بعد</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>الشعبة</th><th>المواد</th><th>الطلاب</th><th></th></tr></thead>
+                            <tbody>
+                            @foreach (var s in Model.Sections)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@s.Name</td>
+                                    <td class="fs-xs text-muted-2">@s.Subject</td>
+                                    <td class="num">@s.Students</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-light"
+                                           asp-controller="Students" asp-action="Index" asp-area="" asp-route-sectionId="@s.SectionId">
+                                            <i class="bi bi-list-ul"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

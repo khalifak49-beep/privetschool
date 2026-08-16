@@ -1,0 +1,121 @@
+@model UserFormViewModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "تعديل مستخدم" : "مستخدم جديد";
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">المستخدمون</a></span>
+            <span class="breadcrumb-item active">@ViewData["Title"]</span>
+        </nav>
+        <h1>@ViewData["Title"]</h1>
+        @if (Model.LinkedTo is not null)
+        {
+            <p class="sub"><span class="chip tone-brand">@Model.LinkedTo</span></p>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <form asp-action="@(Model.IsEdit ? "Edit" : "Create")" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" dir="ltr" />
+                            <span asp-validation-for="Email" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control num" dir="ltr" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Password" class="form-control" id="pwdField" autocomplete="new-password" />
+                                <button class="btn btn-light" type="button" id="genPwd">توليد</button>
+                            </div>
+                            @if (Model.IsEdit)
+                            {
+                                <div class="form-text fs-xs">اتركه فارغاً للإبقاء على كلمة المرور الحالية.</div>
+                            }
+                            <span asp-validation-for="Password" class="text-danger fs-xs"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label"></label>
+                                <div class="form-text fs-xs">الحسابات المعطّلة لا تستطيع تسجيل الدخول.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ</button>
+                    <a class="btn btn-light" asp-action="Index">إلغاء</a>
+                </div>
+
+                <div class="card-body border-top">
+                    <div class="fw-bold fs-sm mb-2"><i class="bi bi-shield-lock me-1"></i> أدوار المستخدم</div>
+                    <div class="row g-2">
+                        @foreach (var r in Model.AllRoles)
+                        {
+                            var isChecked = Model.SelectedRoles.Contains(r);
+                            <div class="col-md-6">
+                                <div class="form-check p-2 rounded-3" style="background:var(--surface-2);border:1px solid var(--line)">
+                                    <input class="form-check-input" type="checkbox" name="SelectedRoles" value="@r"
+                                           id="role-@r" checked="@isChecked" />
+                                    <label class="form-check-label fs-sm" for="role-@r">
+                                        @RoleNames.Display(r)
+                                        <div class="fs-xs text-muted-3" dir="ltr">@r</div>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <div class="fw-bold fs-sm mb-2"><i class="bi bi-info-circle me-1"></i> ملاحظات مهمة</div>
+                <ul class="fs-sm text-muted-2 ps-3 mb-0 lh-lg">
+                    <li>صلاحيات المستخدم تُشتق من أدواره — عدّلها من <a asp-controller="Roles" asp-action="Index">شاشة الأدوار</a>.</li>
+                    <li>دور <b>مسؤول النظام</b> يتجاوز كل فحوصات الصلاحيات، امنحه بحذر.</li>
+                    <li>حسابات الطلاب وأولياء الأمور تُنشأ عادة من صفحة الطالب أو ولي الأمر ليتم ربطها تلقائياً.</li>
+                    <li>تسري تغييرات الصلاحيات على المستخدم خلال 5 دقائق أو عند إعادة تسجيل الدخول.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        document.getElementById('genPwd')?.addEventListener('click', function () {
+            const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789@@#';
+            let out = '';
+            for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
+            const f = document.getElementById('pwdField');
+            f.type = 'text';
+            f.value = out;
+        });
+    </script>
+}

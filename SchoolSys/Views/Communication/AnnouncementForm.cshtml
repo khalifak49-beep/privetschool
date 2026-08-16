@@ -1,0 +1,103 @@
+@model AnnouncementFormViewModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "تعديل إعلان" : "إعلان جديد";
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Announcements">الإعلانات</a></span>
+            <span class="breadcrumb-item active">@ViewData["Title"]</span>
+        </nav>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <form id="annForm" asp-action="@(Model.IsEdit ? "EditAnnouncement" : "CreateAnnouncement")" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="AttachmentPath" />
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label"></label>
+                        <input asp-for="Title" class="form-control" placeholder="عنوان الإعلان" />
+                        <span asp-validation-for="Title" class="text-danger fs-xs"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Body" class="form-label"></label>
+                        <textarea asp-for="Body" class="form-control" rows="7" placeholder="اكتب محتوى الإعلان..."></textarea>
+                        <span asp-validation-for="Body" class="text-danger fs-xs"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Audience" class="form-label"></label>
+                            <select asp-for="Audience" class="form-select">
+                                @foreach (var (v, t) in ViewHelpers.Options<AnnouncementAudience>())
+                                {
+                                    <option value="@((int)v)" selected="@(Model.Audience == v)">@t</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="PublishDate" class="form-label"></label>
+                            <input asp-for="PublishDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ExpiryDate" class="form-label"></label>
+                            <input asp-for="ExpiryDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Attachment" class="form-label"></label>
+                            <input asp-for="Attachment" type="file" class="form-control" />
+                            @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                            {
+                                <div class="form-text fs-xs">
+                                    المرفق الحالي: <a href="@Model.AttachmentPath" target="_blank">عرض</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ ونشر</button>
+                    <a class="btn btn-light" asp-action="Announcements">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h2>خيارات النشر</h2></div>
+            <div class="card-body">
+                @* السمة form تربط هذه الحقول بالنموذج رغم وجودها خارجه *@
+                <div class="form-check mb-3">
+                    <input asp-for="IsPublished" class="form-check-input" form="annForm" />
+                    <label asp-for="IsPublished" class="form-check-label"></label>
+                    <div class="form-text fs-xs">الإعلانات غير المنشورة تظهر للإدارة فقط.</div>
+                </div>
+                <div class="form-check mb-3">
+                    <input asp-for="IsPinned" class="form-check-input" form="annForm" />
+                    <label asp-for="IsPinned" class="form-check-label"></label>
+                    <div class="form-text fs-xs">يظهر في أعلى القائمة ولوحة التحكم.</div>
+                </div>
+                <div class="form-check">
+                    <input asp-for="SendNotification" class="form-check-input" form="annForm" />
+                    <label asp-for="SendNotification" class="form-check-label"></label>
+                    <div class="form-text fs-xs">يصل إشعار فوري لكل مستخدمي الفئة المستهدفة.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

@@ -1,0 +1,154 @@
+@model ExamIndexViewModel
+@{
+    ViewData["Title"] = "الاختبارات";
+}
+
+<div class="page-head">
+    <div>
+        <h1>الاختبارات</h1>
+        <p class="sub">
+            @Model.TotalExams.ToString("N0") اختبار ·
+            <span class="chip tone-info">@Model.UpcomingExams قادم</span>
+            @if (Model.PendingMarks > 0)
+            {
+                <span class="chip tone-warn">@Model.PendingMarks بانتظار الرصد</span>
+            }
+        </p>
+    </div>
+    @if (User.Can(Permissions.ExamsManage))
+    {
+        <div class="actions">
+            <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i> اختبار جديد</a>
+        </div>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label">بحث</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input name="q" value="@Model.Q" class="form-control" placeholder="عنوان الاختبار..." />
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">الشعبة</label>
+                <select name="sectionId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">المادة</label>
+                <select name="subjectId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Subjects)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">الفصل</label>
+                <select name="termId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var t in Model.Terms)
+                    {
+                        <option value="@t.Value" selected="@t.Selected">@t.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">الحالة</label>
+                <select name="status" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var (v, t) in ViewHelpers.Options<ExamStatus>())
+                    {
+                        <option value="@((int)v)" selected="@(Model.Status == v)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-1 col-md-6 d-flex gap-1">
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
+                <a asp-action="Index" class="btn btn-sm btn-light"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>الاختبار</th>
+                <th>المادة</th>
+                <th>الشعبة</th>
+                <th>التاريخ</th>
+                <th>الدرجة</th>
+                <th style="width:170px">الرصد</th>
+                <th>المتوسط</th>
+                <th>الحالة</th>
+                <th style="width:110px"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Exams.TotalCount == 0)
+            {
+                <tr><td colspan="9"><div class="empty-state"><i class="bi bi-journal-x"></i>لا توجد اختبارات</div></td></tr>
+            }
+            @foreach (var e in Model.Exams.Items)
+            {
+                <tr>
+                    <td>
+                        <div class="fw-semibold">@e.Title</div>
+                        <div class="fs-xs text-muted-3">@e.ExamType.Display() · @e.Term</div>
+                    </td>
+                    <td>@e.Subject</td>
+                    <td class="text-muted-2 fs-sm">@e.Section</td>
+                    <td>
+                        <div class="num fs-sm">@ViewHelpers.Date(e.ExamDate)</div>
+                        @if (e.ExamDate.Date >= DateTime.Today)
+                        {
+                            var days = (e.ExamDate.Date - DateTime.Today).Days;
+                            <span class="chip @(days <= 2 ? "tone-danger" : "tone-info")">@(days == 0 ? "اليوم" : $"بعد {days} يوم")</span>
+                        }
+                    </td>
+                    <td class="num">@e.MaxScore.ToString("0.##")</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="mini-bar flex-grow-1">
+                                <span style="width:@e.MarkedRate.ToString("0.#")%;background:@(e.MarkedRate >= 100 ? "var(--ok)" : e.MarkedRate > 0 ? "var(--warn)" : "var(--line-strong)")"></span>
+                            </div>
+                            <span class="fs-xs num text-nowrap">@e.MarkedCount/@e.StudentsCount</span>
+                        </div>
+                    </td>
+                    <td class="num fw-semibold">@(e.Average.HasValue ? e.Average.Value.ToString("0.##") : "—")</td>
+                    <td>@e.Status.Badge()</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a class="btn btn-sm btn-light" asp-action="Marks" asp-route-id="@e.Id" title="رصد الدرجات">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            @if (User.Can(Permissions.ExamsManage))
+                            {
+                                <a class="btn btn-sm btn-light" asp-action="Edit" asp-route-id="@e.Id"><i class="bi bi-gear"></i></a>
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@e.Id" />
+                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف الاختبار وجميع درجاته؟"><i class="bi bi-trash"></i></button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Exams" />
+</div>

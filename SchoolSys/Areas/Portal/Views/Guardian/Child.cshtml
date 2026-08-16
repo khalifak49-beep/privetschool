@@ -1,0 +1,374 @@
+@model GuardianChildDetailsViewModel
+@{
+    var s = Model.Student;
+    ViewData["Title"] = s.FullName;
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">بوابة ولي الأمر</a></span>
+            <span class="breadcrumb-item active">@s.FullName</span>
+        </nav>
+        <h1>@s.FullName</h1>
+        <p class="sub">
+            <span class="num">@s.StudentNo</span> · @(Model.SectionName ?? "—")
+            @if (!string.IsNullOrEmpty(Model.HomeroomTeacher))
+            {
+                <text> · رائد الفصل: @Model.HomeroomTeacher</text>
+            }
+        </p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        <a class="btn btn-light" asp-action="Attendance" asp-route-id="@s.Id"><i class="bi bi-calendar-check me-1"></i> سجل الحضور</a>
+        <a class="btn btn-primary" asp-controller="Results" asp-action="ReportCard" asp-area="" asp-route-studentId="@s.Id">
+            <i class="bi bi-award me-1"></i> كشف الدرجات
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico @(Model.Attendance.Rate >= 90 ? "tone-ok" : Model.Attendance.Rate >= 75 ? "tone-warn" : "tone-danger")">
+                <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div><div class="value num">@Model.Attendance.Rate.ToString("0.#")%</div><div class="label">نسبة الحضور</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-graph-up"></i></div>
+            <div><div class="value num">@Model.AveragePercent.ToString("0.#")%</div><div class="label">المعدل العام</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-x-circle"></i></div>
+            <div><div class="value num">@Model.Attendance.Absent</div><div class="label">أيام الغياب</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico @(Model.Finance.Overdue > 0 ? "tone-danger" : "tone-ok")"><i class="bi bi-cash-coin"></i></div>
+            <div><div class="value num">@Model.Finance.Remaining.ToString("N0")</div><div class="label">المتبقي (@cur)</div></div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#g-grades">الدرجات</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#g-attendance">الحضور</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#g-homework">الواجبات</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#g-timetable">الجدول</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#g-notes">الملاحظات</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#g-fees">الرسوم</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#g-transport">النقل</button></li>
+</ul>
+
+<div class="tab-content">
+    @* ===== الدرجات ===== *@
+    <div class="tab-pane fade show active" id="g-grades">
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="table-wrap">
+                    <div class="card-header"><h2>سجل الدرجات</h2></div>
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr><th>المادة</th><th>الاختبار</th><th>التاريخ</th><th>الدرجة</th><th>النسبة</th></tr></thead>
+                            <tbody>
+                            @if (Model.Results.Count == 0)
+                            {
+                                <tr><td colspan="5"><div class="empty-state"><i class="bi bi-journal"></i>لا توجد درجات مرصودة</div></td></tr>
+                            }
+                            @foreach (var r in Model.Results)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@r.Subject</td>
+                                    <td class="fs-sm">@r.ExamTitle <div class="fs-xs text-muted-3">@r.ExamType.Display()</div></td>
+                                    <td class="num fs-sm">@ViewHelpers.Date(r.ExamDate)</td>
+                                    <td>@ViewHelpers.ScoreChip(r.IsAbsent ? null : r.Score, r.MaxScore)</td>
+                                    <td>
+                                        @if (!r.IsAbsent)
+                                        {
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="mini-bar flex-grow-1">
+                                                    <span style="width:@r.Percentage.ToString("0.#")%;background:var(--@(ViewHelpers.ScoreTone(r.Percentage) == "ok" ? "ok" : ViewHelpers.ScoreTone(r.Percentage) == "info" ? "info" : ViewHelpers.ScoreTone(r.Percentage) == "warn" ? "warn" : "danger"))"></span>
+                                                </div>
+                                                <span class="fs-xs num">@r.Percentage.ToString("0.#")%</span>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header"><h2>الاختبارات القادمة</h2></div>
+                    <div class="card-body p-0">
+                        @if (Model.UpcomingExams.Count == 0)
+                        {
+                            <div class="empty-state"><i class="bi bi-calendar-x"></i>لا توجد اختبارات</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <tbody>
+                                    @foreach (var e in Model.UpcomingExams)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold fs-sm">@e.Title</div>
+                                                <div class="fs-xs text-muted-3">@e.Subject</div>
+                                            </td>
+                                            <td class="text-start">
+                                                <div class="num fs-xs">@ViewHelpers.Date(e.ExamDate)</div>
+                                                <span class="chip @(e.DaysLeft <= 2 ? "tone-danger" : "tone-info")">
+                                                    @(e.DaysLeft == 0 ? "اليوم" : $"بعد {e.DaysLeft} يوم")
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الحضور ===== *@
+    <div class="tab-pane fade" id="g-attendance">
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check-circle"></i></div>
+                    <div><div class="value num">@Model.Attendance.Present</div><div class="label">حاضر</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-x-circle"></i></div>
+                    <div><div class="value num">@Model.Attendance.Absent</div><div class="label">غائب</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-clock"></i></div>
+                    <div><div class="value num">@Model.Attendance.Late</div><div class="label">متأخر</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-info"><i class="bi bi-file-earmark-check"></i></div>
+                    <div><div class="value num">@Model.Attendance.Excused</div><div class="label">بعذر</div></div></div>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>آخر سجلات الحضور</h2>
+                <a class="btn btn-sm btn-light" asp-action="Attendance" asp-route-id="@s.Id">السجل الكامل</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>التاريخ</th><th>اليوم</th><th>الحالة</th><th>وقت الحضور</th><th>ملاحظات</th></tr></thead>
+                    <tbody>
+                    @foreach (var a in Model.Attendance.Recent)
+                    {
+                        <tr>
+                            <td class="num">@ViewHelpers.Date(a.Date)</td>
+                            <td class="fs-sm text-muted-2">@ViewHelpers.DayName((int)a.Date.DayOfWeek)</td>
+                            <td>@a.Status.Badge()</td>
+                            <td class="num fs-sm">@ViewHelpers.Time(a.CheckInTime)</td>
+                            <td class="fs-sm text-muted-2">@(a.Notes ?? "—")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الواجبات ===== *@
+    <div class="tab-pane fade" id="g-homework">
+        <div class="table-wrap">
+            <div class="card-header"><h2>الواجبات</h2></div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>الواجب</th><th>المادة</th><th>المعلم</th><th>التسليم</th><th>الحالة</th><th>الدرجة</th></tr></thead>
+                    <tbody>
+                    @if (Model.Homework.Count == 0)
+                    {
+                        <tr><td colspan="6"><div class="empty-state"><i class="bi bi-pencil-square"></i>لا توجد واجبات</div></td></tr>
+                    }
+                    @foreach (var h in Model.Homework)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@h.Title</td>
+                            <td class="fs-sm">@h.Subject</td>
+                            <td class="fs-sm text-muted-2">@h.Teacher</td>
+                            <td class="num fs-sm">@ViewHelpers.Date(h.DueDate)</td>
+                            <td>@h.Status.Badge()</td>
+                            <td>
+                                @if (h.Score.HasValue)
+                                {
+                                    @ViewHelpers.ScoreChip(h.Score, h.MaxScore)
+                                }
+                                else
+                                {
+                                    <span class="text-muted-3">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الجدول ===== *@
+    <div class="tab-pane fade" id="g-timetable">
+        <div class="table-wrap">
+            <div class="card-header"><h2>الجدول الأسبوعي</h2></div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>اليوم</th><th>الحصة</th><th>المادة</th><th>المعلم</th><th>الوقت</th></tr></thead>
+                    <tbody>
+                    @if (Model.Timetable.Count == 0)
+                    {
+                        <tr><td colspan="5"><div class="empty-state"><i class="bi bi-calendar3"></i>لا يوجد جدول</div></td></tr>
+                    }
+                    @foreach (var t in Model.Timetable)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@ViewHelpers.DayName(t.SectionId)</td>
+                            <td><span class="chip tone-brand num">@t.PeriodNo</span></td>
+                            <td>@t.Subject</td>
+                            <td class="text-muted-2 fs-sm">@t.Section</td>
+                            <td class="num fs-sm">@ViewHelpers.Time(t.StartTime) — @ViewHelpers.Time(t.EndTime)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الملاحظات ===== *@
+    <div class="tab-pane fade" id="g-notes">
+        <div class="card">
+            <div class="card-header"><h2>الملاحظات والسلوك</h2></div>
+            <div class="card-body">
+                @if (Model.Notes.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-chat-square-text"></i>لا توجد ملاحظات</div>
+                }
+                @foreach (var n in Model.Notes)
+                {
+                    <div class="py-3 @(n != Model.Notes.Last() ? "border-bottom" : "")">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <span class="fw-semibold">@n.Title</span>
+                            @n.Severity.Badge()
+                            <span class="chip tone-brand">@n.NoteType.Display()</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(n.Body))
+                        {
+                            <div class="fs-sm text-muted-2">@n.Body</div>
+                        }
+                        @if (!string.IsNullOrEmpty(n.ActionTaken))
+                        {
+                            <div class="fs-xs text-muted-3"><b>الإجراء:</b> @n.ActionTaken</div>
+                        }
+                        <div class="fs-xs text-muted-3">
+                            @ViewHelpers.Date(n.NoteDate)
+                            @if (n.Employee is not null)
+                            {
+                                <text> · @n.Employee.FullName</text>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ===== الرسوم ===== *@
+    <div class="tab-pane fade" id="g-fees">
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-receipt"></i></div>
+                    <div><div class="value num">@Model.Finance.Total.ToString("N2")</div><div class="label">إجمالي الرسوم</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-cash"></i></div>
+                    <div><div class="value num">@Model.Finance.Paid.ToString("N2")</div><div class="label">المدفوع</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-hourglass-split"></i></div>
+                    <div><div class="value num">@Model.Finance.Remaining.ToString("N2")</div><div class="label">المتبقي</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div><div class="value num">@Model.Finance.Overdue.ToString("N2")</div><div class="label">متأخرات</div></div></div>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>الأقساط @(Model.Finance.InvoiceNo is null ? "" : $"— فاتورة {Model.Finance.InvoiceNo}")</h2>
+                <a class="btn btn-sm btn-light" asp-action="Fees">كل الرسوم</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+                    <tbody>
+                    @if (Model.Finance.Installments.Count == 0)
+                    {
+                        <tr><td colspan="6"><div class="empty-state"><i class="bi bi-cash-stack"></i>لا توجد فاتورة</div></td></tr>
+                    }
+                    @foreach (var i in Model.Finance.Installments)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@i.Name</td>
+                            <td class="num">
+                                @ViewHelpers.Date(i.DueDate)
+                                @if (i.IsOverdue)
+                                {
+                                    <div class="fs-xs text-danger">متأخر @((DateTime.Today - i.DueDate.Date).Days) يوم</div>
+                                }
+                            </td>
+                            <td class="num">@i.Amount.ToString("N2")</td>
+                            <td class="num text-success">@i.PaidAmount.ToString("N2")</td>
+                            <td class="num @(i.RemainingAmount > 0 ? "text-warning fw-bold" : "")">@i.RemainingAmount.ToString("N2")</td>
+                            <td>@i.Status.Badge()</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ===== النقل ===== *@
+    <div class="tab-pane fade" id="g-transport">
+        <div class="card">
+            <div class="card-header"><h2>النقل المدرسي</h2></div>
+            <div class="card-body">
+                @if (Model.Transport is null)
+                {
+                    <div class="empty-state"><i class="bi bi-bus-front"></i>الطالب غير مشترك في النقل المدرسي</div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("خط السير", Model.Transport.RouteName))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("المحطة", Model.Transport.StopName ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("رقم الحافلة", Model.Transport.BusNo ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("السائق", Model.Transport.DriverName ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("جوال السائق", Model.Transport.DriverPhone ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("الرسوم الشهرية", $"{Model.Transport.MonthlyFee:N2} {cur}"))" /></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

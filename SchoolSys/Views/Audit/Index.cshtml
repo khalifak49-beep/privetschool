@@ -1,0 +1,93 @@
+@model AuditIndexViewModel
+@{
+    ViewData["Title"] = "سجل التدقيق";
+}
+
+<div class="page-head">
+    <div>
+        <h1>سجل التدقيق</h1>
+        <p class="sub">تتبّع العمليات الحساسة التي نُفِّذت في النظام</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label">بحث</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input name="q" value="@Model.Q" class="form-control" placeholder="المستخدم، التفاصيل، الكيان..." />
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label">العملية</label>
+                <select name="action" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var a in Model.Actions)
+                    {
+                        <option value="@a" selected="@(Model.Action == a)">@a</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">من تاريخ</label>
+                <input name="from" type="date" value="@Model.From?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">إلى تاريخ</label>
+                <input name="to" type="date" value="@Model.To?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-lg-2 col-md-6 d-flex gap-1">
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i> بحث</button>
+                <a asp-action="Index" class="btn btn-sm btn-light"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th style="width:150px">التاريخ والوقت</th>
+                <th>المستخدم</th>
+                <th>العملية</th>
+                <th>الكيان</th>
+                <th>التفاصيل</th>
+                <th style="width:120px">عنوان IP</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Logs.TotalCount == 0)
+            {
+                <tr><td colspan="6"><div class="empty-state"><i class="bi bi-clock-history"></i>لا توجد سجلات</div></td></tr>
+            }
+            @foreach (var l in Model.Logs.Items)
+            {
+                <tr>
+                    <td class="num fs-sm">@ViewHelpers.DateTimeShort(l.CreatedAt)</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar sm">@ViewHelpers.Initials(l.UserName)</div>
+                            <span class="fs-sm">@(l.UserName ?? "نظام")</span>
+                        </div>
+                    </td>
+                    <td><span class="chip tone-brand">@l.Action</span></td>
+                    <td class="fs-sm text-muted-2">
+                        @(l.EntityName ?? "—")
+                        @if (!string.IsNullOrEmpty(l.EntityId))
+                        {
+                            <span class="fs-xs text-muted-3 num">#@l.EntityId</span>
+                        }
+                    </td>
+                    <td class="fs-sm text-muted-2">@(l.Details ?? "—")</td>
+                    <td class="num fs-xs text-muted-3" dir="ltr">@(l.IpAddress ?? "—")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Logs" />
+</div>

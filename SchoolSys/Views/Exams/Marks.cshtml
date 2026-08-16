@@ -1,0 +1,233 @@
+@model ExamMarksViewModel
+@{
+    ViewData["Title"] = "رصد الدرجات";
+    var canEnter = User.Can(Permissions.ExamsEnterMarks) && Model.Status != ExamStatus.Approved;
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">الاختبارات</a></span>
+            <span class="breadcrumb-item active">رصد الدرجات</span>
+        </nav>
+        <h1>@Model.Title</h1>
+        <p class="sub">
+            @Model.Subject · @Model.Section · @ViewHelpers.Date(Model.ExamDate) ·
+            الدرجة العظمى <b class="num">@Model.MaxScore.ToString("0.##")</b>
+            @Model.Status.Badge()
+        </p>
+    </div>
+    <div class="actions d-flex gap-2">
+        @if (Model.Status == ExamStatus.Graded && User.Can(Permissions.ExamsApprove))
+        {
+            <form asp-action="Approve" method="post">
+                <input type="hidden" name="id" value="@Model.ExamId" />
+                <button class="btn btn-accent" data-confirm="سيتم اعتماد النتائج نهائياً وإشعار أولياء الأمور. متابعة؟">
+                    <i class="bi bi-patch-check me-1"></i> اعتماد النتائج
+                </button>
+            </form>
+        }
+        <button class="btn btn-light" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+    </div>
+</div>
+
+@if (Model.Status == ExamStatus.Approved)
+{
+    <div class="alert alert-info"><i class="bi bi-lock me-1"></i> هذا الاختبار معتمد — الدرجات مقفلة للتعديل.</div>
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-list-check"></i></div>
+            <div><div class="value num">@Model.Marked/@Model.Entries.Count</div><div class="label">تم الرصد</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-info"><i class="bi bi-graph-up"></i></div>
+            <div><div class="value num">@(Model.Average?.ToString("0.##") ?? "—")</div><div class="label">المتوسط</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-arrow-up-circle"></i></div>
+            <div><div class="value num">@(Model.Highest?.ToString("0.##") ?? "—")</div><div class="label">أعلى درجة</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-arrow-down-circle"></i></div>
+            <div><div class="value num">@(Model.Lowest?.ToString("0.##") ?? "—")</div><div class="label">أدنى درجة</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check2-all"></i></div>
+            <div><div class="value num" id="passCnt">@Model.PassedCount</div><div class="label">ناجح</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-x-octagon"></i></div>
+            <div><div class="value num" id="failCnt">@Model.FailedCount</div><div class="label">راسب</div></div></div>
+    </div>
+</div>
+
+<form asp-action="SaveMarks" method="post">
+    <input type="hidden" name="examId" value="@Model.ExamId" />
+
+    <div class="table-wrap">
+        <div class="card-header">
+            <h2>كشف الدرجات (@Model.Entries.Count طالب)</h2>
+            <div class="fs-xs text-muted-2">
+                <i class="bi bi-lightbulb me-1"></i>
+                استخدم مفتاح Enter للانتقال إلى الطالب التالي
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th style="width:44px">#</th>
+                    <th>الطالب</th>
+                    <th style="width:150px">الدرجة (من @Model.MaxScore.ToString("0.##"))</th>
+                    <th style="width:110px">النسبة</th>
+                    <th style="width:90px">غائب</th>
+                    <th style="width:110px">النتيجة</th>
+                    <th>ملاحظات</th>
+                </tr>
+                </thead>
+                <tbody>
+                @for (var i = 0; i < Model.Entries.Count; i++)
+                {
+                    var e = Model.Entries[i];
+                    <tr>
+                        <td class="num text-muted-3">@(i + 1)</td>
+                        <td>
+                            <input type="hidden" name="entries[@i].StudentId" value="@e.StudentId" />
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar sm">
+                                    @if (!string.IsNullOrEmpty(e.PhotoPath))
+                                    {
+                                        <img src="@e.PhotoPath" alt="" />
+                                    }
+                                    else
+                                    {
+                                        @ViewHelpers.Initials(e.StudentName)
+                                    }
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-truncate">@e.StudentName</div>
+                                    <div class="fs-xs text-muted-3 num">@e.StudentNo</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" max="@Model.MaxScore"
+                                   name="entries[@i].Score" value="@(e.Score?.ToString("0.##"))"
+                                   class="form-control form-control-sm num score-input text-center"
+                                   data-row="@i" disabled="@(!canEnter)" />
+                        </td>
+                        <td class="pct num fs-sm fw-semibold" data-row="@i">
+                            @(e.Score.HasValue && Model.MaxScore > 0 ? (e.Score.Value / Model.MaxScore * 100).ToString("0.#") + "%" : "—")
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check d-inline-block">
+                                <input type="checkbox" class="form-check-input absent-check" data-row="@i"
+                                       name="entries[@i].IsAbsent" value="true" checked="@e.IsAbsent" disabled="@(!canEnter)" />
+                            </div>
+                        </td>
+                        <td class="verdict" data-row="@i">
+                            @if (e.IsAbsent)
+                            {
+                                <span class="chip tone-danger">غائب</span>
+                            }
+                            else if (e.Score.HasValue)
+                            {
+                                <span class="chip @(e.Score >= Model.PassScore ? "tone-ok" : "tone-danger")">
+                                    @(e.Score >= Model.PassScore ? "ناجح" : "راسب")
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <input name="entries[@i].Notes" value="@e.Notes" class="form-control form-control-sm"
+                                   placeholder="—" disabled="@(!canEnter)" />
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        @if (canEnter)
+        {
+            <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="markGraded" value="true" id="markGraded" checked />
+                    <label class="form-check-label fs-sm" for="markGraded">تحديث حالة الاختبار إلى «مرصود»</label>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ الدرجات</button>
+            </div>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        const MAX = @Model.MaxScore;
+        const PASS = @Model.PassScore;
+
+        function update(row) {
+            const input = document.querySelector('.score-input[data-row="' + row + '"]');
+            const absent = document.querySelector('.absent-check[data-row="' + row + '"]');
+            const pct = document.querySelector('.pct[data-row="' + row + '"]');
+            const verdict = document.querySelector('.verdict[data-row="' + row + '"]');
+
+            if (absent.checked) {
+                input.value = '';
+                input.disabled = true;
+                pct.textContent = '—';
+                verdict.innerHTML = '<span class="chip tone-danger">غائب</span>';
+            } else {
+                input.disabled = false;
+                const v = parseFloat(input.value);
+                if (isNaN(v)) {
+                    pct.textContent = '—';
+                    verdict.innerHTML = '';
+                } else {
+                    const p = MAX > 0 ? (v / MAX * 100) : 0;
+                    pct.textContent = p.toFixed(1) + '%';
+                    verdict.innerHTML = v >= PASS
+                        ? '<span class="chip tone-ok">ناجح</span>'
+                        : '<span class="chip tone-danger">راسب</span>';
+                }
+            }
+            recount();
+        }
+
+        function recount() {
+            let pass = 0, fail = 0;
+            document.querySelectorAll('.score-input').forEach(function (el) {
+                const row = el.getAttribute('data-row');
+                const absent = document.querySelector('.absent-check[data-row="' + row + '"]');
+                if (absent.checked) return;
+                const v = parseFloat(el.value);
+                if (isNaN(v)) return;
+                if (v >= PASS) pass++; else fail++;
+            });
+            document.getElementById('passCnt').textContent = pass;
+            document.getElementById('failCnt').textContent = fail;
+        }
+
+        document.querySelectorAll('.score-input').forEach(function (el) {
+            el.addEventListener('input', function () {
+                const v = parseFloat(el.value);
+                if (!isNaN(v) && v > MAX) el.value = MAX;
+                if (!isNaN(v) && v < 0) el.value = 0;
+                update(el.getAttribute('data-row'));
+            });
+            el.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    const row = parseInt(el.getAttribute('data-row'), 10);
+                    const next = document.querySelector('.score-input[data-row="' + (row + 1) + '"]');
+                    if (next) { next.focus(); next.select(); }
+                }
+            });
+        });
+
+        document.querySelectorAll('.absent-check').forEach(function (el) {
+            el.addEventListener('change', function () { update(el.getAttribute('data-row')); });
+        });
+    </script>
+}

@@ -1,0 +1,620 @@
+/* =====================================================================
+   نظام إدارة المدارس — ورقة الأنماط الرئيسية (RTL)
+   ===================================================================== */
+
+:root {
+    /* الهوية اللونية */
+    --brand-900: #0b1f4b;
+    --brand-800: #122c63;
+    --brand-700: #1b3a80;
+    --brand-600: #24499b;
+    --brand-500: #3159b8;
+    --brand-100: #e5ecfb;
+    --brand-050: #f2f6fe;
+
+    --accent: #0f9d8f;
+    --accent-dark: #0b7d72;
+    --accent-100: #dcf5f2;
+
+    --ok: #16a34a;
+    --ok-100: #dcfce7;
+    --warn: #d97706;
+    --warn-100: #fef3c7;
+    --danger: #dc2626;
+    --danger-100: #fee2e2;
+    --info: #0284c7;
+    --info-100: #e0f2fe;
+    --purple: #7c3aed;
+    --purple-100: #ede9fe;
+
+    /* الأسطح والنصوص */
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface-2: #fafbfe;
+    --line: #e6eaf2;
+    --line-strong: #d3dae7;
+    --text: #16233c;
+    --text-2: #5a6883;
+    --text-3: #8b96ad;
+
+    /* القياسات */
+    --radius: 14px;
+    --radius-sm: 9px;
+    --radius-lg: 20px;
+    --sidebar-w: 268px;
+    --topbar-h: 64px;
+
+    --shadow-xs: 0 1px 2px rgba(16, 30, 60, .06);
+    --shadow-sm: 0 2px 8px rgba(16, 30, 60, .07);
+    --shadow-md: 0 8px 24px rgba(16, 30, 60, .09);
+    --shadow-lg: 0 18px 48px rgba(16, 30, 60, .14);
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 15px; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Tahoma", "Dubai", "Cairo", system-ui, -apple-system, sans-serif;
+    font-size: .95rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; }
+
+/* ===================== الشريط الجانبي ===================== */
+.app-sidebar {
+    position: fixed;
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-w);
+    background: linear-gradient(180deg, var(--brand-900) 0%, var(--brand-800) 60%, #0a1b42 100%);
+    color: #cdd8f0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1040;
+    transition: transform .25s ease;
+}
+
+.app-sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: 1.05rem 1.15rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .09);
+    flex-shrink: 0;
+}
+
+.app-sidebar .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent) 0%, #14b8a6 100%);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 1.35rem;
+    box-shadow: 0 6px 16px rgba(15, 157, 143, .4);
+    flex-shrink: 0;
+}
+
+.app-sidebar .brand-text b {
+    display: block;
+    color: #fff;
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.app-sidebar .brand-text span {
+    font-size: .74rem;
+    color: #8fa3cc;
+}
+
+.sidebar-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: .7rem .7rem 1.5rem;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.18) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar { width: 6px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 3px; }
+
+.nav-group-title {
+    font-size: .7rem;
+    letter-spacing: .04em;
+    color: #7387b5;
+    font-weight: 700;
+    padding: 1rem .75rem .35rem;
+    text-transform: none;
+}
+
+.app-sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    color: #c3d0ea;
+    padding: .58rem .75rem;
+    border-radius: 10px;
+    font-size: .89rem;
+    font-weight: 500;
+    margin-bottom: 2px;
+    transition: background .15s, color .15s;
+    position: relative;
+}
+
+.app-sidebar .nav-link i { font-size: 1.05rem; width: 1.35rem; text-align: center; flex-shrink: 0; }
+
+.app-sidebar .nav-link:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+
+.app-sidebar .nav-link.active {
+    background: linear-gradient(90deg, rgba(15, 157, 143, .28), rgba(15, 157, 143, .06));
+    color: #fff;
+    font-weight: 600;
+}
+
+.app-sidebar .nav-link.active::before {
+    content: "";
+    position: absolute;
+    inset-inline-end: -.7rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: var(--accent);
+    border-radius: 4px 0 0 4px;
+}
+
+.app-sidebar .nav-link .badge { margin-inline-start: auto; font-size: .68rem; }
+
+/* ===================== الشريط العلوي ===================== */
+.app-topbar {
+    position: fixed;
+    top: 0;
+    inset-inline-end: var(--sidebar-w);
+    inset-inline-start: 0;
+    height: var(--topbar-h);
+    background: rgba(255, 255, 255, .92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 1.35rem;
+    z-index: 1030;
+}
+
+.topbar-search {
+    position: relative;
+    max-width: 340px;
+    flex: 1;
+}
+
+.topbar-search input {
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: .48rem 2.3rem .48rem .9rem;
+    width: 100%;
+    font-size: .87rem;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.topbar-search input:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px var(--brand-100);
+    background: #fff;
+}
+
+.topbar-search i {
+    position: absolute;
+    inset-inline-end: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    font-size: .95rem;
+    pointer-events: none;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text-2);
+    display: grid;
+    place-items: center;
+    font-size: 1.1rem;
+    position: relative;
+    transition: all .15s;
+}
+
+.icon-btn:hover { background: var(--brand-050); color: var(--brand-700); border-color: var(--brand-100); }
+
+.icon-btn .dot {
+    position: absolute;
+    top: 6px;
+    inset-inline-end: 6px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--danger);
+    color: #fff;
+    font-size: .62rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    border: 2px solid #fff;
+}
+
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .3rem .6rem .3rem .3rem;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    transition: all .15s;
+}
+
+.user-chip:hover { background: var(--brand-050); border-color: var(--brand-100); }
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--brand-600), var(--brand-500));
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .82rem;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar.sm { width: 30px; height: 30px; font-size: .7rem; border-radius: 8px; }
+.avatar.lg { width: 64px; height: 64px; font-size: 1.3rem; border-radius: 16px; }
+.avatar.xl { width: 104px; height: 104px; font-size: 2rem; border-radius: 22px; }
+
+/* ===================== المحتوى ===================== */
+.app-main {
+    margin-inline-end: var(--sidebar-w);
+    padding: calc(var(--topbar-h) + 1.35rem) 1.35rem 2.5rem;
+    min-height: 100vh;
+}
+
+.page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.35rem;
+}
+
+.page-head h1 {
+    font-size: 1.42rem;
+    font-weight: 700;
+    margin: 0 0 .2rem;
+    letter-spacing: -.01em;
+}
+
+.page-head .sub { color: var(--text-2); font-size: .87rem; margin: 0; }
+
+.breadcrumb { font-size: .8rem; margin: 0 0 .35rem; --bs-breadcrumb-divider-color: var(--text-3); }
+.breadcrumb a { color: var(--text-2); }
+.breadcrumb a:hover { color: var(--brand-600); }
+.breadcrumb-item.active { color: var(--text-3); }
+
+/* ===================== البطاقات ===================== */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-xs);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--line);
+    padding: .95rem 1.15rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.card-header h2, .card-header h3 { font-size: 1rem; font-weight: 700; margin: 0; }
+.card-body { padding: 1.15rem; }
+.card-footer { background: var(--surface-2); border-top: 1px solid var(--line); padding: .8rem 1.15rem; }
+
+/* بطاقة إحصائية */
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.15rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .95rem;
+    box-shadow: var(--shadow-xs);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s, box-shadow .18s;
+}
+
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.stat-card .ico {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.stat-card .value {
+    font-size: 1.72rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+}
+
+.stat-card .label { color: var(--text-2); font-size: .84rem; font-weight: 500; }
+.stat-card .trend { font-size: .76rem; font-weight: 600; margin-top: .25rem; }
+
+.tone-brand { background: var(--brand-100); color: var(--brand-700); }
+.tone-accent { background: var(--accent-100); color: var(--accent-dark); }
+.tone-ok { background: var(--ok-100); color: var(--ok); }
+.tone-warn { background: var(--warn-100); color: var(--warn); }
+.tone-danger { background: var(--danger-100); color: var(--danger); }
+.tone-info { background: var(--info-100); color: var(--info); }
+.tone-purple { background: var(--purple-100); color: var(--purple); }
+
+/* ===================== الجداول ===================== */
+.table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+
+.table-wrap > .table-responsive { border-radius: 0; }
+
+.table {
+    margin: 0;
+    --bs-table-bg: transparent;
+    font-size: .875rem;
+}
+
+.table > thead th {
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-weight: 700;
+    font-size: .78rem;
+    letter-spacing: .01em;
+    border-bottom: 1px solid var(--line-strong);
+    padding: .72rem .85rem;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.table > tbody td {
+    padding: .68rem .85rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+.table > tbody tr:last-child td { border-bottom: 0; }
+.table > tbody tr:hover { background: var(--brand-050); }
+.table-sm > tbody td, .table-sm > thead th { padding: .45rem .6rem; }
+
+.empty-state { padding: 3rem 1rem; text-align: center; color: var(--text-3); }
+.empty-state i { font-size: 2.6rem; opacity: .45; display: block; margin-bottom: .6rem; }
+
+/* ===================== العناصر ===================== */
+.badge { font-weight: 600; padding: .34em .68em; border-radius: 7px; font-size: .74rem; }
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .32rem;
+    padding: .22rem .6rem;
+    border-radius: 999px;
+    font-size: .74rem;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.btn { border-radius: var(--radius-sm); font-weight: 600; font-size: .87rem; padding: .48rem 1rem; }
+.btn-sm { padding: .32rem .7rem; font-size: .8rem; border-radius: 7px; }
+.btn-lg { padding: .65rem 1.4rem; font-size: .95rem; }
+
+.btn-primary { background: var(--brand-700); border-color: var(--brand-700); }
+.btn-primary:hover, .btn-primary:focus { background: var(--brand-800); border-color: var(--brand-800); }
+.btn-outline-primary { color: var(--brand-700); border-color: var(--line-strong); }
+.btn-outline-primary:hover { background: var(--brand-700); border-color: var(--brand-700); }
+.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+.btn-light { background: var(--surface); border-color: var(--line); color: var(--text-2); }
+.btn-light:hover { background: var(--brand-050); color: var(--brand-700); border-color: var(--brand-100); }
+
+.form-label { font-weight: 600; font-size: .83rem; margin-bottom: .32rem; color: var(--text); }
+
+.form-control, .form-select {
+    border-radius: var(--radius-sm);
+    border-color: var(--line-strong);
+    padding: .48rem .8rem;
+    font-size: .88rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.form-control-sm, .form-select-sm { padding: .32rem .6rem; font-size: .82rem; }
+.input-group-text { background: var(--surface-2); border-color: var(--line-strong); font-size: .85rem; }
+
+.nav-tabs { border-bottom: 1px solid var(--line); gap: .15rem; }
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-2);
+    font-weight: 600;
+    font-size: .875rem;
+    padding: .6rem .95rem;
+    border-radius: 0;
+}
+
+.nav-tabs .nav-link:hover { color: var(--brand-600); border-bottom-color: var(--brand-100); }
+.nav-tabs .nav-link.active { color: var(--brand-700); border-bottom-color: var(--brand-700); background: transparent; }
+
+.modal-content { border: 0; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+.modal-header { border-bottom: 1px solid var(--line); padding: 1.05rem 1.25rem; }
+.modal-title { font-size: 1.02rem; font-weight: 700; }
+.modal-body { padding: 1.25rem; }
+.modal-footer { border-top: 1px solid var(--line); padding: .85rem 1.25rem; background: var(--surface-2); }
+
+.dropdown-menu {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: .4rem;
+    font-size: .87rem;
+}
+
+.dropdown-item { border-radius: 8px; padding: .48rem .7rem; font-weight: 500; }
+.dropdown-item:hover { background: var(--brand-050); color: var(--brand-700); }
+.dropdown-header { font-size: .74rem; font-weight: 700; color: var(--text-3); }
+
+.alert { border: 0; border-radius: var(--radius); font-size: .88rem; padding: .8rem 1.05rem; }
+.alert-success { background: var(--ok-100); color: #14532d; }
+.alert-danger { background: var(--danger-100); color: #7f1d1d; }
+.alert-warning { background: var(--warn-100); color: #78350f; }
+.alert-info { background: var(--info-100); color: #075985; }
+
+.progress { height: 7px; border-radius: 4px; background: var(--line); }
+.progress-bar { border-radius: 4px; }
+
+/* شريط تقدم صغير داخل الجداول */
+.mini-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; min-width: 70px; }
+.mini-bar > span { display: block; height: 100%; border-radius: 3px; }
+
+/* قائمة الإشعارات */
+.notif-list { max-height: 380px; overflow-y: auto; }
+
+.notif-item {
+    display: flex;
+    gap: .65rem;
+    padding: .65rem .7rem;
+    border-radius: 10px;
+    transition: background .15s;
+}
+
+.notif-item:hover { background: var(--brand-050); }
+.notif-item.unread { background: var(--brand-050); }
+
+.notif-item .ico {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: .95rem;
+}
+
+.notif-item .t { font-weight: 600; font-size: .84rem; line-height: 1.4; }
+.notif-item .b { font-size: .78rem; color: var(--text-2); line-height: 1.45; }
+.notif-item .d { font-size: .7rem; color: var(--text-3); }
+
+/* بطاقة تعريف الطالب (QR) */
+.id-card {
+    width: 340px;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--line);
+    background: #fff;
+}
+
+.id-card .idc-head {
+    background: linear-gradient(135deg, var(--brand-800), var(--brand-600));
+    color: #fff;
+    padding: .9rem 1rem;
+    text-align: center;
+}
+
+/* الرسوم البيانية */
+.chart-box { position: relative; width: 100%; }
+
+/* الطباعة */
+@media print {
+    .app-sidebar, .app-topbar, .no-print, .btn, .page-head .actions { display: none !important; }
+    .app-main { margin: 0 !important; padding: 0 !important; }
+    body { background: #fff; }
+    .card, .table-wrap { box-shadow: none !important; border: 1px solid #ccc !important; }
+    .print-only { display: block !important; }
+}
+
+.print-only { display: none; }
+
+/* ===================== الاستجابة ===================== */
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 31, 75, .45);
+    z-index: 1035;
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    .app-sidebar { transform: translateX(100%); }
+    .app-sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+    .sidebar-backdrop.show { display: block; }
+    .app-topbar { inset-inline-end: 0; padding: 0 .9rem; }
+    .app-main { margin-inline-end: 0; padding: calc(var(--topbar-h) + 1rem) .9rem 2rem; }
+    .topbar-search { display: none; }
+}
+
+@media (max-width: 575.98px) {
+    .page-head h1 { font-size: 1.2rem; }
+    .stat-card { padding: .9rem; gap: .7rem; }
+    .stat-card .value { font-size: 1.4rem; }
+    .stat-card .ico { width: 42px; height: 42px; font-size: 1.15rem; }
+    .user-chip .u-meta { display: none; }
+}
+
+/* أدوات مساعدة */
+.text-muted-2 { color: var(--text-2) !important; }
+.text-muted-3 { color: var(--text-3) !important; }
+.fw-800 { font-weight: 800; }
+.fs-xs { font-size: .76rem; }
+.fs-sm { font-size: .84rem; }
+.cursor-pointer { cursor: pointer; }
+.divider { height: 1px; background: var(--line); margin: 1rem 0; }
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }

@@ -1,0 +1,197 @@
+@model BusIndexViewModel
+@{
+    ViewData["Title"] = "الحافلات";
+    var canManage = User.Can(Permissions.TransportManage);
+}
+
+<div class="page-head">
+    <div>
+        <h1>الحافلات المدرسية</h1>
+        <p class="sub">
+            @Model.TotalBuses حافلة · سعة @Model.TotalCapacity مقعد · @Model.TotalSubscribers مشترك
+        </p>
+    </div>
+    @if (canManage)
+    {
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openBus()"><i class="bi bi-plus-lg me-1"></i> إضافة حافلة</button>
+        </div>
+    }
+</div>
+
+<div class="row g-3">
+    @if (Model.Buses.Count == 0)
+    {
+        <div class="col-12">
+            <div class="card"><div class="card-body"><div class="empty-state"><i class="bi bi-bus-front"></i>لا توجد حافلات مسجّلة</div></div></div>
+        </div>
+    }
+    @foreach (var b in Model.Buses)
+    {
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="ico tone-@(b.IsActive ? "brand" : "danger")"
+                             style="width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.4rem;flex-shrink:0">
+                            <i class="bi bi-bus-front-fill"></i>
+                        </div>
+                        <div class="min-w-0 flex-grow-1">
+                            <div class="fw-bold" style="font-size:1.05rem">@b.BusNo</div>
+                            <div class="fs-sm text-muted-2 num" dir="ltr">@b.PlateNo</div>
+                            <div class="fs-xs text-muted-3">@b.Model @(b.ManufactureYear.HasValue ? $"· {b.ManufactureYear}" : "")</div>
+                        </div>
+                        @if (canManage)
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-start">
+                                    <li>
+                                        <button class="dropdown-item"
+                                                onclick='openBus(@Html.Raw(Json.Serialize(new { b.Id, b.BusNo, b.PlateNo, b.Capacity, b.Model, b.ManufactureYear, b.DriverId, b.SupervisorId, LicenseExpiry = b.LicenseExpiry?.ToString("yyyy-MM-dd"), b.IsActive })))'>
+                                            <i class="bi bi-pencil me-2"></i>تعديل
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <form asp-action="DeleteBus" method="post">
+                                            <input type="hidden" name="id" value="@b.Id" />
+                                            <button class="dropdown-item text-danger" data-confirm="حذف هذه الحافلة؟"><i class="bi bi-trash me-2"></i>حذف</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="d-flex justify-content-between fs-sm py-1">
+                        <span class="text-muted-2"><i class="bi bi-person-badge me-1"></i>السائق</span>
+                        <span class="fw-semibold">@(b.DriverName ?? "—")</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(b.DriverPhone))
+                    {
+                        <div class="d-flex justify-content-between fs-sm py-1">
+                            <span class="text-muted-2"><i class="bi bi-telephone me-1"></i>الجوال</span>
+                            <span class="num" dir="ltr">@b.DriverPhone</span>
+                        </div>
+                    }
+                    <div class="d-flex justify-content-between fs-sm py-1">
+                        <span class="text-muted-2"><i class="bi bi-person-check me-1"></i>المشرف</span>
+                        <span class="fw-semibold">@(b.SupervisorName ?? "—")</span>
+                    </div>
+                    <div class="d-flex justify-content-between fs-sm py-1">
+                        <span class="text-muted-2"><i class="bi bi-signpost-split me-1"></i>خطوط السير</span>
+                        <span class="num">@b.RoutesCount</span>
+                    </div>
+                    @if (b.LicenseExpiry.HasValue)
+                    {
+                        <div class="d-flex justify-content-between fs-sm py-1">
+                            <span class="text-muted-2"><i class="bi bi-card-checklist me-1"></i>انتهاء الترخيص</span>
+                            <span class="num @(b.LicenseExpiringSoon ? "text-danger fw-bold" : "")">@ViewHelpers.Date(b.LicenseExpiry)</span>
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between fs-xs mb-1">
+                            <span class="text-muted-2">الإشغال</span>
+                            <span class="num">@b.Subscribers / @b.Capacity</span>
+                        </div>
+                        <div class="mini-bar">
+                            <span style="width:@Math.Min(100, b.FillRate).ToString("0.#")%;background:@(b.FillRate >= 95 ? "var(--danger)" : b.FillRate >= 80 ? "var(--warn)" : "var(--accent)")"></span>
+                        </div>
+                    </div>
+
+                    @if (b.LicenseExpiringSoon)
+                    {
+                        <div class="alert alert-warning fs-xs mt-3 mb-0 py-2">
+                            <i class="bi bi-exclamation-triangle me-1"></i> ترخيص الحافلة يقارب الانتهاء
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (canManage)
+{
+    <div class="modal fade" id="busModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveBus" method="post">
+                <input type="hidden" name="Id" id="b-id" value="0" />
+                <div class="modal-header">
+                    <h5 class="modal-title">بيانات الحافلة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">رقم الحافلة</label>
+                            <input name="BusNo" id="b-no" class="form-control" placeholder="BUS-01" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">رقم اللوحة</label>
+                            <input name="PlateNo" id="b-plate" class="form-control num" dir="ltr" required />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">السعة</label>
+                            <input name="Capacity" id="b-cap" type="number" class="form-control num" value="30" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">الموديل</label>
+                            <input name="Model" id="b-model" class="form-control" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">سنة الصنع</label>
+                            <input name="ManufactureYear" id="b-year" type="number" class="form-control num" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">السائق</label>
+                            <select name="DriverId" id="b-driver" class="form-select" asp-items="Model.Drivers">
+                                <option value="">— بدون —</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">المشرف</label>
+                            <select name="SupervisorId" id="b-sup" class="form-select" asp-items="Model.Supervisors">
+                                <option value="">— بدون —</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">تاريخ انتهاء الترخيص</label>
+                            <input name="LicenseExpiry" id="b-lic" type="date" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" name="IsActive" value="true" id="b-active" checked />
+                        <label class="form-check-label" for="b-active">الحافلة في الخدمة</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function openBus(d) {
+            d = d || { Id: 0, BusNo: '', PlateNo: '', Capacity: 30, Model: '', ManufactureYear: '', DriverId: '', SupervisorId: '', LicenseExpiry: '', IsActive: true };
+            document.getElementById('b-id').value = d.Id;
+            document.getElementById('b-no').value = d.BusNo || '';
+            document.getElementById('b-plate').value = d.PlateNo || '';
+            document.getElementById('b-cap').value = d.Capacity || 30;
+            document.getElementById('b-model').value = d.Model || '';
+            document.getElementById('b-year').value = d.ManufactureYear || '';
+            document.getElementById('b-driver').value = d.DriverId || '';
+            document.getElementById('b-sup').value = d.SupervisorId || '';
+            document.getElementById('b-lic').value = d.LicenseExpiry || '';
+            document.getElementById('b-active').checked = !!d.IsActive;
+            new bootstrap.Modal(document.getElementById('busModal')).show();
+        }
+    </script>
+}

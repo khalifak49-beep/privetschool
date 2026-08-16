@@ -1,0 +1,744 @@
+@model StudentDetailsViewModel
+@{
+    var s = Model.Student;
+    ViewData["Title"] = s.FullName;
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">الطلاب</a></span>
+            <span class="breadcrumb-item active">@s.FullName</span>
+        </nav>
+        <h1>@s.FullName</h1>
+        <p class="sub">
+            <span class="num">@s.StudentNo</span> ·
+            @(Model.SectionName ?? "غير مسجّل في شعبة") ·
+            @s.Status.Badge()
+        </p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        @if (User.Can(Permissions.StudentsEdit))
+        {
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@s.Id"><i class="bi bi-pencil me-1"></i> تعديل</a>
+        }
+        @if (User.Can(Permissions.StudentsTransfer))
+        {
+            <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#transferModal">
+                <i class="bi bi-arrow-left-right me-1"></i> نقل بين الشعب
+            </button>
+        }
+        <a class="btn btn-light" asp-action="IdCard" asp-route-id="@s.Id" target="_blank">
+            <i class="bi bi-qr-code me-1"></i> بطاقة الطالب
+        </a>
+        @if (User.Can(Permissions.StudentsDelete))
+        {
+            <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="d-inline">
+                <button type="submit" class="btn btn-light text-danger"
+                        data-confirm="سيتم حذف الطالب نهائياً مع سجلاته. هل أنت متأكد؟">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+@* ---------- بطاقة الملخص ---------- *@
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-auto">
+                <div class="avatar xl">
+                    @if (!string.IsNullOrEmpty(s.PhotoPath))
+                    {
+                        <img src="@s.PhotoPath" alt="" />
+                    }
+                    else
+                    {
+                        @ViewHelpers.Initials(s.FullName)
+                    }
+                </div>
+            </div>
+            <div class="col">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="fs-xs text-muted-3">المرحلة / الصف</div>
+                        <div class="fw-semibold">@(Model.StageName ?? "—")</div>
+                        <div class="fs-sm text-muted-2">@(Model.GradeName ?? "")</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="fs-xs text-muted-3">رائد الفصل</div>
+                        <div class="fw-semibold">@(Model.HomeroomTeacher ?? "—")</div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <div class="fs-xs text-muted-3">العمر</div>
+                        <div class="fw-semibold num">@(s.Age?.ToString() ?? "—") سنة</div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <div class="fs-xs text-muted-3">نسبة الحضور</div>
+                        <div class="fw-semibold num @(Model.Attendance.Rate >= 90 ? "text-success" : Model.Attendance.Rate >= 75 ? "text-warning" : "text-danger")">
+                            @Model.Attendance.Rate.ToString("0.#")%
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <div class="fs-xs text-muted-3">تاريخ الالتحاق</div>
+                        <div class="fw-semibold num">@ViewHelpers.Date(s.EnrollmentDate)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ---------- التبويبات ---------- *@
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-info">البيانات</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-guardians">أولياء الأمور <span class="badge text-bg-secondary">@Model.Guardians.Count</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-attendance">الحضور</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-grades">الدرجات</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-notes">الملاحظات <span class="badge text-bg-secondary">@Model.Notes.Count</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-docs">المستندات <span class="badge text-bg-secondary">@Model.Documents.Count</span></button></li>
+    @if (User.Can(Permissions.FinanceView))
+    {
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-finance">الرسوم</button></li>
+    }
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-transport">النقل</button></li>
+</ul>
+
+<div class="tab-content">
+
+    @* ===== البيانات ===== *@
+    <div class="tab-pane fade show active" id="t-info">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header"><h2>البيانات الشخصية</h2></div>
+                    <div class="card-body">
+                        <partial name="_InfoRow" model="@(("الاسم الكامل", s.FullName))" />
+                        <partial name="_InfoRow" model="@(("الاسم بالإنجليزية", s.FullNameEn ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("رقم الهوية", s.NationalId ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("الجنس", s.Gender.Display()))" />
+                        <partial name="_InfoRow" model="@(("تاريخ الميلاد", ViewHelpers.Date(s.BirthDate)))" />
+                        <partial name="_InfoRow" model="@(("مكان الميلاد", s.BirthPlace ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("الجنسية", s.Nationality ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("الديانة", s.Religion ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("فصيلة الدم", s.BloodType ?? "—"))" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header"><h2>بيانات التواصل والدراسة</h2></div>
+                    <div class="card-body">
+                        <partial name="_InfoRow" model="@(("الهاتف", s.Phone ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("البريد الإلكتروني", s.Email ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("العنوان", s.Address ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("الشعبة الحالية", Model.SectionName ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("تاريخ الالتحاق", ViewHelpers.Date(s.EnrollmentDate)))" />
+                        <partial name="_InfoRow" model="@(("المدرسة السابقة", s.PreviousSchool ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("ملاحظات صحية", s.HealthNotes ?? "—"))" />
+                        <partial name="_InfoRow" model="@(("حساب في النظام", Model.HasAccount ? "موجود" : "غير منشأ"))" />
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Transfers.Count > 0)
+            {
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header"><h2>سجل النقل بين الشعب</h2></div>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead><tr><th>التاريخ</th><th>من</th><th>إلى</th><th>السبب</th></tr></thead>
+                                <tbody>
+                                @foreach (var t in Model.Transfers)
+                                {
+                                    <tr>
+                                        <td class="num">@ViewHelpers.Date(t.TransferDate)</td>
+                                        <td>@(t.FromSection is null ? "—" : $"{t.FromSection.Grade.Name} - {t.FromSection.Name}")</td>
+                                        <td class="fw-semibold">@($"{t.ToSection.Grade.Name} - {t.ToSection.Name}")</td>
+                                        <td class="text-muted-2 fs-sm">@(t.Reason ?? "—")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ===== أولياء الأمور ===== *@
+    <div class="tab-pane fade" id="t-guardians">
+        <div class="card">
+            <div class="card-header">
+                <h2>أولياء الأمور المرتبطون</h2>
+                @if (User.Can(Permissions.StudentsEdit))
+                {
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#linkGuardianModal">
+                        <i class="bi bi-plus-lg me-1"></i> ربط ولي أمر
+                    </button>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>الاسم</th><th>صلة القرابة</th><th>الجوال</th><th>المهنة</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody>
+                    @if (Model.Guardians.Count == 0)
+                    {
+                        <tr><td colspan="6"><div class="empty-state"><i class="bi bi-people"></i>لا يوجد أولياء أمور مرتبطون</div></td></tr>
+                    }
+                    @foreach (var g in Model.Guardians)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-controller="Guardians" asp-action="Details" asp-route-id="@g.GuardianId" class="fw-semibold text-reset">@g.FullName</a>
+                            </td>
+                            <td>@g.Relation</td>
+                            <td class="num" dir="ltr">@g.Phone</td>
+                            <td class="text-muted-2 fs-sm">@(g.Job ?? "—")</td>
+                            <td>
+                                @if (g.IsPrimary)
+                                {
+                                    <span class="chip tone-ok">ولي الأمر الأساسي</span>
+                                }
+                                @if (g.CanPickup)
+                                {
+                                    <span class="chip tone-info">مصرّح بالاستلام</span>
+                                }
+                            </td>
+                            <td>
+                                @if (User.Can(Permissions.StudentsEdit))
+                                {
+                                    <form asp-action="UnlinkGuardian" method="post" class="d-inline">
+                                        <input type="hidden" name="linkId" value="@g.LinkId" />
+                                        <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء ربط ولي الأمر بالطالب؟">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الحضور ===== *@
+    <div class="tab-pane fade" id="t-attendance">
+        <div class="row g-3">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check-circle"></i></div>
+                    <div><div class="value num">@Model.Attendance.Present</div><div class="label">أيام حضور</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-x-circle"></i></div>
+                    <div><div class="value num">@Model.Attendance.Absent</div><div class="label">أيام غياب</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-clock"></i></div>
+                    <div><div class="value num">@Model.Attendance.Late</div><div class="label">أيام تأخير</div></div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"><div class="ico tone-info"><i class="bi bi-file-earmark-check"></i></div>
+                    <div><div class="value num">@Model.Attendance.Excused</div><div class="label">غياب بعذر</div></div></div>
+            </div>
+
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header"><h2>آخر سجلات الحضور</h2></div>
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr><th>التاريخ</th><th>اليوم</th><th>الحالة</th><th>وقت الحضور</th><th>التأخير</th><th>الطريقة</th><th>ملاحظات</th></tr></thead>
+                            <tbody>
+                            @if (Model.Attendance.Recent.Count == 0)
+                            {
+                                <tr><td colspan="7"><div class="empty-state"><i class="bi bi-calendar"></i>لا توجد سجلات حضور</div></td></tr>
+                            }
+                            @foreach (var a in Model.Attendance.Recent)
+                            {
+                                <tr>
+                                    <td class="num">@ViewHelpers.Date(a.Date)</td>
+                                    <td class="fs-sm text-muted-2">@ViewHelpers.DayName((int)a.Date.DayOfWeek)</td>
+                                    <td>@a.Status.Badge()</td>
+                                    <td class="num fs-sm">@ViewHelpers.Time(a.CheckInTime)</td>
+                                    <td class="num fs-sm">@(a.LateMinutes > 0 ? $"{a.LateMinutes} د" : "—")</td>
+                                    <td class="fs-xs text-muted-3">@a.Method.Display()</td>
+                                    <td class="fs-sm text-muted-2">@(a.Notes ?? "—")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الدرجات ===== *@
+    <div class="tab-pane fade" id="t-grades">
+        <div class="card">
+            <div class="card-header">
+                <h2>سجل الدرجات</h2>
+                @if (User.Can(Permissions.ResultsView))
+                {
+                    <a class="btn btn-sm btn-light" asp-controller="Results" asp-action="ReportCard" asp-route-studentId="@s.Id">
+                        <i class="bi bi-file-earmark-text me-1"></i> كشف الدرجات
+                    </a>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>المادة</th><th>الاختبار</th><th>النوع</th><th>التاريخ</th><th>الدرجة</th><th>النسبة</th></tr></thead>
+                    <tbody>
+                    @if (Model.Results.Count == 0)
+                    {
+                        <tr><td colspan="6"><div class="empty-state"><i class="bi bi-journal"></i>لا توجد درجات مرصودة</div></td></tr>
+                    }
+                    @foreach (var r in Model.Results)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@r.Subject</td>
+                            <td>@r.ExamTitle</td>
+                            <td class="fs-xs text-muted-3">@r.ExamType.Display()</td>
+                            <td class="num fs-sm">@ViewHelpers.Date(r.ExamDate)</td>
+                            <td>
+                                @if (r.IsAbsent)
+                                {
+                                    <span class="chip tone-danger">غائب</span>
+                                }
+                                else
+                                {
+                                    @ViewHelpers.ScoreChip(r.Score, r.MaxScore)
+                                }
+                            </td>
+                            <td>
+                                @if (!r.IsAbsent)
+                                {
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="mini-bar flex-grow-1">
+                                            <span style="width:@r.Percentage.ToString("0.#")%;background:var(--@(ViewHelpers.ScoreTone(r.Percentage) == "ok" ? "ok" : ViewHelpers.ScoreTone(r.Percentage) == "info" ? "info" : ViewHelpers.ScoreTone(r.Percentage) == "warn" ? "warn" : "danger"))"></span>
+                                        </div>
+                                        <span class="fs-xs num">@r.Percentage.ToString("0.#")%</span>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الملاحظات ===== *@
+    <div class="tab-pane fade" id="t-notes">
+        <div class="row g-3">
+            @if (User.Can(Permissions.StudentsNotes))
+            {
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header"><h2>إضافة ملاحظة</h2></div>
+                        <form asp-action="AddNote" method="post">
+                            <input type="hidden" name="StudentId" value="@s.Id" />
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label">النوع</label>
+                                    <select name="NoteType" class="form-select form-select-sm">
+                                        @foreach (var (v, t) in ViewHelpers.Options<NoteType>())
+                                        {
+                                            <option value="@((int)v)">@t</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">الدرجة</label>
+                                    <select name="Severity" class="form-select form-select-sm">
+                                        @foreach (var (v, t) in ViewHelpers.Options<NoteSeverity>())
+                                        {
+                                            <option value="@((int)v)" selected="@(v == NoteSeverity.Info)">@t</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">العنوان</label>
+                                    <input name="Title" class="form-control form-control-sm" required />
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">التفاصيل</label>
+                                    <textarea name="Body" class="form-control form-control-sm" rows="3"></textarea>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">الإجراء المتخذ</label>
+                                    <input name="ActionTaken" class="form-control form-control-sm" />
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label">التاريخ</label>
+                                        <input name="NoteDate" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">النقاط</label>
+                                        <input name="Points" type="number" value="0" class="form-control form-control-sm" />
+                                    </div>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="notifyGuardian" value="true" id="notifyG" />
+                                    <label class="form-check-label fs-sm" for="notifyG">إشعار ولي الأمر</label>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg me-1"></i> إضافة</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <div class="col-lg-@(User.Can(Permissions.StudentsNotes) ? "8" : "12")">
+                <div class="card">
+                    <div class="card-header"><h2>سجل الملاحظات والسلوك</h2></div>
+                    <div class="card-body">
+                        @if (Model.Notes.Count == 0)
+                        {
+                            <div class="empty-state"><i class="bi bi-chat-square-text"></i>لا توجد ملاحظات مسجّلة</div>
+                        }
+                        @foreach (var n in Model.Notes)
+                        {
+                            <div class="d-flex gap-2 py-3 @(n != Model.Notes.Last() ? "border-bottom" : "")">
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                        <span class="fw-semibold">@n.Title</span>
+                                        @n.Severity.Badge()
+                                        <span class="chip tone-brand">@n.NoteType.Display()</span>
+                                        @if (n.Points != 0)
+                                        {
+                                            <span class="chip @(n.Points > 0 ? "tone-ok" : "tone-danger") num">@n.Points نقطة</span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(n.Body))
+                                    {
+                                        <div class="fs-sm text-muted-2">@n.Body</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(n.ActionTaken))
+                                    {
+                                        <div class="fs-xs text-muted-3"><b>الإجراء:</b> @n.ActionTaken</div>
+                                    }
+                                    <div class="fs-xs text-muted-3">
+                                        @ViewHelpers.Date(n.NoteDate)
+                                        @if (n.Employee is not null)
+                                        {
+                                            <text> · @n.Employee.FullName</text>
+                                        }
+                                        @if (n.NotifyGuardian)
+                                        {
+                                            <text> · <i class="bi bi-bell"></i> تم إشعار ولي الأمر</text>
+                                        }
+                                    </div>
+                                </div>
+                                @if (User.Can(Permissions.StudentsNotes))
+                                {
+                                    <form asp-action="DeleteNote" method="post">
+                                        <input type="hidden" name="id" value="@n.Id" />
+                                        <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه الملاحظة؟"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ===== المستندات ===== *@
+    <div class="tab-pane fade" id="t-docs">
+        <div class="row g-3">
+            @if (User.Can(Permissions.StudentsDocuments))
+            {
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header"><h2>رفع مستند</h2></div>
+                        <form asp-action="UploadDocument" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="studentId" value="@s.Id" />
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label">عنوان المستند</label>
+                                    <input name="title" class="form-control form-control-sm" />
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">النوع</label>
+                                    <select name="docType" class="form-select form-select-sm">
+                                        @foreach (var (v, t) in ViewHelpers.Options<DocumentType>())
+                                        {
+                                            <option value="@((int)v)">@t</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">الملف</label>
+                                    <input name="file" type="file" class="form-control form-control-sm" required />
+                                    <div class="form-text fs-xs">PDF, Word, Excel, صور — بحد أقصى 8 ميجابايت</div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-primary btn-sm w-100"><i class="bi bi-upload me-1"></i> رفع</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <div class="col-lg-@(User.Can(Permissions.StudentsDocuments) ? "8" : "12")">
+                <div class="card">
+                    <div class="card-header"><h2>المستندات والمرفقات</h2></div>
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr><th>المستند</th><th>النوع</th><th>الحجم</th><th>تاريخ الرفع</th><th></th></tr></thead>
+                            <tbody>
+                            @if (Model.Documents.Count == 0)
+                            {
+                                <tr><td colspan="5"><div class="empty-state"><i class="bi bi-folder2-open"></i>لا توجد مستندات مرفوعة</div></td></tr>
+                            }
+                            @foreach (var d in Model.Documents)
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="@d.FilePath" target="_blank" class="fw-semibold text-reset">
+                                            <i class="bi bi-file-earmark me-1"></i> @d.Title
+                                        </a>
+                                    </td>
+                                    <td><span class="chip tone-brand">@d.DocType.Display()</span></td>
+                                    <td class="num fs-sm text-muted-2">@((d.SizeBytes / 1024.0).ToString("N0")) KB</td>
+                                    <td class="num fs-sm">@ViewHelpers.Date(d.UploadedAt)</td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a class="btn btn-sm btn-light" href="@d.FilePath" target="_blank"><i class="bi bi-download"></i></a>
+                                            @if (User.Can(Permissions.StudentsDocuments))
+                                            {
+                                                <form asp-action="DeleteDocument" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@d.Id" />
+                                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا المستند؟"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ===== الرسوم ===== *@
+    @if (User.Can(Permissions.FinanceView))
+    {
+        <div class="tab-pane fade" id="t-finance">
+            <div class="row g-3">
+                <div class="col-6 col-lg-3">
+                    <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-receipt"></i></div>
+                        <div><div class="value num">@Model.Finance.Total.ToString("N2")</div><div class="label">إجمالي الرسوم (@cur)</div></div></div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-cash"></i></div>
+                        <div><div class="value num">@Model.Finance.Paid.ToString("N2")</div><div class="label">المدفوع</div></div></div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-hourglass-split"></i></div>
+                        <div><div class="value num">@Model.Finance.Remaining.ToString("N2")</div><div class="label">المتبقي</div></div></div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                        <div><div class="value num">@Model.Finance.Overdue.ToString("N2")</div><div class="label">متأخرات</div></div></div>
+                </div>
+
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>الأقساط @(Model.Finance.InvoiceNo is null ? "" : $"— فاتورة {Model.Finance.InvoiceNo}")</h2>
+                            @if (Model.Finance.InvoiceId.HasValue)
+                            {
+                                <a class="btn btn-sm btn-light" asp-controller="Finance" asp-action="InvoiceDetails" asp-route-id="@Model.Finance.InvoiceId">
+                                    تفاصيل الفاتورة <i class="bi bi-arrow-left"></i>
+                                </a>
+                            }
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead><tr><th>القسط</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+                                <tbody>
+                                @if (Model.Finance.Installments.Count == 0)
+                                {
+                                    <tr><td colspan="6"><div class="empty-state"><i class="bi bi-cash-stack"></i>لا توجد فاتورة رسوم لهذا الطالب</div></td></tr>
+                                }
+                                @foreach (var i in Model.Finance.Installments)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@i.Name</td>
+                                        <td class="num">@ViewHelpers.Date(i.DueDate)</td>
+                                        <td class="num">@i.Amount.ToString("N2")</td>
+                                        <td class="num text-success">@i.PaidAmount.ToString("N2")</td>
+                                        <td class="num @(i.RemainingAmount > 0 ? "text-warning fw-bold" : "")">@i.RemainingAmount.ToString("N2")</td>
+                                        <td>@i.Status.Badge()</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ===== النقل ===== *@
+    <div class="tab-pane fade" id="t-transport">
+        <div class="card">
+            <div class="card-header"><h2>اشتراك النقل المدرسي</h2></div>
+            <div class="card-body">
+                @if (Model.Transport is null)
+                {
+                    <div class="empty-state"><i class="bi bi-bus-front"></i>الطالب غير مشترك في النقل المدرسي</div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("خط السير", Model.Transport.RouteName))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("المحطة", Model.Transport.StopName ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("رقم الحافلة", Model.Transport.BusNo ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("السائق", Model.Transport.DriverName ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("جوال السائق", Model.Transport.DriverPhone ?? "—"))" /></div>
+                        <div class="col-md-6"><partial name="_InfoRow" model="@(("الرسوم الشهرية", $"{Model.Transport.MonthlyFee:N2} {cur}"))" /></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ---------- النوافذ ---------- *@
+@if (User.Can(Permissions.StudentsTransfer))
+{
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="Transfer" method="post">
+                <input type="hidden" name="StudentId" value="@s.Id" />
+                <div class="modal-header">
+                    <h5 class="modal-title">نقل الطالب بين الشعب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info fs-sm">
+                        الشعبة الحالية: <b>@(Model.SectionName ?? "غير محدد")</b>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الشعبة الجديدة</label>
+                        <select name="ToSectionId" class="form-select" required asp-items="Model.Sections">
+                            <option value="">— اختر —</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">تاريخ النقل</label>
+                        <input name="TransferDate" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div>
+                        <label class="form-label">سبب النقل</label>
+                        <textarea name="Reason" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">تنفيذ النقل</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@if (User.Can(Permissions.StudentsEdit))
+{
+    <div class="modal fade" id="linkGuardianModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="LinkGuardian" method="post">
+                <input type="hidden" name="studentId" value="@s.Id" />
+                <div class="modal-header">
+                    <h5 class="modal-title">ربط ولي أمر بالطالب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ابحث عن ولي الأمر</label>
+                        <input class="form-control" id="guardianSearch" placeholder="اكتب الاسم أو رقم الجوال..." autocomplete="off" />
+                        <input type="hidden" name="guardianId" id="guardianId" required />
+                        <div class="list-group mt-1" id="guardianResults" style="max-height:200px;overflow:auto"></div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-7">
+                            <label class="form-label">صلة القرابة</label>
+                            <select name="relation" class="form-select">
+                                @foreach (var r in new[] { "الأب", "الأم", "الأخ", "العم", "الخال", "الجد", "ولي أمر" })
+                                {
+                                    <option value="@r">@r</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-5 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="isPrimary" value="true" id="isPrimary" />
+                                <label class="form-check-label fs-sm" for="isPrimary">ولي الأمر الأساسي</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">ربط</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        const gSearch = document.getElementById('guardianSearch');
+        const gResults = document.getElementById('guardianResults');
+        const gId = document.getElementById('guardianId');
+        let gTimer;
+
+        gSearch?.addEventListener('input', function () {
+            clearTimeout(gTimer);
+            gId.value = '';
+            const q = this.value.trim();
+            if (q.length < 2) { gResults.innerHTML = ''; return; }
+
+            gTimer = setTimeout(function () {
+                fetch('/Guardians/Search?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(items => {
+                        gResults.innerHTML = items.length
+                            ? items.map(i =>
+                                '<button type="button" class="list-group-item list-group-item-action py-2" data-id="' + i.id + '">' +
+                                '<div class="fw-semibold fs-sm">' + i.name + '</div>' +
+                                '<div class="fs-xs text-muted-3" dir="ltr">' + (i.phone || '') + '</div></button>').join('')
+                            : '<div class="text-muted-3 fs-sm p-2">لا توجد نتائج</div>';
+                    });
+            }, 250);
+        });
+
+        gResults?.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-id]');
+            if (!btn) return;
+            gId.value = btn.getAttribute('data-id');
+            gSearch.value = btn.querySelector('.fw-semibold').textContent;
+            gResults.innerHTML = '';
+        });
+    </script>
+}

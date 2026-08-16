@@ -1,0 +1,162 @@
+@model SettingsViewModel
+@{
+    ViewData["Title"] = "إعدادات المدرسة";
+}
+
+<div class="page-head">
+    <div>
+        <h1>إعدادات المدرسة</h1>
+        <p class="sub">البيانات الأساسية وأوقات الدوام وقنوات الإشعارات</p>
+    </div>
+</div>
+
+<form asp-action="Index" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="LogoPath" />
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header"><h2><i class="bi bi-building me-1"></i> بيانات المدرسة</h2></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="SchoolName" class="form-label"></label>
+                            <input asp-for="SchoolName" class="form-control" />
+                            <span asp-validation-for="SchoolName" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SchoolNameEn" class="form-label"></label>
+                            <input asp-for="SchoolNameEn" class="form-control" dir="ltr" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Address" class="form-label"></label>
+                            <input asp-for="Address" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control num" dir="ltr" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" dir="ltr" />
+                            <span asp-validation-for="Email" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Website" class="form-label"></label>
+                            <input asp-for="Website" class="form-control" dir="ltr" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><h2><i class="bi bi-clock me-1"></i> الدوام والحضور</h2></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="SchoolStartTime" class="form-label"></label>
+                            <input asp-for="SchoolStartTime" type="time" class="form-control num" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="SchoolEndTime" class="form-label"></label>
+                            <input asp-for="SchoolEndTime" type="time" class="form-control num" />
+                            <span asp-validation-for="SchoolEndTime" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="LateGraceMinutes" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="LateGraceMinutes" type="number" class="form-control num" />
+                                <span class="input-group-text">دقيقة</span>
+                            </div>
+                            <div class="form-text fs-xs">بعدها يُسجَّل الطالب متأخراً عند المسح بـ QR.</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="AutoNotifyGuardianOnAbsence" class="form-check-input" />
+                                <label asp-for="AutoNotifyGuardianOnAbsence" class="form-check-label"></label>
+                                <div class="form-text fs-xs">يصل إشعار لولي الأمر فور حفظ الغياب.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h2><i class="bi bi-broadcast me-1"></i> قنوات الإشعارات الخارجية</h2></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-check p-3 rounded-3" style="background:var(--surface-2);border:1px solid var(--line)">
+                                <input asp-for="EnableSms" class="form-check-input" />
+                                <label asp-for="EnableSms" class="form-check-label fw-semibold"></label>
+                                <div class="form-text fs-xs">تُرسل رسائل الغياب والرسوم عبر SMS.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check p-3 rounded-3" style="background:var(--surface-2);border:1px solid var(--line)">
+                                <input asp-for="EnableWhatsApp" class="form-check-input" />
+                                <label asp-for="EnableWhatsApp" class="form-check-label fw-semibold"></label>
+                                <div class="form-text fs-xs">تُفضَّل على SMS عند تفعيلها.</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-info fs-sm mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                تُخزَّن الرسائل في <a asp-controller="Communication" asp-action="Outbox">صندوق الصادر</a>
+                                ثم تُرسل عبر مزوّد الخدمة. اربط بيانات المزوّد في ملف الإعدادات قبل التشغيل الفعلي.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header"><h2><i class="bi bi-image me-1"></i> شعار المدرسة</h2></div>
+                <div class="card-body text-center">
+                    <div class="mx-auto mb-3 d-grid place-items-center"
+                         style="width:120px;height:120px;border-radius:20px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden">
+                        @if (!string.IsNullOrEmpty(Model.LogoPath))
+                        {
+                            <img src="@Model.LogoPath" alt="" style="max-width:100%;max-height:100%;object-fit:contain" />
+                        }
+                        else
+                        {
+                            <i class="bi bi-mortarboard" style="font-size:2.6rem;color:var(--text-3)"></i>
+                        }
+                    </div>
+                    <input asp-for="Logo" type="file" class="form-control form-control-sm" accept="image/*" />
+                    <div class="form-text fs-xs">PNG أو SVG — بحد أقصى 2 ميجابايت</div>
+                    <span asp-validation-for="Logo" class="text-danger fs-xs"></span>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><h2><i class="bi bi-cash me-1"></i> العملة</h2></div>
+                <div class="card-body">
+                    <label asp-for="Currency" class="form-label"></label>
+                    <input asp-for="Currency" class="form-control" />
+                    <div class="form-text fs-xs">تظهر بجانب كل المبالغ في النظام والتقارير.</div>
+                    <span asp-validation-for="Currency" class="text-danger fs-xs"></span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-lg me-1"></i> حفظ الإعدادات
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

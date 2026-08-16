@@ -1,0 +1,242 @@
+@model RouteIndexViewModel
+@{
+    ViewData["Title"] = "خطوط السير";
+    var canManage = User.Can(Permissions.TransportManage);
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <h1>خطوط السير والمحطات</h1>
+        <p class="sub">@Model.Routes.Count خط سير · @Model.Routes.Sum(r => r.StopsCount) محطة · @Model.Routes.Sum(r => r.Subscribers) مشترك</p>
+    </div>
+    @if (canManage)
+    {
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openRoute()"><i class="bi bi-plus-lg me-1"></i> خط سير جديد</button>
+        </div>
+    }
+</div>
+
+<div class="row g-3">
+    @if (Model.Routes.Count == 0)
+    {
+        <div class="col-12">
+            <div class="card"><div class="card-body"><div class="empty-state"><i class="bi bi-signpost-split"></i>لا توجد خطوط سير</div></div></div>
+        </div>
+    }
+    @foreach (var r in Model.Routes)
+    {
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="chip tone-accent num">@r.Code</span>
+                        <h2>@r.Name</h2>
+                        @if (!r.IsActive)
+                        {
+                            <span class="chip tone-danger">معطّل</span>
+                        }
+                    </div>
+                    @if (canManage)
+                    {
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-light"
+                                    onclick='openStop(null, @r.Id)' title="إضافة محطة">
+                                <i class="bi bi-geo-alt"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light"
+                                    onclick='openRoute(@Html.Raw(Json.Serialize(new { r.Id, r.Code, r.Name, r.BusId, r.Description, r.MonthlyFee, r.IsActive })))'>
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form asp-action="DeleteRoute" method="post">
+                                <input type="hidden" name="id" value="@r.Id" />
+                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف خط السير ومحطاته؟"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    }
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="fs-xs text-muted-3">الحافلة</div>
+                            <div class="fw-semibold fs-sm">@(r.BusNo ?? "غير محدد")</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fs-xs text-muted-3">السائق</div>
+                            <div class="fw-semibold fs-sm">@(r.DriverName ?? "—")</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fs-xs text-muted-3">الرسوم الشهرية</div>
+                            <div class="fw-semibold fs-sm num">@r.MonthlyFee.ToString("N2") @cur</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fs-xs text-muted-3">المشتركون</div>
+                            <div class="fw-semibold fs-sm num">@r.Subscribers طالب</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(r.Description))
+                    {
+                        <div class="fs-xs text-muted-2 mb-3">@r.Description</div>
+                    }
+
+                    <div class="fw-bold fs-sm mb-2"><i class="bi bi-geo-alt me-1"></i> المحطات (@r.StopsCount)</div>
+                    @if (r.Stops.Count == 0)
+                    {
+                        <div class="fs-sm text-muted-3">لم تُضف محطات بعد</div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead><tr><th style="width:40px">#</th><th>المحطة</th><th>الصعود</th><th>النزول</th><th style="width:70px"></th></tr></thead>
+                                <tbody>
+                                @foreach (var s in r.Stops)
+                                {
+                                    <tr>
+                                        <td class="num text-muted-3">@s.SeqNo</td>
+                                        <td class="fw-semibold fs-sm">@s.Name</td>
+                                        <td class="num fs-xs">@ViewHelpers.Time(s.PickupTime)</td>
+                                        <td class="num fs-xs">@ViewHelpers.Time(s.DropTime)</td>
+                                        <td>
+                                            @if (canManage)
+                                            {
+                                                <div class="d-flex gap-1">
+                                                    <button class="btn btn-sm btn-light py-0 px-1"
+                                                            onclick='openStop(@Html.Raw(Json.Serialize(new { s.Id, s.Name, s.SeqNo, PickupTime = s.PickupTime?.ToString(@"hh\:mm"), DropTime = s.DropTime?.ToString(@"hh\:mm") })), @r.Id)'>
+                                                        <i class="bi bi-pencil fs-xs"></i>
+                                                    </button>
+                                                    <form asp-action="DeleteStop" method="post">
+                                                        <input type="hidden" name="id" value="@s.Id" />
+                                                        <button class="btn btn-sm btn-light text-danger py-0 px-1" data-confirm="حذف المحطة؟">
+                                                            <i class="bi bi-x fs-xs"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (canManage)
+{
+    <div class="modal fade" id="routeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveRoute" method="post">
+                <input type="hidden" name="Id" id="r-id" value="0" />
+                <div class="modal-header">
+                    <h5 class="modal-title">خط سير</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <label class="form-label">الرمز</label>
+                            <input name="Code" id="r-code" class="form-control" placeholder="R-01" required />
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label">اسم الخط</label>
+                            <input name="Name" id="r-name" class="form-control" placeholder="خط السيب" required />
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label">الحافلة</label>
+                            <select name="BusId" id="r-bus" class="form-select" asp-items="Model.Buses">
+                                <option value="">— بدون —</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label">الرسوم الشهرية</label>
+                            <input name="MonthlyFee" id="r-fee" type="number" step="0.01" class="form-control num" value="0" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">الوصف</label>
+                            <textarea name="Description" id="r-desc" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" name="IsActive" value="true" id="r-active" checked />
+                        <label class="form-check-label" for="r-active">نشط</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="stopModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveStop" method="post">
+                <input type="hidden" name="Id" id="st-id" value="0" />
+                <input type="hidden" name="RouteId" id="st-route" />
+                <div class="modal-header">
+                    <h5 class="modal-title">محطة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <label class="form-label">اسم المحطة</label>
+                            <input name="Name" id="st-name" class="form-control" required />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">الترتيب</label>
+                            <input name="SeqNo" id="st-seq" type="number" class="form-control num" value="1" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">وقت الصعود</label>
+                            <input name="PickupTime" id="st-pickup" type="time" class="form-control num" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">وقت النزول</label>
+                            <input name="DropTime" id="st-drop" type="time" class="form-control num" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function openRoute(d) {
+            d = d || { Id: 0, Code: '', Name: '', BusId: '', Description: '', MonthlyFee: 0, IsActive: true };
+            document.getElementById('r-id').value = d.Id;
+            document.getElementById('r-code').value = d.Code || '';
+            document.getElementById('r-name').value = d.Name || '';
+            document.getElementById('r-bus').value = d.BusId || '';
+            document.getElementById('r-desc').value = d.Description || '';
+            document.getElementById('r-fee').value = d.MonthlyFee || 0;
+            document.getElementById('r-active').checked = !!d.IsActive;
+            new bootstrap.Modal(document.getElementById('routeModal')).show();
+        }
+
+        function openStop(d, routeId) {
+            d = d || { Id: 0, Name: '', SeqNo: 1, PickupTime: '', DropTime: '' };
+            document.getElementById('st-id').value = d.Id;
+            document.getElementById('st-route').value = routeId;
+            document.getElementById('st-name').value = d.Name || '';
+            document.getElementById('st-seq').value = d.SeqNo || 1;
+            document.getElementById('st-pickup').value = d.PickupTime || '';
+            document.getElementById('st-drop').value = d.DropTime || '';
+            new bootstrap.Modal(document.getElementById('stopModal')).show();
+        }
+    </script>
+}

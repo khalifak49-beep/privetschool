@@ -1,0 +1,214 @@
+@model AttendanceReportViewModel
+@{
+    ViewData["Title"] = "تقارير الحضور";
+}
+
+<div class="page-head">
+    <div>
+        <h1>تقارير الحضور والانصراف</h1>
+        <p class="sub">من @ViewHelpers.Date(Model.From) إلى @ViewHelpers.Date(Model.To)</p>
+    </div>
+    @if (User.Can(Permissions.ReportsExport))
+    {
+        <div class="actions d-flex gap-2">
+            <a class="btn btn-light" asp-action="ExportReport"
+               asp-route-From="@Model.From.ToString("yyyy-MM-dd")" asp-route-To="@Model.To.ToString("yyyy-MM-dd")"
+               asp-route-StageId="@Model.StageId" asp-route-GradeId="@Model.GradeId" asp-route-SectionId="@Model.SectionId"
+               asp-route-GroupBy="@Model.GroupBy" asp-route-format="excel">
+                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+            </a>
+            <a class="btn btn-light" asp-action="ExportReport"
+               asp-route-From="@Model.From.ToString("yyyy-MM-dd")" asp-route-To="@Model.To.ToString("yyyy-MM-dd")"
+               asp-route-StageId="@Model.StageId" asp-route-GradeId="@Model.GradeId" asp-route-SectionId="@Model.SectionId"
+               asp-route-GroupBy="@Model.GroupBy" asp-route-format="pdf">
+                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+            </a>
+        </div>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">من تاريخ</label>
+                <input name="From" type="date" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">إلى تاريخ</label>
+                <input name="To" type="date" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">المرحلة</label>
+                <select name="StageId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Stages)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">الصف</label>
+                <select name="GradeId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var g in Model.Grades)
+                    {
+                        <option value="@g.Value" selected="@g.Selected">@g.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">الشعبة</label>
+                <select name="SectionId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">التجميع حسب</label>
+                <div class="d-flex gap-1">
+                    <select name="GroupBy" class="form-select form-select-sm" data-autosubmit>
+                        <option value="student" selected="@(Model.GroupBy == "student")">الطالب</option>
+                        <option value="section" selected="@(Model.GroupBy == "section")">الشعبة</option>
+                        <option value="day" selected="@(Model.GroupBy == "day")">اليوم</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary"><i class="bi bi-funnel"></i></button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-list-ol"></i></div>
+            <div><div class="value num">@Model.TotalRecords.ToString("N0")</div><div class="label">إجمالي السجلات</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check-circle"></i></div>
+            <div><div class="value num">@Model.TotalPresent.ToString("N0")</div><div class="label">حضور</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-x-circle"></i></div>
+            <div><div class="value num">@Model.TotalAbsent.ToString("N0")</div><div class="label">غياب</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-clock"></i></div>
+            <div><div class="value num">@Model.TotalLate.ToString("N0")</div><div class="label">تأخير</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card">
+            <div class="ico @(Model.OverallRate >= 90 ? "tone-ok" : Model.OverallRate >= 75 ? "tone-warn" : "tone-danger")">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div><div class="value num">@Model.OverallRate.ToString("0.#")%</div><div class="label">نسبة الحضور</div></div>
+        </div>
+    </div>
+</div>
+
+@if (Model.DailyTrend.Count > 1)
+{
+    <div class="card mb-3">
+        <div class="card-header"><h2>اتجاه نسبة الحضور اليومي</h2></div>
+        <div class="card-body">
+            <div class="chart-box" style="height:240px"><canvas id="trendChart"></canvas></div>
+        </div>
+    </div>
+}
+
+<div class="table-wrap">
+    <div class="card-header">
+        <h2>
+            @(Model.GroupBy switch { "section" => "التقرير حسب الشعبة", "day" => "التقرير حسب اليوم", _ => "التقرير حسب الطالب" })
+        </h2>
+        <span class="chip tone-brand">@Model.Rows.Count سجل</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>البيان</th>
+                <th>حاضر</th>
+                <th>غائب</th>
+                <th>متأخر</th>
+                <th>بعذر</th>
+                <th>الإجمالي</th>
+                <th style="width:180px">نسبة الحضور</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Rows.Count == 0)
+            {
+                <tr><td colspan="7"><div class="empty-state"><i class="bi bi-clipboard-x"></i>لا توجد بيانات في هذه الفترة</div></td></tr>
+            }
+            @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>
+                        @if (Model.GroupBy == "student" && r.Id > 0)
+                        {
+                            <a asp-controller="Students" asp-action="Details" asp-route-id="@r.Id" class="fw-semibold text-reset">@r.Label</a>
+                        }
+                        else
+                        {
+                            <span class="fw-semibold">@r.Label</span>
+                        }
+                        @if (!string.IsNullOrEmpty(r.SubLabel))
+                        {
+                            <div class="fs-xs text-muted-3">@r.SubLabel</div>
+                        }
+                    </td>
+                    <td class="num text-success">@r.Present</td>
+                    <td class="num @(r.Absent > 0 ? "text-danger fw-bold" : "")">@r.Absent</td>
+                    <td class="num text-warning">@r.Late</td>
+                    <td class="num text-info">@r.Excused</td>
+                    <td class="num fw-semibold">@r.Total</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="mini-bar flex-grow-1">
+                                <span style="width:@r.Rate.ToString("0.#")%;background:@(r.Rate >= 90 ? "var(--ok)" : r.Rate >= 75 ? "var(--warn)" : "var(--danger)")"></span>
+                            </div>
+                            <span class="num fs-sm fw-semibold text-nowrap">@r.Rate.ToString("0.#")%</span>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script>
+        const el = document.getElementById('trendChart');
+        if (el) {
+            new Chart(el, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailyTrend.Select(p => p.Label))),
+                    datasets: [{
+                        label: 'نسبة الحضور %',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailyTrend.Select(p => p.Value))),
+                        borderColor: '#0f9d8f',
+                        backgroundColor: 'rgba(15,157,143,.12)',
+                        borderWidth: 3, fill: true, tension: .35,
+                        pointRadius: 3, pointBackgroundColor: '#fff', pointBorderColor: '#0f9d8f'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { suggestedMin: 50, suggestedMax: 100, ticks: { callback: v => v + '%' }, grid: { color: '#e6eaf2' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    </script>
+}

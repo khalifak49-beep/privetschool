@@ -1,0 +1,103 @@
+@model MessagesViewModel
+@{
+    ViewData["Title"] = "الرسائل الداخلية";
+}
+
+<div class="page-head">
+    <div>
+        <h1>الرسائل الداخلية</h1>
+        <p class="sub">
+            @if (Model.UnreadCount > 0)
+            {
+                <span class="chip tone-danger">@Model.UnreadCount غير مقروءة</span>
+            }
+            else
+            {
+                <text>لا توجد رسائل غير مقروءة</text>
+            }
+        </p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-primary" asp-action="Compose"><i class="bi bi-pencil-square me-1"></i> رسالة جديدة</a>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(Model.Folder == "inbox" ? "active" : "")" asp-action="Messages" asp-route-folder="inbox">
+            <i class="bi bi-inbox me-1"></i> الوارد
+            @if (Model.UnreadCount > 0)
+            {
+                <span class="badge text-bg-danger">@Model.UnreadCount</span>
+            }
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.Folder == "sent" ? "active" : "")" asp-action="Messages" asp-route-folder="sent">
+            <i class="bi bi-send me-1"></i> الصادر
+        </a>
+    </li>
+</ul>
+
+<div class="table-wrap">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th style="width:220px">@(Model.Folder == "sent" ? "إلى" : "من")</th>
+                <th>الموضوع</th>
+                <th style="width:150px">التاريخ</th>
+                <th style="width:60px"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.TotalCount == 0)
+            {
+                <tr><td colspan="4"><div class="empty-state"><i class="bi bi-envelope"></i>لا توجد رسائل</div></td></tr>
+            }
+            @foreach (var m in Model.Items.Items)
+            {
+                <tr class="@(m.IsRead ? "" : "fw-semibold")" style="@(m.IsRead ? "" : "background:var(--brand-050)")">
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar sm">@ViewHelpers.Initials(m.CounterpartName)</div>
+                            <div class="min-w-0">
+                                <div class="text-truncate fs-sm">@m.CounterpartName</div>
+                                @if (Model.Folder == "sent" && m.RecipientCount > 3)
+                                {
+                                    <div class="fs-xs text-muted-3">و @(m.RecipientCount - 3) آخرين</div>
+                                }
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <a asp-action="ReadMessage" asp-route-id="@m.Id" class="text-reset">
+                            @if (!m.IsRead)
+                            {
+                                <span class="chip tone-danger">جديد</span>
+                            }
+                            @m.Subject
+                            @if (!string.IsNullOrEmpty(m.AttachmentPath))
+                            {
+                                <i class="bi bi-paperclip text-muted-3"></i>
+                            }
+                        </a>
+                        <div class="fs-xs text-muted-3 text-truncate" style="max-width:520px">@m.Body</div>
+                    </td>
+                    <td class="fs-sm text-muted-2">@ViewHelpers.Ago(m.SentAt)</td>
+                    <td>
+                        @if (Model.Folder == "inbox")
+                        {
+                            <form asp-action="DeleteMessage" method="post">
+                                <input type="hidden" name="recipientRowId" value="@m.RecipientRowId" />
+                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف الرسالة؟"><i class="bi bi-trash"></i></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Items" />
+</div>

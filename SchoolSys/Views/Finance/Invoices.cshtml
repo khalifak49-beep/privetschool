@@ -1,0 +1,138 @@
+@model InvoiceIndexViewModel
+@{
+    ViewData["Title"] = "الفواتير";
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <h1>فواتير الرسوم</h1>
+        <p class="sub">
+            الإجمالي <b class="num">@Model.SumNet.ToString("N2")</b> @cur ·
+            المحصّل <b class="num text-success">@Model.SumPaid.ToString("N2")</b> @cur
+            @if (Model.StudentsWithoutInvoice > 0)
+            {
+                <span class="chip tone-warn">@Model.StudentsWithoutInvoice طالب بلا فاتورة</span>
+            }
+        </p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        @if (User.Can(Permissions.FinanceInvoices))
+        {
+            <a class="btn btn-primary" asp-action="GenerateInvoices"><i class="bi bi-receipt-cutoff me-1"></i> إصدار فواتير</a>
+        }
+        @if (User.Can(Permissions.ReportsExport))
+        {
+            <a class="btn btn-light" asp-action="ExportInvoices" asp-route-q="@Model.Q" asp-route-status="@Model.Status"
+               asp-route-sectionId="@Model.SectionId" asp-route-format="excel">
+                <i class="bi bi-file-earmark-excel me-1"></i> تصدير
+            </a>
+        }
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">بحث</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input name="q" value="@Model.Q" class="form-control" placeholder="رقم الفاتورة، اسم الطالب، الرقم الطلابي..." />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">الشعبة</label>
+                <select name="sectionId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">الحالة</label>
+                <select name="status" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var (v, t) in ViewHelpers.Options<InvoiceStatus>())
+                    {
+                        <option value="@((int)v)" selected="@(Model.Status == v)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
+                <a asp-action="Invoices" class="btn btn-sm btn-light"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>رقم الفاتورة</th>
+                <th>الطالب</th>
+                <th>الشعبة</th>
+                <th>الصافي</th>
+                <th>المدفوع</th>
+                <th>المتبقي</th>
+                <th style="width:150px">نسبة السداد</th>
+                <th>الحالة</th>
+                <th style="width:60px"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Invoices.TotalCount == 0)
+            {
+                <tr><td colspan="9"><div class="empty-state"><i class="bi bi-receipt"></i>لا توجد فواتير</div></td></tr>
+            }
+            @foreach (var i in Model.Invoices.Items)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="InvoiceDetails" asp-route-id="@i.Id" class="num fw-semibold text-reset">@i.InvoiceNo</a>
+                        <div class="fs-xs text-muted-3 num">@ViewHelpers.Date(i.IssueDate)</div>
+                    </td>
+                    <td>
+                        <a asp-controller="Students" asp-action="Details" asp-route-id="@i.StudentId" class="fw-semibold text-reset">@i.StudentName</a>
+                        <div class="fs-xs text-muted-3 num">@i.StudentNo</div>
+                    </td>
+                    <td class="fs-sm text-muted-2">@(i.Section ?? "—")</td>
+                    <td class="num">
+                        @i.NetAmount.ToString("N2")
+                        @if (i.DiscountAmount > 0)
+                        {
+                            <div class="fs-xs text-success">خصم @i.DiscountAmount.ToString("N2")</div>
+                        }
+                    </td>
+                    <td class="num text-success">@i.PaidAmount.ToString("N2")</td>
+                    <td class="num @(i.Remaining > 0 ? "text-warning fw-bold" : "")">@i.Remaining.ToString("N2")</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="mini-bar flex-grow-1">
+                                <span style="width:@Math.Min(100, i.PaidRate).ToString("0.#")%;background:@(i.PaidRate >= 100 ? "var(--ok)" : i.PaidRate > 0 ? "var(--warn)" : "var(--line-strong)")"></span>
+                            </div>
+                            <span class="fs-xs num">@i.PaidRate.ToString("0")%</span>
+                        </div>
+                    </td>
+                    <td>
+                        @i.Status.Badge()
+                        @if (i.HasOverdue)
+                        {
+                            <span class="chip tone-danger">متأخر</span>
+                        }
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-light" asp-action="InvoiceDetails" asp-route-id="@i.Id"><i class="bi bi-eye"></i></a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Invoices" />
+</div>

@@ -1,0 +1,1084 @@
+@model LandingViewModel
+@{
+    Layout = null;
+    var signedIn = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1f4b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>@Model.SchoolName — مدرسة أهلية للتعليم الحديث</title>
+    <meta name="description" content="@Model.SchoolName — تعليم نوعي من الروضة حتى الثانوية، بيئة تعلّم حديثة وأنشطة إثرائية ومتابعة رقمية لأولياء الأمور." />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+</head>
+<body class="landing">
+
+@* ==================== الشريط العلوي ==================== *@
+<nav class="nav" id="siteNav">
+    <div class="wrap nav-in">
+        <a class="brand" href="#top">
+            <div class="brand-mark">
+                @if (!string.IsNullOrEmpty(Model.LogoPath))
+                {
+                    <img src="@Model.LogoPath" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:13px" />
+                }
+                else
+                {
+                    <i class="bi bi-mortarboard-fill"></i>
+                }
+            </div>
+            <div>
+                <b>@Model.SchoolName</b>
+                <span>@(Model.SchoolNameEn ?? "نظام تعليمي متكامل")</span>
+            </div>
+        </a>
+
+        <button class="nav-toggle" id="navToggle" aria-label="القائمة"><i class="bi bi-list"></i></button>
+
+        <div class="nav-links" id="navLinks">
+            <a href="#about">عن المدرسة</a>
+            <a href="#stages">المراحل</a>
+            <a href="#programs">الشهادات والبرامج</a>
+            <a href="#activities">الأنشطة</a>
+            <a href="#why">لماذا نحن</a>
+            <a href="#contact">تواصل معنا</a>
+        </div>
+
+        <div class="nav-cta">
+            @if (signedIn)
+            {
+                <a class="btn-l btn-teal" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i> لوحة التحكم
+                </a>
+            }
+            else
+            {
+                <a class="btn-l btn-teal" asp-controller="Account" asp-action="Login">
+                    <i class="bi bi-box-arrow-in-left"></i> تسجيل الدخول
+                </a>
+            }
+        </div>
+    </div>
+</nav>
+
+@* ==================== البطل ==================== *@
+<header class="hero" id="top">
+    <div class="wrap hero-grid">
+        <div>
+            <div class="eyebrow"><i class="bi bi-stars"></i> العام الدراسي @(Model.YearName ?? "الجديد")</div>
+
+            <h1>
+                نُنشئ جيلاً يفكّر ويبدع<br />
+                في بيئة <span class="grad">تعليمية حديثة</span>
+            </h1>
+
+            <p class="lead">
+                @Model.SchoolName مدرسة أهلية تجمع بين المنهج الوطني والمهارات العالمية،
+                بكادر مؤهل وفصول ذكية وأنشطة إثرائية، مع بوابة رقمية تتيح لولي الأمر
+                متابعة أبنائه أولاً بأول.
+            </p>
+
+            <div class="hero-cta">
+                <a class="btn-l btn-teal btn-lg-l" href="#programs">
+                    <i class="bi bi-patch-check-fill"></i> برامجنا وشهاداتنا
+                </a>
+                <a class="btn-l btn-ghost btn-lg-l" href="#contact">
+                    <i class="bi bi-telephone-fill"></i> احجز زيارة
+                </a>
+            </div>
+
+            <div class="hero-badges">
+                <div class="hero-badge"><i class="bi bi-check-circle-fill"></i> فصول لا تتجاوز 30 طالباً</div>
+                <div class="hero-badge"><i class="bi bi-check-circle-fill"></i> نقل مدرسي آمن</div>
+                <div class="hero-badge"><i class="bi bi-check-circle-fill"></i> متابعة رقمية لحظية</div>
+            </div>
+        </div>
+
+        @* ---------- رسمة المدرسة المتحركة ---------- *@
+        <div class="hero-illu">
+            <svg viewBox="0 0 560 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="رسمة مدرسة">
+                <defs>
+                    <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#1e4fa3" stop-opacity=".55" />
+                        <stop offset="1" stop-color="#0b1f4b" stop-opacity="0" />
+                    </linearGradient>
+                    <linearGradient id="gWall" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#ffffff" />
+                        <stop offset="1" stop-color="#dbe6f8" />
+                    </linearGradient>
+                    <linearGradient id="gRoof" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#0f9d8f" />
+                        <stop offset="1" stop-color="#14b8a6" />
+                    </linearGradient>
+                    <linearGradient id="gDoor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#f59e0b" />
+                        <stop offset="1" stop-color="#f97316" />
+                    </linearGradient>
+                    <linearGradient id="gBus" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#fbbf24" />
+                        <stop offset="1" stop-color="#f59e0b" />
+                    </linearGradient>
+                </defs>
+
+                <!-- هالة الخلفية -->
+                <circle cx="290" cy="215" r="200" fill="url(#gSky)" />
+                <circle cx="290" cy="215" r="200" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1.5" class="a-pulse" />
+
+                <!-- الشمس -->
+                <g class="a-spin" style="transform-origin:470px 78px">
+                    <g stroke="#fbbf24" stroke-width="4" stroke-linecap="round" opacity=".85">
+                        <line x1="470" y1="34" x2="470" y2="48" />
+                        <line x1="470" y1="108" x2="470" y2="122" />
+                        <line x1="426" y1="78" x2="440" y2="78" />
+                        <line x1="500" y1="78" x2="514" y2="78" />
+                        <line x1="439" y1="47" x2="449" y2="57" />
+                        <line x1="491" y1="99" x2="501" y2="109" />
+                        <line x1="491" y1="57" x2="501" y2="47" />
+                        <line x1="439" y1="109" x2="449" y2="99" />
+                    </g>
+                </g>
+                <circle cx="470" cy="78" r="21" fill="#fbbf24" opacity=".95" />
+                <circle cx="470" cy="78" r="30" fill="#fbbf24" opacity=".16" class="a-pulse" />
+
+                <!-- سحب -->
+                <g class="a-drift" opacity=".5">
+                    <ellipse cx="110" cy="72" rx="34" ry="17" fill="#fff" />
+                    <ellipse cx="138" cy="72" rx="24" ry="13" fill="#fff" />
+                    <ellipse cx="86" cy="76" rx="20" ry="11" fill="#fff" />
+                </g>
+                <g class="a-drift-2" opacity=".32">
+                    <ellipse cx="380" cy="128" rx="27" ry="13" fill="#fff" />
+                    <ellipse cx="402" cy="128" rx="19" ry="10" fill="#fff" />
+                </g>
+
+                <!-- السارية والعلم -->
+                <line x1="150" y1="150" x2="150" y2="330" stroke="#8fa3cc" stroke-width="4" stroke-linecap="round" />
+                <g class="a-wave" style="transform-origin:150px 158px">
+                    <path d="M150 154 L214 168 L150 186 Z" fill="#0f9d8f" />
+                    <path d="M150 154 L214 168 L182 175 Z" fill="#14b8a6" opacity=".7" />
+                </g>
+
+                <!-- المبنى: الجناح الأيمن -->
+                <rect x="186" y="240" width="78" height="112" rx="10" fill="url(#gWall)" />
+                <rect x="202" y="262" width="20" height="20" rx="4" fill="#3159b8" opacity=".6" />
+                <rect x="230" y="262" width="20" height="20" rx="4" fill="#3159b8" opacity=".6" />
+                <rect x="202" y="296" width="20" height="20" rx="4" fill="#3159b8" opacity=".35" />
+                <rect x="230" y="296" width="20" height="20" rx="4" fill="#3159b8" opacity=".6" />
+                <path d="M180 240 L225 208 L270 240 Z" fill="url(#gRoof)" />
+
+                <!-- المبنى: الجناح الأيسر -->
+                <rect x="330" y="240" width="78" height="112" rx="10" fill="url(#gWall)" />
+                <rect x="346" y="262" width="20" height="20" rx="4" fill="#3159b8" opacity=".6" />
+                <rect x="374" y="262" width="20" height="20" rx="4" fill="#3159b8" opacity=".35" />
+                <rect x="346" y="296" width="20" height="20" rx="4" fill="#3159b8" opacity=".6" />
+                <rect x="374" y="296" width="20" height="20" rx="4" fill="#3159b8" opacity=".6" />
+                <path d="M324 240 L369 208 L414 240 Z" fill="url(#gRoof)" />
+
+                <!-- المبنى الرئيسي -->
+                <rect x="252" y="196" width="90" height="156" rx="12" fill="url(#gWall)" />
+                <path d="M244 196 L297 152 L350 196 Z" fill="url(#gRoof)" />
+                <rect x="290" y="130" width="14" height="30" rx="4" fill="#0b7d72" />
+
+                <!-- الساعة -->
+                <circle cx="297" cy="216" r="17" fill="#0b1f4b" opacity=".9" />
+                <circle cx="297" cy="216" r="14" fill="#fff" />
+                <g class="a-spin-f" style="transform-origin:297px 216px">
+                    <line x1="297" y1="216" x2="297" y2="207" stroke="#0b1f4b" stroke-width="2.4" stroke-linecap="round" />
+                </g>
+                <line x1="297" y1="216" x2="304" y2="216" stroke="#0f9d8f" stroke-width="2" stroke-linecap="round" />
+                <circle cx="297" cy="216" r="2" fill="#0b1f4b" />
+
+                <!-- الباب -->
+                <path d="M279 352 L279 288 Q297 272 315 288 L315 352 Z" fill="url(#gDoor)" />
+                <circle cx="307" cy="320" r="3" fill="#fff" opacity=".9" />
+                <rect x="294" y="288" width="2" height="64" fill="#fff" opacity=".3" />
+
+                <!-- الأرضية -->
+                <rect x="120" y="352" width="360" height="9" rx="4.5" fill="#0f9d8f" opacity=".65" />
+                <rect x="120" y="361" width="360" height="4" rx="2" fill="#0b1f4b" opacity=".35" />
+
+                <!-- الشجر -->
+                <g class="a-swing" style="transform-origin:154px 352px">
+                    <rect x="150" y="322" width="8" height="32" rx="4" fill="#8b5e3c" />
+                    <circle cx="154" cy="312" r="22" fill="#14b8a6" opacity=".92" />
+                    <circle cx="140" cy="322" r="14" fill="#0f9d8f" opacity=".9" />
+                    <circle cx="168" cy="322" r="14" fill="#0f9d8f" opacity=".9" />
+                </g>
+                <g class="a-swing" style="transform-origin:440px 352px;animation-delay:.9s">
+                    <rect x="436" y="326" width="8" height="28" rx="4" fill="#8b5e3c" />
+                    <circle cx="440" cy="318" r="19" fill="#14b8a6" opacity=".9" />
+                    <circle cx="428" cy="326" r="12" fill="#0f9d8f" opacity=".85" />
+                </g>
+
+                <!-- الحافلة -->
+                <g class="a-drift" style="animation-duration:16s">
+                    <rect x="60" y="316" width="72" height="36" rx="9" fill="url(#gBus)" />
+                    <rect x="66" y="324" width="17" height="14" rx="3" fill="#0b1f4b" opacity=".55" />
+                    <rect x="88" y="324" width="17" height="14" rx="3" fill="#0b1f4b" opacity=".55" />
+                    <rect x="110" y="324" width="16" height="14" rx="3" fill="#0b1f4b" opacity=".35" />
+                    <circle cx="78" cy="354" r="8" fill="#0b1f4b" />
+                    <circle cx="78" cy="354" r="3.4" fill="#8fa3cc" />
+                    <circle cx="116" cy="354" r="8" fill="#0b1f4b" />
+                    <circle cx="116" cy="354" r="3.4" fill="#8fa3cc" />
+                </g>
+
+                <!-- أيقونات عائمة -->
+                <g class="a-float">
+                    <rect x="94" y="196" width="52" height="44" rx="10" fill="#fff" opacity=".97" />
+                    <rect x="102" y="206" width="36" height="4" rx="2" fill="#3159b8" opacity=".55" />
+                    <rect x="102" y="216" width="26" height="4" rx="2" fill="#3159b8" opacity=".35" />
+                    <rect x="102" y="226" width="32" height="4" rx="2" fill="#0f9d8f" opacity=".55" />
+                </g>
+
+                <g class="a-float-2">
+                    <circle cx="432" cy="182" r="26" fill="#fff" opacity=".97" />
+                    <circle cx="432" cy="182" r="5" fill="#7c3aed" />
+                    <ellipse cx="432" cy="182" rx="20" ry="8" fill="none" stroke="#7c3aed" stroke-width="2.2" opacity=".8" />
+                    <ellipse cx="432" cy="182" rx="20" ry="8" fill="none" stroke="#7c3aed" stroke-width="2.2" opacity=".8" transform="rotate(60 432 182)" />
+                    <ellipse cx="432" cy="182" rx="20" ry="8" fill="none" stroke="#7c3aed" stroke-width="2.2" opacity=".8" transform="rotate(120 432 182)" />
+                </g>
+
+                <g class="a-float-3">
+                    <circle cx="112" cy="278" r="23" fill="#fff" opacity=".97" />
+                    <path d="M112 265 a11 11 0 0 1 6 20 v4 h-12 v-4 a11 11 0 0 1 6 -20 z" fill="#f59e0b" />
+                    <rect x="107" y="291" width="10" height="3.4" rx="1.7" fill="#f59e0b" opacity=".65" />
+                </g>
+
+                <g class="a-float" style="animation-delay:1.2s">
+                    <circle cx="466" cy="286" r="22" fill="#fff" opacity=".97" />
+                    <path d="M457 292 L468 276 L475 288" stroke="#0f9d8f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <circle cx="475" cy="288" r="3" fill="#0f9d8f" />
+                    <path d="M455 296 h22" stroke="#0f9d8f" stroke-width="2.6" stroke-linecap="round" opacity=".45" />
+                </g>
+            </svg>
+        </div>
+    </div>
+</header>
+
+@* ==================== شريط الإحصاءات ==================== *@
+<div class="wrap stats-bar">
+    <div class="stats-in reveal">
+        <div class="stat-i">
+            <div class="ic ic-teal"><i class="bi bi-mortarboard-fill"></i></div>
+            <div class="n" data-count="@Model.Students">0</div>
+            <div class="t">طالب وطالبة</div>
+        </div>
+        <div class="stat-i">
+            <div class="ic ic-blue"><i class="bi bi-person-badge-fill"></i></div>
+            <div class="n" data-count="@Model.Teachers">0</div>
+            <div class="t">معلم ومعلمة</div>
+        </div>
+        <div class="stat-i">
+            <div class="ic ic-purple"><i class="bi bi-building-fill"></i></div>
+            <div class="n" data-count="@Model.Sections">0</div>
+            <div class="t">شعبة دراسية</div>
+        </div>
+        <div class="stat-i">
+            <div class="ic ic-amber"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div class="n" data-count="@Model.Subjects">0</div>
+            <div class="t">مادة دراسية</div>
+        </div>
+        <div class="stat-i">
+            <div class="ic ic-coral"><i class="bi bi-bus-front-fill"></i></div>
+            <div class="n" data-count="@Model.Buses">0</div>
+            <div class="t">حافلة مدرسية</div>
+        </div>
+    </div>
+</div>
+
+@* ==================== عن المدرسة ==================== *@
+<section class="sec" id="about">
+    <div class="wrap">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6 reveal">
+                <div class="eyebrow"><i class="bi bi-building-check"></i> من نحن</div>
+                <h2 class="sec-title">مدرسة تُوازن بين الأصالة والمهارات الحديثة</h2>
+                <p class="sec-sub" style="margin-bottom:1.4rem">
+                    نقدّم تعليماً نوعياً يبدأ من الصفوف الأولى وحتى الثانوية العامة، ضمن بيئة
+                    تربوية آمنة تُنمّي الشخصية والقيم إلى جانب التحصيل الأكاديمي. نعتمد على
+                    التعلّم النشط والمشاريع التطبيقية بدل الحفظ، ونقيس تقدّم كل طالب بشكل مستمر.
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="feat">
+                            <div class="feat-ic ic-teal"><i class="bi bi-bullseye"></i></div>
+                            <h3>رسالتنا</h3>
+                            <p>إعداد متعلّم واثق، متمكّن من لغته وهويته، وقادر على المنافسة عالمياً.</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="feat">
+                            <div class="feat-ic ic-purple"><i class="bi bi-eye"></i></div>
+                            <h3>رؤيتنا</h3>
+                            <p>أن نكون خياراً تعليمياً أول للأسرة الباحثة عن جودة حقيقية ومتابعة شفافة.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 reveal d2">
+                @* رسمة الفصل الدراسي المتحركة *@
+                <svg viewBox="0 0 520 380" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="فصل دراسي">
+                    <defs>
+                        <linearGradient id="gBoard" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#0f766e" />
+                            <stop offset="1" stop-color="#134e4a" />
+                        </linearGradient>
+                        <linearGradient id="gCard" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#f4f7fd" />
+                            <stop offset="1" stop-color="#e2e9f7" />
+                        </linearGradient>
+                    </defs>
+
+                    <rect x="20" y="24" width="480" height="330" rx="26" fill="url(#gCard)" />
+
+                    <!-- السبورة -->
+                    <rect x="62" y="60" width="266" height="150" rx="12" fill="url(#gBoard)" />
+                    <rect x="62" y="60" width="266" height="150" rx="12" fill="none" stroke="#0b1f4b" stroke-opacity=".18" stroke-width="2" />
+
+                    <!-- كتابة على السبورة تُرسم تدريجياً -->
+                    <path d="M96 108 h94" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" class="a-dash" />
+                    <path d="M96 132 h150" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".75" class="a-dash" style="animation-delay:.5s" />
+                    <path d="M96 154 h112" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".45" class="a-dash" style="animation-delay:1s" />
+                    <path d="M96 176 h72" stroke="#4fd1c5" stroke-width="4" stroke-linecap="round" class="a-dash" style="animation-delay:1.4s" />
+
+                    <!-- معادلة صغيرة تنبض -->
+                    <g class="a-pulse" style="transform-origin:288px 92px">
+                        <circle cx="288" cy="92" r="17" fill="#fbbf24" opacity=".25" />
+                        <text x="288" y="98" text-anchor="middle" font-size="16" font-weight="700" fill="#fbbf24">%</text>
+                    </g>
+
+                    <!-- المعلمة -->
+                    <g class="a-float-s">
+                        <circle cx="392" cy="106" r="21" fill="#f59e0b" />
+                        <path d="M392 84 a21 21 0 0 1 21 20 h-42 a21 21 0 0 1 21 -20z" fill="#0b1f4b" opacity=".75" />
+                        <circle cx="386" cy="106" r="2.4" fill="#0b1f4b" class="a-blink" />
+                        <circle cx="398" cy="106" r="2.4" fill="#0b1f4b" />
+                        <path d="M386 114 q6 5 12 0" stroke="#0b1f4b" stroke-width="2" stroke-linecap="round" fill="none" />
+                        <rect x="372" y="132" width="40" height="52" rx="16" fill="#0f9d8f" />
+                        <rect x="356" y="140" width="16" height="7" rx="3.5" fill="#f59e0b" />
+                    </g>
+
+                    <!-- مقاعد الطلاب -->
+                    <g>
+                        <rect x="74" y="248" width="112" height="12" rx="6" fill="#3159b8" opacity=".85" />
+                        <rect x="88" y="260" width="8" height="34" rx="4" fill="#8fa3cc" />
+                        <rect x="164" y="260" width="8" height="34" rx="4" fill="#8fa3cc" />
+                        <g class="a-float-s">
+                            <circle cx="106" cy="228" r="15" fill="#7c3aed" />
+                            <circle cx="101" cy="228" r="1.9" fill="#fff" />
+                            <circle cx="111" cy="228" r="1.9" fill="#fff" />
+                            <rect x="92" y="245" width="28" height="6" rx="3" fill="#7c3aed" opacity=".55" />
+                        </g>
+                        <g class="a-float-s" style="animation-delay:.6s">
+                            <circle cx="154" cy="228" r="15" fill="#ec4899" />
+                            <circle cx="149" cy="228" r="1.9" fill="#fff" />
+                            <circle cx="159" cy="228" r="1.9" fill="#fff" />
+                            <rect x="140" y="245" width="28" height="6" rx="3" fill="#ec4899" opacity=".55" />
+                        </g>
+                    </g>
+
+                    <g>
+                        <rect x="222" y="248" width="112" height="12" rx="6" fill="#3159b8" opacity=".85" />
+                        <rect x="236" y="260" width="8" height="34" rx="4" fill="#8fa3cc" />
+                        <rect x="312" y="260" width="8" height="34" rx="4" fill="#8fa3cc" />
+                        <g class="a-float-s" style="animation-delay:.3s">
+                            <circle cx="254" cy="228" r="15" fill="#0ea5e9" />
+                            <circle cx="249" cy="228" r="1.9" fill="#fff" />
+                            <circle cx="259" cy="228" r="1.9" fill="#fff" />
+                            <rect x="240" y="245" width="28" height="6" rx="3" fill="#0ea5e9" opacity=".55" />
+                        </g>
+                        <g class="a-float-s" style="animation-delay:.9s">
+                            <circle cx="302" cy="228" r="15" fill="#f97316" />
+                            <circle cx="297" cy="228" r="1.9" fill="#fff" />
+                            <circle cx="307" cy="228" r="1.9" fill="#fff" />
+                            <rect x="288" y="245" width="28" height="6" rx="3" fill="#f97316" opacity=".55" />
+                        </g>
+                    </g>
+
+                    <g>
+                        <rect x="370" y="248" width="86" height="12" rx="6" fill="#3159b8" opacity=".85" />
+                        <rect x="382" y="260" width="8" height="34" rx="4" fill="#8fa3cc" />
+                        <rect x="436" y="260" width="8" height="34" rx="4" fill="#8fa3cc" />
+                        <g class="a-float-s" style="animation-delay:1.2s">
+                            <circle cx="412" cy="228" r="15" fill="#14b8a6" />
+                            <circle cx="407" cy="228" r="1.9" fill="#fff" />
+                            <circle cx="417" cy="228" r="1.9" fill="#fff" />
+                            <rect x="398" y="245" width="28" height="6" rx="3" fill="#14b8a6" opacity=".55" />
+                        </g>
+                    </g>
+
+                    <!-- أرضية -->
+                    <rect x="52" y="308" width="416" height="7" rx="3.5" fill="#0f9d8f" opacity=".45" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== المراحل والفئات ==================== *@
+<section class="sec sec-soft" id="stages">
+    <div class="wrap">
+        <div class="center reveal" style="margin-bottom:2.6rem">
+            <div class="eyebrow"><i class="bi bi-layers-fill"></i> الفئات العمرية</div>
+            <h2 class="sec-title">المراحل الدراسية التي نستقبلها</h2>
+            <p class="sec-sub">
+                نستقبل الطلاب عبر مراحل متدرّجة، لكل مرحلة منهج وأنشطة وأسلوب تقويم يناسب عمر الطالب.
+            </p>
+        </div>
+
+        <div class="stage-grid">
+            @{
+                var stageIcons = new[] { "bi-balloon-heart-fill", "bi-backpack2-fill", "bi-mortarboard-fill", "bi-award-fill" };
+                var stageTones = new[] { "ic-teal", "ic-blue", "ic-purple", "ic-amber" };
+                var stageDesc = new[]
+                {
+                    "بناء الأساس: القراءة والكتابة والحساب عبر اللعب والاكتشاف، مع تنمية المهارات الحركية والاجتماعية.",
+                    "ترسيخ المهارات: تعمّق في العلوم واللغات وبداية التفكير النقدي والمشاريع الجماعية.",
+                    "التخصص والإعداد: مسارات علمية وأدبية وإعداد مكثّف لاختبارات الشهادة العامة والجامعة.",
+                    "برامج متقدمة وإثرائية للطلاب المتميزين."
+                };
+                var i = 0;
+            }
+
+            @if (Model.Stages.Count == 0)
+            {
+                <div class="stage-card reveal">
+                    <div class="top-bar"></div>
+                    <div class="stage-illu"><i class="bi bi-layers" style="font-size:3rem;color:var(--l-mute)"></i></div>
+                    <h3>لم تُضف المراحل بعد</h3>
+                    <div class="range">سيتم عرض المراحل هنا فور إضافتها من لوحة التحكم.</div>
+                </div>
+            }
+
+            @foreach (var st in Model.Stages)
+            {
+                var idx = Math.Min(i, stageIcons.Length - 1);
+                <div class="stage-card reveal d@(Math.Min(i + 1, 4))">
+                    <div class="top-bar"></div>
+                    <div class="stage-illu">
+                        <div class="@stageTones[idx] a-float-s"
+                             style="width:78px;height:78px;border-radius:24px;display:grid;place-items:center;font-size:2.2rem">
+                            <i class="bi @stageIcons[idx]"></i>
+                        </div>
+                    </div>
+                    <h3>@st.Name</h3>
+                    <div class="range">@stageDesc[idx]</div>
+                    <div class="stage-meta">
+                        <span class="pill pill-age"><i class="bi bi-person-standing"></i> @st.AgeLabel</span>
+                        <span class="pill">@st.GradesCount صفوف</span>
+                        <span class="pill">@st.StudentsCount.ToString("N0") طالب</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(st.GradeRange))
+                    {
+                        <div class="fs-xs" style="color:var(--l-mute);font-size:.78rem;margin-top:.7rem">
+                            <i class="bi bi-bookmark"></i> @st.GradeRange
+                        </div>
+                    }
+                </div>
+                i++;
+            }
+        </div>
+    </div>
+</section>
+
+@* ==================== الشهادات والبرامج ==================== *@
+<section class="sec" id="programs">
+    <div class="wrap">
+        <div class="center reveal" style="margin-bottom:2.6rem">
+            <div class="eyebrow"><i class="bi bi-patch-check-fill"></i> الشهادات والبرامج</div>
+            <h2 class="sec-title">ماذا تقدّم المدرسة؟</h2>
+            <p class="sec-sub">
+                مسارات تعليمية معتمدة وبرامج إثرائية تُصدر لها شهادات موثّقة من المدرسة،
+                ترافق الطالب في ملفه الأكاديمي.
+            </p>
+        </div>
+
+        <div class="prog-grid">
+            <div class="prog-card reveal">
+                <span class="ribbon">المسار الأساسي</span>
+                <div class="prog-ic ic-blue"><i class="bi bi-mortarboard-fill"></i></div>
+                <h3>شهادة الدبلوم العام</h3>
+                <p>المنهج الوطني المعتمد من وزارة التربية والتعليم، من الصف الأول حتى الثاني عشر.</p>
+                <ul class="prog-list">
+                    <li><i class="bi bi-check-circle-fill"></i> كشف درجات فصلي معتمد</li>
+                    <li><i class="bi bi-check-circle-fill"></i> شهادة إتمام لكل صف دراسي</li>
+                    <li><i class="bi bi-check-circle-fill"></i> إعداد مكثّف لاختبارات الدبلوم</li>
+                </ul>
+            </div>
+
+            <div class="prog-card reveal d1">
+                <span class="ribbon">لغات</span>
+                <div class="prog-ic ic-teal"><i class="bi bi-translate"></i></div>
+                <h3>برنامج ثنائي اللغة</h3>
+                <p>تقوية اللغة الإنجليزية بمستويات متدرّجة إلى جانب إتقان اللغة العربية.</p>
+                <ul class="prog-list">
+                    <li><i class="bi bi-check-circle-fill"></i> شهادة إتقان لغوي بمستويات</li>
+                    <li><i class="bi bi-check-circle-fill"></i> حصص محادثة مع معلمين متخصصين</li>
+                    <li><i class="bi bi-check-circle-fill"></i> تحضير لاختبارات اللغة الدولية</li>
+                </ul>
+            </div>
+
+            <div class="prog-card reveal d2">
+                <span class="ribbon">إثرائي</span>
+                <div class="prog-ic ic-purple"><i class="bi bi-cpu-fill"></i></div>
+                <h3>الحاسب والروبوت</h3>
+                <p>البرمجة والتفكير الحاسوبي والروبوتات ضمن معمل تقني مجهّز.</p>
+                <ul class="prog-list">
+                    <li><i class="bi bi-check-circle-fill"></i> شهادة في أساسيات البرمجة</li>
+                    <li><i class="bi bi-check-circle-fill"></i> مشاركة في مسابقات الروبوت</li>
+                    <li><i class="bi bi-check-circle-fill"></i> مشاريع تطبيقية بمعرض سنوي</li>
+                </ul>
+            </div>
+
+            <div class="prog-card reveal">
+                <span class="ribbon">قرآني</span>
+                <div class="prog-ic ic-amber"><i class="bi bi-book-fill"></i></div>
+                <h3>برنامج التحفيظ والتجويد</h3>
+                <p>حلقات قرآنية بإشراف معلمين مجازين، بخطة حفظ متدرّجة لكل مستوى.</p>
+                <ul class="prog-list">
+                    <li><i class="bi bi-check-circle-fill"></i> إجازة في الحفظ حسب الأجزاء</li>
+                    <li><i class="bi bi-check-circle-fill"></i> شهادة إتقان التجويد</li>
+                    <li><i class="bi bi-check-circle-fill"></i> مسابقات داخلية وحفل تكريم</li>
+                </ul>
+            </div>
+
+            <div class="prog-card reveal d1">
+                <span class="ribbon">موهبة</span>
+                <div class="prog-ic ic-pink"><i class="bi bi-palette-fill"></i></div>
+                <h3>الفنون والمواهب</h3>
+                <p>الرسم والخط العربي والمسرح والإنشاد، لاكتشاف ميول الطالب وصقلها.</p>
+                <ul class="prog-list">
+                    <li><i class="bi bi-check-circle-fill"></i> شهادة مشاركة في المعرض الفني</li>
+                    <li><i class="bi bi-check-circle-fill"></i> ورش متخصصة على مدار العام</li>
+                    <li><i class="bi bi-check-circle-fill"></i> عروض مسرحية أمام أولياء الأمور</li>
+                </ul>
+            </div>
+
+            <div class="prog-card reveal d2">
+                <span class="ribbon">رياضي</span>
+                <div class="prog-ic ic-coral"><i class="bi bi-trophy-fill"></i></div>
+                <h3>الأنشطة الرياضية</h3>
+                <p>فرق مدرسية في كرة القدم والسلة وألعاب القوى، بملاعب مجهّزة.</p>
+                <ul class="prog-list">
+                    <li><i class="bi bi-check-circle-fill"></i> شهادة عضوية الفريق المدرسي</li>
+                    <li><i class="bi bi-check-circle-fill"></i> بطولات داخلية وخارجية</li>
+                    <li><i class="bi bi-check-circle-fill"></i> متابعة اللياقة والصحة</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== الأنشطة ==================== *@
+<section class="sec sec-soft" id="activities">
+    <div class="wrap">
+        <div class="center reveal" style="margin-bottom:2.6rem">
+            <div class="eyebrow"><i class="bi bi-stars"></i> الحياة المدرسية</div>
+            <h2 class="sec-title">أنشطة تجعل اليوم الدراسي ممتعاً</h2>
+            <p class="sec-sub">
+                التعلّم عندنا لا يتوقف عند حدود الكتاب — مختبرات ومسرح وملاعب وورش تُخرج
+                طاقات الطالب وتبني ثقته بنفسه.
+            </p>
+        </div>
+
+        <div class="act-grid">
+
+            @* ---------- المختبر العلمي ---------- *@
+            <div class="act-card reveal">
+                <div class="act-scene" style="background:linear-gradient(135deg,#0f766e,#134e4a)">
+                    <span class="act-tag"><i class="bi bi-eyedropper"></i> علوم</span>
+                    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="مختبر علمي">
+                        <circle cx="200" cy="100" r="78" fill="#fff" opacity=".06" class="a-pulse" />
+                        <!-- دورق -->
+                        <path d="M176 62 h48 v30 l30 62 a12 12 0 0 1 -10 18 h-88 a12 12 0 0 1 -10 -18 l30 -62 z"
+                              fill="#7dd3fc" fill-opacity=".22" stroke="#7dd3fc" stroke-width="3" stroke-linejoin="round" />
+                        <path d="M158 132 l-8 16 a12 12 0 0 0 10 18 h80 a12 12 0 0 0 10 -18 l-8 -16 z" fill="#14b8a6" opacity=".85" />
+                        <rect x="172" y="54" width="56" height="10" rx="5" fill="#7dd3fc" />
+                        <!-- فقاعات -->
+                        <circle cx="186" cy="150" r="5" fill="#fff" opacity=".85" class="a-bubble" />
+                        <circle cx="204" cy="152" r="4" fill="#fff" opacity=".8" class="a-bubble b2" />
+                        <circle cx="220" cy="148" r="6" fill="#fff" opacity=".75" class="a-bubble b3" />
+                        <!-- أنابيب -->
+                        <g class="a-float-s">
+                            <rect x="292" y="70" width="17" height="72" rx="8.5" fill="#fbbf24" opacity=".28" stroke="#fbbf24" stroke-width="2.5" />
+                            <rect x="294" y="108" width="13" height="32" rx="6.5" fill="#fbbf24" />
+                        </g>
+                        <g class="a-float-s" style="animation-delay:.7s">
+                            <rect x="318" y="84" width="17" height="58" rx="8.5" fill="#ec4899" opacity=".28" stroke="#ec4899" stroke-width="2.5" />
+                            <rect x="320" y="114" width="13" height="26" rx="6.5" fill="#ec4899" />
+                        </g>
+                        <!-- ذرّة -->
+                        <g class="a-float" style="animation-delay:.4s">
+                            <circle cx="78" cy="86" r="4.5" fill="#4fd1c5" />
+                            <ellipse cx="78" cy="86" rx="26" ry="10" fill="none" stroke="#4fd1c5" stroke-width="2.4" opacity=".75" />
+                            <ellipse cx="78" cy="86" rx="26" ry="10" fill="none" stroke="#4fd1c5" stroke-width="2.4" opacity=".75" transform="rotate(60 78 86)" />
+                            <ellipse cx="78" cy="86" rx="26" ry="10" fill="none" stroke="#4fd1c5" stroke-width="2.4" opacity=".75" transform="rotate(120 78 86)" />
+                        </g>
+                        <rect x="90" y="164" width="220" height="6" rx="3" fill="#fff" opacity=".22" />
+                    </svg>
+                </div>
+                <div class="act-body">
+                    <h3>المختبر العلمي</h3>
+                    <p>تجارب عملية في الفيزياء والكيمياء والأحياء بإشراف مختصين وأدوات آمنة.</p>
+                </div>
+            </div>
+
+            @* ---------- الرياضة ---------- *@
+            <div class="act-card reveal d1">
+                <div class="act-scene" style="background:linear-gradient(135deg,#166534,#15803d)">
+                    <span class="act-tag"><i class="bi bi-dribbble"></i> رياضة</span>
+                    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ملعب رياضي">
+                        <!-- الملعب -->
+                        <rect x="40" y="52" width="320" height="118" rx="12" fill="#fff" fill-opacity=".08" stroke="#fff" stroke-opacity=".35" stroke-width="2.5" />
+                        <line x1="200" y1="52" x2="200" y2="170" stroke="#fff" stroke-opacity=".35" stroke-width="2.5" />
+                        <circle cx="200" cy="111" r="30" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2.5" />
+                        <rect x="40" y="84" width="34" height="54" rx="6" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="2.5" />
+                        <rect x="326" y="84" width="34" height="54" rx="6" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="2.5" />
+                        <!-- الكرة -->
+                        <g class="a-bounce" style="transform-origin:200px 152px">
+                            <circle cx="200" cy="146" r="17" fill="#fff" />
+                            <path d="M200 132 l9 7 -3.4 11 h-11 L191 139 z" fill="#0b1f4b" />
+                            <path d="M186 141 l-6 8 M214 141 l6 8 M195 158 l-4 8 M205 158 l4 8"
+                                  stroke="#0b1f4b" stroke-width="2.2" stroke-linecap="round" />
+                        </g>
+                        <ellipse cx="200" cy="170" rx="18" ry="4" fill="#000" opacity=".18" />
+                        <!-- كأس -->
+                        <g class="a-float-s">
+                            <path d="M330 36 h30 v14 a15 15 0 0 1 -30 0 z" fill="#fbbf24" />
+                            <rect x="341" y="64" width="8" height="10" rx="2" fill="#f59e0b" />
+                            <rect x="333" y="74" width="24" height="6" rx="3" fill="#f59e0b" />
+                            <path d="M330 38 h-8 a8 8 0 0 0 8 12" stroke="#fbbf24" stroke-width="3" fill="none" />
+                            <path d="M360 38 h8 a8 8 0 0 1 -8 12" stroke="#fbbf24" stroke-width="3" fill="none" />
+                        </g>
+                        <!-- صافرة -->
+                        <g class="a-float-s" style="animation-delay:.8s">
+                            <circle cx="60" cy="42" r="13" fill="#fff" opacity=".9" />
+                            <path d="M60 35 v14 M53 42 h14" stroke="#166534" stroke-width="3" stroke-linecap="round" />
+                        </g>
+                    </svg>
+                </div>
+                <div class="act-body">
+                    <h3>الأنشطة الرياضية</h3>
+                    <p>فرق مدرسية وبطولات داخلية في كرة القدم والسلة وألعاب القوى.</p>
+                </div>
+            </div>
+
+            @* ---------- الفنون ---------- *@
+            <div class="act-card reveal d2">
+                <div class="act-scene" style="background:linear-gradient(135deg,#7c3aed,#c026d3)">
+                    <span class="act-tag"><i class="bi bi-brush"></i> فنون</span>
+                    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="فنون ورسم">
+                        <circle cx="200" cy="100" r="76" fill="#fff" opacity=".07" class="a-pulse" />
+                        <!-- لوحة الألوان -->
+                        <g class="a-float-s">
+                            <path d="M200 48 a56 46 0 1 0 8 92 c-9 0 -14 -7 -12 -14 c2 -8 10 -8 18 -8 c22 0 42 -12 42 -34 a56 46 0 0 0 -56 -36 z"
+                                  fill="#fff" opacity=".95" />
+                            <circle cx="176" cy="80" r="9" fill="#ef4444" />
+                            <circle cx="206" cy="70" r="9" fill="#3b82f6" />
+                            <circle cx="234" cy="86" r="9" fill="#22c55e" />
+                            <circle cx="182" cy="112" r="9" fill="#f59e0b" />
+                            <circle cx="212" cy="118" r="9" fill="#7c3aed" />
+                        </g>
+                        <!-- الفرشاة -->
+                        <g class="a-swing" style="transform-origin:308px 44px">
+                            <rect x="302" y="44" width="10" height="72" rx="5" fill="#fbbf24" />
+                            <path d="M300 116 h14 l-3 22 h-8 z" fill="#f97316" />
+                            <path d="M303 138 h8 l-4 12 z" fill="#ec4899" />
+                        </g>
+                        <!-- بقع لونية -->
+                        <circle cx="84" cy="62" r="11" fill="#fbbf24" opacity=".85" class="a-float-s" />
+                        <circle cx="70" cy="122" r="8" fill="#4fd1c5" opacity=".85" class="a-float-s" style="animation-delay:.6s" />
+                        <circle cx="110" cy="150" r="7" fill="#f472b6" opacity=".85" class="a-float-s" style="animation-delay:1.1s" />
+                        <circle cx="330" cy="160" r="9" fill="#7dd3fc" opacity=".8" class="a-float-s" style="animation-delay:.3s" />
+                    </svg>
+                </div>
+                <div class="act-body">
+                    <h3>الفنون والخط العربي</h3>
+                    <p>ورش رسم وخط ومسرح، ومعرض سنوي يعرض أعمال الطلاب أمام أولياء الأمور.</p>
+                </div>
+            </div>
+
+            @* ---------- الروبوت والبرمجة ---------- *@
+            <div class="act-card reveal">
+                <div class="act-scene" style="background:linear-gradient(135deg,#0b1f4b,#1e40af)">
+                    <span class="act-tag"><i class="bi bi-robot"></i> تقنية</span>
+                    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="روبوت وبرمجة">
+                        <!-- الروبوت -->
+                        <g class="a-float">
+                            <line x1="200" y1="44" x2="200" y2="58" stroke="#4fd1c5" stroke-width="3" stroke-linecap="round" />
+                            <circle cx="200" cy="40" r="6" fill="#4fd1c5" class="a-pulse" />
+                            <rect x="160" y="58" width="80" height="62" rx="18" fill="#e2e9f7" />
+                            <rect x="172" y="76" width="56" height="26" rx="13" fill="#0b1f4b" />
+                            <circle cx="187" cy="89" r="6" fill="#4fd1c5" class="a-blink" style="animation:blink 3.6s infinite" />
+                            <circle cx="213" cy="89" r="6" fill="#4fd1c5" class="a-blink" style="animation:blink 3.6s infinite .2s" />
+                            <rect x="176" y="126" width="48" height="40" rx="12" fill="#cbd8ee" />
+                            <rect x="190" y="138" width="20" height="6" rx="3" fill="#3159b8" opacity=".6" />
+                            <rect x="190" y="150" width="14" height="6" rx="3" fill="#3159b8" opacity=".4" />
+                            <rect x="150" y="128" width="20" height="8" rx="4" fill="#e2e9f7" />
+                            <rect x="230" y="128" width="20" height="8" rx="4" fill="#e2e9f7" />
+                        </g>
+                        <!-- أسطر كود -->
+                        <g opacity=".85">
+                            <rect x="52" y="66" width="58" height="7" rx="3.5" fill="#4fd1c5" class="a-dash" style="stroke:none" />
+                            <rect x="52" y="82" width="40" height="7" rx="3.5" fill="#7dd3fc" opacity=".8" />
+                            <rect x="62" y="98" width="50" height="7" rx="3.5" fill="#fbbf24" opacity=".8" />
+                            <rect x="62" y="114" width="34" height="7" rx="3.5" fill="#f472b6" opacity=".7" />
+                            <rect x="52" y="130" width="46" height="7" rx="3.5" fill="#7dd3fc" opacity=".55" />
+                        </g>
+                        <g opacity=".75">
+                            <rect x="292" y="72" width="52" height="7" rx="3.5" fill="#7dd3fc" />
+                            <rect x="302" y="88" width="38" height="7" rx="3.5" fill="#4fd1c5" opacity=".8" />
+                            <rect x="302" y="104" width="46" height="7" rx="3.5" fill="#fbbf24" opacity=".7" />
+                            <rect x="292" y="120" width="30" height="7" rx="3.5" fill="#f472b6" opacity=".6" />
+                        </g>
+                        <!-- تروس -->
+                        <g class="a-spin" style="transform-origin:330px 158px">
+                            <circle cx="330" cy="158" r="13" fill="none" stroke="#fbbf24" stroke-width="4" stroke-dasharray="5 4" />
+                        </g>
+                        <g class="a-spin" style="transform-origin:66px 162px;animation-direction:reverse">
+                            <circle cx="66" cy="162" r="10" fill="none" stroke="#4fd1c5" stroke-width="4" stroke-dasharray="4 4" />
+                        </g>
+                    </svg>
+                </div>
+                <div class="act-body">
+                    <h3>الروبوت والبرمجة</h3>
+                    <p>معمل تقني لتعلّم البرمجة وبناء الروبوتات والمشاركة في المسابقات.</p>
+                </div>
+            </div>
+
+            @* ---------- الموسيقى والإنشاد ---------- *@
+            <div class="act-card reveal d1">
+                <div class="act-scene" style="background:linear-gradient(135deg,#b45309,#f59e0b)">
+                    <span class="act-tag"><i class="bi bi-music-note-beamed"></i> إنشاد</span>
+                    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="إنشاد وموسيقى">
+                        <circle cx="200" cy="100" r="72" fill="#fff" opacity=".08" class="a-pulse" />
+                        <!-- ميكروفون -->
+                        <g class="a-float-s">
+                            <rect x="186" y="52" width="28" height="52" rx="14" fill="#fff" opacity=".95" />
+                            <rect x="192" y="60" width="16" height="4" rx="2" fill="#b45309" opacity=".45" />
+                            <rect x="192" y="70" width="16" height="4" rx="2" fill="#b45309" opacity=".45" />
+                            <rect x="192" y="80" width="16" height="4" rx="2" fill="#b45309" opacity=".45" />
+                            <path d="M172 94 a28 28 0 0 0 56 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" />
+                            <rect x="196" y="122" width="8" height="26" rx="4" fill="#fff" opacity=".9" />
+                            <rect x="182" y="148" width="36" height="8" rx="4" fill="#fff" opacity=".9" />
+                        </g>
+                        <!-- نوتات طائرة -->
+                        <g fill="#fff" opacity=".95">
+                            <g class="a-note">
+                                <circle cx="120" cy="120" r="8" />
+                                <rect x="126" y="90" width="3.4" height="32" rx="1.7" />
+                                <path d="M129 90 q12 5 12 14 q-4 -8 -12 -8 z" />
+                            </g>
+                            <g class="a-note n2">
+                                <circle cx="272" cy="128" r="7" />
+                                <rect x="277" y="102" width="3.2" height="28" rx="1.6" />
+                                <path d="M280 102 q10 4 10 12 q-3 -7 -10 -7 z" />
+                            </g>
+                            <g class="a-note n3">
+                                <circle cx="96" cy="70" r="6" />
+                                <rect x="100" y="48" width="3" height="24" rx="1.5" />
+                                <path d="M103 48 q9 4 9 11 q-3 -6 -9 -6 z" />
+                            </g>
+                        </g>
+                        <!-- موجات صوت -->
+                        <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55">
+                            <path d="M312 84 q12 16 0 32" fill="none" class="a-pulse" />
+                            <path d="M328 74 q20 26 0 52" fill="none" class="a-pulse" style="animation-delay:.4s" />
+                            <path d="M88 84 q-12 16 0 32" fill="none" class="a-pulse" style="animation-delay:.2s" />
+                        </g>
+                    </svg>
+                </div>
+                <div class="act-body">
+                    <h3>الإنشاد والمسرح</h3>
+                    <p>فرقة إنشاد وعروض مسرحية في المناسبات الوطنية والحفل السنوي.</p>
+                </div>
+            </div>
+
+            @* ---------- المكتبة ---------- *@
+            <div class="act-card reveal d2">
+                <div class="act-scene" style="background:linear-gradient(135deg,#1b3a80,#0ea5e9)">
+                    <span class="act-tag"><i class="bi bi-book"></i> قراءة</span>
+                    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="مكتبة وقراءة">
+                        <circle cx="200" cy="104" r="74" fill="#fff" opacity=".07" class="a-pulse" />
+                        <!-- كتاب مفتوح -->
+                        <g class="a-float-s">
+                            <path d="M200 78 q-30 -18 -66 -12 v82 q36 -6 66 12 z" fill="#fff" opacity=".96" />
+                            <path d="M200 78 q30 -18 66 -12 v82 q-36 -6 -66 12 z" fill="#e2e9f7" opacity=".96" />
+                            <rect x="196" y="76" width="8" height="84" rx="4" fill="#1b3a80" opacity=".85" />
+                            <g stroke="#3159b8" stroke-width="2.6" stroke-linecap="round" opacity=".45">
+                                <path d="M148 96 h38" /><path d="M148 110 h38" /><path d="M148 124 h30" />
+                                <path d="M214 96 h38" /><path d="M214 110 h38" /><path d="M214 124 h30" />
+                            </g>
+                        </g>
+                        <!-- كتب متراصة -->
+                        <g class="a-float-s" style="animation-delay:.7s">
+                            <rect x="76" y="120" width="14" height="48" rx="4" fill="#fbbf24" />
+                            <rect x="93" y="108" width="14" height="60" rx="4" fill="#4fd1c5" />
+                            <rect x="110" y="126" width="14" height="42" rx="4" fill="#f472b6" />
+                        </g>
+                        <g class="a-float-s" style="animation-delay:1.1s">
+                            <rect x="288" y="112" width="14" height="56" rx="4" fill="#f97316" />
+                            <rect x="305" y="126" width="14" height="42" rx="4" fill="#a78bfa" />
+                            <rect x="322" y="118" width="14" height="50" rx="4" fill="#4fd1c5" />
+                        </g>
+                        <!-- مصباح فكرة -->
+                        <g class="a-float" style="animation-delay:.4s">
+                            <path d="M200 30 a15 15 0 0 1 8 27 v5 h-16 v-5 a15 15 0 0 1 8 -27 z" fill="#fbbf24" />
+                            <rect x="194" y="64" width="12" height="4" rx="2" fill="#f59e0b" />
+                        </g>
+                        <rect x="70" y="172" width="260" height="6" rx="3" fill="#fff" opacity=".2" />
+                    </svg>
+                </div>
+                <div class="act-body">
+                    <h3>المكتبة ومسابقات القراءة</h3>
+                    <p>مكتبة غنية ومسابقة «القارئ المتميز» لتعزيز حب المطالعة لدى الطلاب.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== شريط متحرك ==================== *@
+<div class="ticker">
+    <div class="ticker-track">
+        @for (var rep = 0; rep < 2; rep++)
+        {
+            <span class="ticker-item"><i class="bi bi-flag-fill"></i> اليوم الوطني</span>
+            <span class="dot"></span>
+            <span class="ticker-item"><i class="bi bi-easel-fill"></i> معرض العلوم</span>
+            <span class="dot"></span>
+            <span class="ticker-item"><i class="bi bi-tree-fill"></i> الرحلات التعليمية</span>
+            <span class="dot"></span>
+            <span class="ticker-item"><i class="bi bi-heart-pulse-fill"></i> اليوم الصحي</span>
+            <span class="dot"></span>
+            <span class="ticker-item"><i class="bi bi-book-half"></i> أسبوع القراءة</span>
+            <span class="dot"></span>
+            <span class="ticker-item"><i class="bi bi-cpu-fill"></i> مسابقة الروبوت</span>
+            <span class="dot"></span>
+            <span class="ticker-item"><i class="bi bi-trophy-fill"></i> البطولة الرياضية</span>
+            <span class="dot"></span>
+            <span class="ticker-item"><i class="bi bi-mic-fill"></i> الحفل السنوي</span>
+            <span class="dot"></span>
+        }
+    </div>
+</div>
+
+@* ==================== لماذا نحن ==================== *@
+<section class="sec" id="why">
+    <div class="wrap">
+        <div class="center reveal" style="margin-bottom:2.6rem">
+            <div class="eyebrow"><i class="bi bi-hand-thumbs-up-fill"></i> لماذا نحن</div>
+            <h2 class="sec-title">ما الذي يميّز تجربتنا التعليمية؟</h2>
+        </div>
+
+        <div class="feat-grid">
+            <div class="feat reveal">
+                <div class="feat-ic ic-teal"><i class="bi bi-people-fill"></i></div>
+                <h3>فصول بأعداد مدروسة</h3>
+                <p>لا يتجاوز الفصل 30 طالباً ليحصل كل طالب على اهتمام حقيقي من معلمه.</p>
+            </div>
+            <div class="feat reveal d1">
+                <div class="feat-ic ic-blue"><i class="bi bi-phone-fill"></i></div>
+                <h3>بوابة ولي الأمر</h3>
+                <p>تابع الحضور والدرجات والواجبات والرسوم من حسابك في أي وقت.</p>
+            </div>
+            <div class="feat reveal d2">
+                <div class="feat-ic ic-amber"><i class="bi bi-qr-code-scan"></i></div>
+                <h3>حضور ذكي بـ QR</h3>
+                <p>تسجيل الحضور والانصراف إلكترونياً مع إشعار فوري لولي الأمر عند الغياب.</p>
+            </div>
+            <div class="feat reveal d3">
+                <div class="feat-ic ic-coral"><i class="bi bi-bus-front-fill"></i></div>
+                <h3>نقل مدرسي آمن</h3>
+                <p>حافلات مجهّزة بمشرفات، وتنبيه لولي الأمر عند صعود ونزول الطالب.</p>
+            </div>
+            <div class="feat reveal">
+                <div class="feat-ic ic-purple"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                <h3>تقويم مستمر</h3>
+                <p>متابعة دورية للمستوى الأكاديمي والسلوكي مع تقارير مفصّلة لكل فصل.</p>
+            </div>
+            <div class="feat reveal d1">
+                <div class="feat-ic ic-pink"><i class="bi bi-shield-check"></i></div>
+                <h3>بيئة آمنة</h3>
+                <p>مبنى مؤمّن ومراقب وطاقم إشراف تربوي وممرضة على مدار اليوم الدراسي.</p>
+            </div>
+            <div class="feat reveal d2">
+                <div class="feat-ic ic-sky"><i class="bi bi-cash-coin"></i></div>
+                <h3>رسوم مرنة</h3>
+                <p>تقسيط الرسوم على دفعات مريحة مع خصومات للإخوة والمتفوقين.</p>
+            </div>
+            <div class="feat reveal d3">
+                <div class="feat-ic ic-rose"><i class="bi bi-chat-heart-fill"></i></div>
+                <h3>تواصل دائم</h3>
+                <p>قناة رسائل مباشرة بين المعلم وولي الأمر ولقاءات دورية على مدار العام.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== اليوم الدراسي ==================== *@
+<section class="sec sec-soft">
+    <div class="wrap">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-5 reveal">
+                <div class="eyebrow"><i class="bi bi-clock-fill"></i> اليوم الدراسي</div>
+                <h2 class="sec-title">يوم متوازن بين العلم والنشاط</h2>
+                <p class="sec-sub" style="margin-bottom:1.6rem">
+                    يبدأ الدوام @ViewHelpers.Time(Model.StartTime) وينتهي @ViewHelpers.Time(Model.EndTime)،
+                    موزّعاً بين الحصص الدراسية وفترات النشاط والراحة.
+                </p>
+                <a class="btn-l btn-navy btn-lg-l" href="#contact">
+                    <i class="bi bi-calendar-check-fill"></i> احجز جولة في المدرسة
+                </a>
+            </div>
+
+            <div class="col-lg-7 reveal d2">
+                <div class="timeline">
+                    <div class="tl-item">
+                        <div class="tl-time">@ViewHelpers.Time(Model.StartTime)</div>
+                        <h4>الطابور الصباحي</h4>
+                        <p>تحية العلم والإذاعة المدرسية وكلمة الصباح.</p>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-time">الحصص 1 – 2</div>
+                        <h4>المواد الأساسية</h4>
+                        <p>اللغة العربية والرياضيات في أوقات الذروة الذهنية للطالب.</p>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-time">الفسحة الأولى</div>
+                        <h4>راحة ووجبة</h4>
+                        <p>مقصف صحي وإشراف تربوي في الساحات.</p>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-time">الحصص 3 – 5</div>
+                        <h4>العلوم واللغات والتقنية</h4>
+                        <p>حصص عملية في المختبر ومعمل الحاسب.</p>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-time">الحصة الأخيرة</div>
+                        <h4>النشاط الإثرائي</h4>
+                        <p>رياضة أو فنون أو تحفيظ حسب اختيار الطالب.</p>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-time">@ViewHelpers.Time(Model.EndTime)</div>
+                        <h4>الانصراف</h4>
+                        <p>تسليم منظّم للحافلات ولأولياء الأمور مع تسجيل إلكتروني.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== دعوة للتسجيل ==================== *@
+<section class="sec" id="contact">
+    <div class="wrap">
+        <div class="cta reveal">
+            <h2>التسجيل مفتوح للعام الدراسي @(Model.YearName ?? "الجديد")</h2>
+            <p>
+                احجز مقعد ابنك الآن، أو تفضّل بزيارتنا للاطلاع على المرافق ولقاء الكادر التعليمي.
+                فريق القبول جاهز للإجابة على كل استفساراتك.
+            </p>
+            <div class="btns">
+                @if (!string.IsNullOrEmpty(Model.Phone))
+                {
+                    <a class="btn-l btn-white btn-lg-l" href="tel:@Model.Phone.Replace(" ", "")">
+                        <i class="bi bi-telephone-fill"></i> @Model.Phone
+                    </a>
+                }
+                @if (!string.IsNullOrEmpty(Model.Email))
+                {
+                    <a class="btn-l btn-ghost btn-lg-l" href="mailto:@Model.Email">
+                        <i class="bi bi-envelope-fill"></i> راسلنا
+                    </a>
+                }
+                <a class="btn-l btn-teal btn-lg-l" asp-controller="Account" asp-action="Login">
+                    <i class="bi bi-box-arrow-in-left"></i> بوابة أولياء الأمور
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== التذييل ==================== *@
+<footer class="foot">
+    <div class="wrap">
+        <div class="foot-grid">
+            <div>
+                <div class="brand" style="margin-bottom:.9rem">
+                    <div class="brand-mark"><i class="bi bi-mortarboard-fill"></i></div>
+                    <div>
+                        <b style="color:#fff">@Model.SchoolName</b>
+                        <span style="color:#7d8fb8">@(Model.SchoolNameEn ?? "")</span>
+                    </div>
+                </div>
+                <p>
+                    مدرسة أهلية تُقدّم تعليماً نوعياً في بيئة حديثة وآمنة،
+                    مع نظام إدارة رقمي متكامل يربط الإدارة والمعلمين والطلاب وأولياء الأمور.
+                </p>
+            </div>
+
+            <div>
+                <h4>روابط سريعة</h4>
+                <ul>
+                    <li><a href="#about">عن المدرسة</a></li>
+                    <li><a href="#stages">المراحل الدراسية</a></li>
+                    <li><a href="#programs">الشهادات والبرامج</a></li>
+                    <li><a href="#activities">الأنشطة</a></li>
+                    <li><a href="#why">لماذا نحن</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4>البوابات</h4>
+                <ul>
+                    <li><a asp-controller="Account" asp-action="Login">بوابة ولي الأمر</a></li>
+                    <li><a asp-controller="Account" asp-action="Login">بوابة الطالب</a></li>
+                    <li><a asp-controller="Account" asp-action="Login">بوابة المعلم</a></li>
+                    <li><a asp-controller="Account" asp-action="Login">لوحة الإدارة</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4>تواصل معنا</h4>
+                <ul class="foot-contact">
+                    @if (!string.IsNullOrEmpty(Model.Address))
+                    {
+                        <li><i class="bi bi-geo-alt-fill"></i><span>@Model.Address</span></li>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Phone))
+                    {
+                        <li><i class="bi bi-telephone-fill"></i><a href="tel:@Model.Phone.Replace(" ", "")" dir="ltr">@Model.Phone</a></li>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <li><i class="bi bi-envelope-fill"></i><a href="mailto:@Model.Email" dir="ltr">@Model.Email</a></li>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Website))
+                    {
+                        <li><i class="bi bi-globe2"></i><span dir="ltr">@Model.Website</span></li>
+                    }
+                    <li><i class="bi bi-clock-fill"></i><span>الدوام: @ViewHelpers.Time(Model.StartTime) — @ViewHelpers.Time(Model.EndTime)</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="foot-bottom">
+            <div>© @DateTime.Today.Year @Model.SchoolName — جميع الحقوق محفوظة.</div>
+            <div>نظام إدارة مدرسي متكامل</div>
+        </div>
+    </div>
+</footer>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/landing.js" asp-append-version="true"></script>
+</body>
+</html>

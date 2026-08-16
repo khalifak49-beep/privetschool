@@ -1,0 +1,91 @@
+@{
+    ViewData["Title"] = "إصدار فواتير";
+    var sections = ViewBag.Sections as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? [];
+    var missing = ViewBag.Missing as int? ?? 0;
+    var yearName = ViewBag.YearName as string;
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Invoices">الفواتير</a></span>
+            <span class="breadcrumb-item active">إصدار فواتير</span>
+        </nav>
+        <h1>إصدار فواتير الرسوم</h1>
+        <p class="sub">إنشاء فواتير للطلاب الذين ليس لديهم فاتورة في @yearName</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <form asp-action="GenerateInvoices" method="post">
+                <div class="card-body">
+                    @if (missing == 0)
+                    {
+                        <div class="alert alert-success d-flex gap-2">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <div>جميع الطلاب النشطين لديهم فواتير في العام الدراسي الحالي.</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info d-flex gap-2">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <div>
+                                يوجد <b class="num">@missing</b> طالب نشط بدون فاتورة.
+                                سيتم إنشاء فاتورة لكل منهم من بنود الرسوم المعرّفة والمطبّقة على صفه.
+                            </div>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label">نطاق الإصدار</label>
+                        <select name="sectionId" class="form-select">
+                            <option value="">جميع الشعب (كل الطلاب بدون فاتورة)</option>
+                            @foreach (var s in sections)
+                            {
+                                <option value="@s.Value">@s.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">عدد الأقساط</label>
+                        <select name="installments" class="form-select">
+                            @foreach (var n in new[] { 1, 2, 3, 4, 6, 8, 10 })
+                            {
+                                <option value="@n" selected="@(n == 4)">@n @(n == 1 ? "دفعة واحدة" : "أقساط")</option>
+                            }
+                        </select>
+                        <div class="form-text fs-xs">تُوزَّع الأقساط بفارق شهرين بدءاً من تاريخ اليوم.</div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@(missing == 0)"
+                            data-confirm="سيتم إصدار الفواتير للطلاب المحددين. متابعة؟">
+                        <i class="bi bi-receipt-cutoff me-1"></i> إصدار الفواتير
+                    </button>
+                    <a class="btn btn-light" asp-action="Invoices">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <div class="fw-bold fs-sm mb-2"><i class="bi bi-lightbulb me-1"></i> قبل الإصدار</div>
+                <ul class="fs-sm text-muted-2 ps-3 mb-3 lh-lg">
+                    <li>تأكد من تعريف <a asp-action="FeeItems">بنود الرسوم</a> للعام الدراسي الحالي.</li>
+                    <li>البنود المرتبطة بصف معيّن تُطبَّق على طلاب ذلك الصف فقط.</li>
+                    <li>البنود غير النشطة لا تُدرَج في الفواتير.</li>
+                    <li>يمكن إضافة بنود أو خصومات لاحقاً على كل فاتورة على حدة.</li>
+                </ul>
+                <a class="btn btn-light w-100" asp-action="FeeItems">
+                    <i class="bi bi-list-check me-1"></i> إدارة بنود الرسوم
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

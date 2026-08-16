@@ -1,0 +1,123 @@
+@model GuardianFeesViewModel
+@{
+    ViewData["Title"] = "الرسوم والأقساط";
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">بوابة ولي الأمر</a></span>
+            <span class="breadcrumb-item active">الرسوم</span>
+        </nav>
+        <h1>الرسوم والأقساط</h1>
+        <p class="sub">متابعة رسوم الأبناء وسجل المدفوعات</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-receipt"></i></div>
+            <div><div class="value num">@Model.TotalNet.ToString("N2")</div><div class="label">إجمالي الرسوم (@cur)</div></div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-cash-stack"></i></div>
+            <div><div class="value num">@Model.TotalPaid.ToString("N2")</div><div class="label">إجمالي المدفوع</div></div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="ico @(Model.TotalRemaining > 0 ? "tone-warn" : "tone-ok")"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="value num">@Model.TotalRemaining.ToString("N2")</div><div class="label">المتبقي</div></div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Invoices.Count == 0)
+{
+    <div class="card"><div class="card-body"><div class="empty-state"><i class="bi bi-receipt"></i>لا توجد فواتير</div></div></div>
+}
+
+@foreach (var inv in Model.Invoices)
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <div>
+                <h2>@inv.StudentName</h2>
+                <div class="fs-xs text-muted-3 num">فاتورة @inv.InvoiceNo</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                @inv.Status.Badge()
+                <span class="chip tone-brand num">المتبقي @inv.Remaining.ToString("N2") @cur</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <div class="d-flex justify-content-between fs-sm mb-1">
+                    <span class="text-muted-2">نسبة السداد</span>
+                    <span class="fw-bold num">
+                        @((inv.NetAmount > 0 ? inv.PaidAmount / inv.NetAmount * 100m : 0).ToString("0.#"))%
+                    </span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-success"
+                         style="width:@((inv.NetAmount > 0 ? inv.PaidAmount / inv.NetAmount * 100m : 0).ToString("0.#"))%"></div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-lg-7">
+                    <div class="fw-bold fs-sm mb-2">الأقساط</div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead>
+                            <tbody>
+                            @foreach (var i in inv.Installments)
+                            {
+                                <tr>
+                                    <td class="fw-semibold fs-sm">@i.Name</td>
+                                    <td class="num fs-sm">
+                                        @ViewHelpers.Date(i.DueDate)
+                                        @if (i.IsOverdue)
+                                        {
+                                            <div class="fs-xs text-danger">متأخر @((DateTime.Today - i.DueDate.Date).Days) يوم</div>
+                                        }
+                                    </td>
+                                    <td class="num">@i.Amount.ToString("N2")</td>
+                                    <td class="num text-success">@i.PaidAmount.ToString("N2")</td>
+                                    <td>@i.Status.Badge()</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="fw-bold fs-sm mb-2">سندات القبض</div>
+                    @if (inv.Payments.Count == 0)
+                    {
+                        <div class="fs-sm text-muted-3">لا توجد مدفوعات مسجّلة</div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead><tr><th>الإيصال</th><th>المبلغ</th><th>التاريخ</th><th>الطريقة</th></tr></thead>
+                                <tbody>
+                                @foreach (var p in inv.Payments)
+                                {
+                                    <tr>
+                                        <td class="num fs-xs">@p.ReceiptNo</td>
+                                        <td class="num fw-bold text-success">@p.Amount.ToString("N2")</td>
+                                        <td class="num fs-xs">@ViewHelpers.Date(p.PaymentDate)</td>
+                                        <td class="fs-xs">@p.Method.Display()</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,523 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "لوحة التحكم";
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <h1>لوحة التحكم</h1>
+        <p class="sub">
+            نظرة شاملة على أداء المدرسة —
+            <span class="chip tone-brand">@(Model.AcademicYearName ?? "لا يوجد عام دراسي")</span>
+            @if (!string.IsNullOrEmpty(Model.TermName))
+            {
+                <span class="chip tone-accent">@Model.TermName</span>
+            }
+        </p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        @if (User.Can(Permissions.AttendanceTakeStudents))
+        {
+            <a class="btn btn-primary" asp-controller="Attendance" asp-action="Index">
+                <i class="bi bi-calendar-check me-1"></i> تسجيل الحضور
+            </a>
+        }
+        @if (User.Can(Permissions.StudentsCreate))
+        {
+            <a class="btn btn-light" asp-controller="Students" asp-action="Create">
+                <i class="bi bi-person-plus me-1"></i> تسجيل طالب
+            </a>
+        }
+        @if (User.Can(Permissions.ReportsView))
+        {
+            <a class="btn btn-light" asp-controller="Reports" asp-action="Index">
+                <i class="bi bi-file-earmark-bar-graph me-1"></i> التقارير
+            </a>
+        }
+    </div>
+</div>
+
+@* ============ بطاقات المؤشرات ============ *@
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3 col-xl">
+        <div class="stat-card">
+            <div class="ico tone-brand"><i class="bi bi-mortarboard-fill"></i></div>
+            <div class="min-w-0">
+                <div class="value num">@Model.TotalStudents.ToString("N0")</div>
+                <div class="label">إجمالي الطلاب</div>
+                @if (Model.NewStudentsThisMonth > 0)
+                {
+                    <div class="trend text-success"><i class="bi bi-arrow-up-short"></i>@Model.NewStudentsThisMonth جديد هذا الشهر</div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3 col-xl">
+        <div class="stat-card">
+            <div class="ico tone-accent"><i class="bi bi-person-badge-fill"></i></div>
+            <div class="min-w-0">
+                <div class="value num">@Model.TotalTeachers.ToString("N0")</div>
+                <div class="label">المعلمون</div>
+                <div class="trend text-muted-3">@Model.TotalGuardians.ToString("N0") ولي أمر مسجّل</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3 col-xl">
+        <div class="stat-card">
+            <div class="ico tone-purple"><i class="bi bi-building-fill"></i></div>
+            <div class="min-w-0">
+                <div class="value num">@Model.TotalSections.ToString("N0")</div>
+                <div class="label">الشعب الدراسية</div>
+                <div class="trend text-muted-3">
+                    متوسط @(Model.TotalSections > 0 ? (Model.TotalStudents / Model.TotalSections) : 0) طالب/شعبة
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3 col-xl">
+        <div class="stat-card">
+            <div class="ico @(Model.AttendanceRateToday >= 90 ? "tone-ok" : Model.AttendanceRateToday >= 75 ? "tone-warn" : "tone-danger")">
+                <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="min-w-0">
+                <div class="value num">@(Model.AttendanceTakenToday ? Model.AttendanceRateToday.ToString("0.#") + "%" : "—")</div>
+                <div class="label">حضور اليوم</div>
+                <div class="trend text-muted-3">
+                    @if (Model.AttendanceTakenToday)
+                    {
+                        <text>@Model.AbsentToday غائب · @Model.LateToday متأخر</text>
+                    }
+                    else
+                    {
+                        <text>لم يُسجَّل الحضور بعد</text>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (User.Can(Permissions.DashboardFinance))
+    {
+        <div class="col-6 col-lg-3 col-xl">
+            <div class="stat-card">
+                <div class="ico tone-ok"><i class="bi bi-cash-stack"></i></div>
+                <div class="min-w-0">
+                    <div class="value num">@Model.CollectedThisMonth.ToString("N0")</div>
+                    <div class="label">تحصيل هذا الشهر (@cur)</div>
+                    <div class="trend text-muted-3">نسبة التحصيل @Model.CollectionRate.ToString("0.#")%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 col-xl">
+            <div class="stat-card">
+                <div class="ico tone-danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div class="min-w-0">
+                    <div class="value num">@Model.OverdueAmount.ToString("N0")</div>
+                    <div class="label">رسوم متأخرة (@cur)</div>
+                    <div class="trend text-danger">@Model.OverdueStudentsCount طالب عليه متأخرات</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* ============ الرسوم البيانية ============ *@
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2>اتجاه نسبة الحضور</h2>
+                <span class="chip tone-info">آخر 7 أيام دراسية</span>
+            </div>
+            <div class="card-body">
+                @if (Model.AttendanceTrend.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-graph-up"></i>لا توجد بيانات حضور بعد</div>
+                }
+                else
+                {
+                    <div class="chart-box" style="height:280px"><canvas id="chartAttendance"></canvas></div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><h2>توزيع الطلاب</h2></div>
+            <div class="card-body">
+                @if (Model.StudentsByStage.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-pie-chart"></i>لا توجد بيانات</div>
+                }
+                else
+                {
+                    <div class="chart-box" style="height:216px"><canvas id="chartStages"></canvas></div>
+                    <div class="divider"></div>
+                    <div class="d-flex justify-content-around text-center">
+                        @foreach (var g in Model.GenderSplit)
+                        {
+                            <div>
+                                <div class="fw-800 num" style="font-size:1.2rem">@g.Value.ToString("N0")</div>
+                                <div class="fs-xs text-muted-2">@g.Label</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (User.Can(Permissions.DashboardFinance))
+{
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h2>الإيرادات الشهرية</h2>
+                    <a class="btn btn-sm btn-light" asp-controller="Finance" asp-action="Reports">
+                        التقارير المالية <i class="bi bi-arrow-left"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-box" style="height:250px"><canvas id="chartRevenue"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header"><h2>ملخص التحصيل</h2></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between fs-sm mb-1">
+                            <span class="text-muted-2">المحصّل من المستحق</span>
+                            <span class="fw-bold num">@Model.CollectionRate.ToString("0.#")%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width:@Model.CollectionRate.ToString("0.#")%"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span class="text-muted-2 fs-sm">إجمالي المستحق</span>
+                        <span class="fw-bold num">@Model.ExpectedTotal.ToString("N2") @cur</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span class="text-muted-2 fs-sm">إجمالي المحصّل</span>
+                        <span class="fw-bold num text-success">@Model.CollectedTotal.ToString("N2") @cur</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2 border-bottom">
+                        <span class="text-muted-2 fs-sm">المتبقي</span>
+                        <span class="fw-bold num text-warning">@((Model.ExpectedTotal - Model.CollectedTotal).ToString("N2")) @cur</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span class="text-muted-2 fs-sm">متأخرات مستحقة</span>
+                        <span class="fw-bold num text-danger">@Model.OverdueAmount.ToString("N2") @cur</span>
+                    </div>
+
+                    <a class="btn btn-light w-100 mt-3" asp-controller="Finance" asp-action="Overdue">
+                        <i class="bi bi-list-ul me-1"></i> عرض المتأخرات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ============ القوائم ============ *@
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-journal-check me-1"></i> الاختبارات القادمة</h2>
+                <a class="btn btn-sm btn-light" asp-controller="Exams" asp-action="Index">الكل</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.UpcomingExams.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-calendar-x"></i>لا توجد اختبارات قادمة</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                            <tr>
+                                <th>الاختبار</th>
+                                <th>المادة</th>
+                                <th>الشعبة</th>
+                                <th>التاريخ</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var e in Model.UpcomingExams)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@e.Title</div>
+                                        <div class="fs-xs text-muted-3">@e.ExamType.Display()</div>
+                                    </td>
+                                    <td>@e.Subject</td>
+                                    <td class="text-muted-2">@e.Section</td>
+                                    <td>
+                                        <div class="num fs-sm">@ViewHelpers.Date(e.ExamDate)</div>
+                                        <span class="chip @(e.DaysLeft <= 2 ? "tone-danger" : e.DaysLeft <= 7 ? "tone-warn" : "tone-info")">
+                                            @(e.DaysLeft == 0 ? "اليوم" : $"بعد {e.DaysLeft} يوم")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-megaphone me-1"></i> آخر الإعلانات</h2>
+                <a class="btn btn-sm btn-light" asp-controller="Communication" asp-action="Announcements">الكل</a>
+            </div>
+            <div class="card-body">
+                @if (Model.Announcements.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-megaphone"></i>لا توجد إعلانات</div>
+                }
+                else
+                {
+                    @foreach (var a in Model.Announcements)
+                    {
+                        <div class="d-flex gap-2 py-2 @(a != Model.Announcements.Last() ? "border-bottom" : "")">
+                            <div class="ico tone-@(a.IsPinned ? "warn" : "brand")"
+                                 style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0">
+                                <i class="bi @(a.IsPinned ? "bi-pin-angle-fill" : "bi-megaphone")"></i>
+                            </div>
+                            <div class="min-w-0 flex-grow-1">
+                                <div class="fw-semibold fs-sm">@a.Title</div>
+                                <div class="fs-xs text-muted-2 text-truncate">@a.Body</div>
+                                <div class="fs-xs text-muted-3">
+                                    @ViewHelpers.Date(a.PublishDate) · @a.Audience.Display()
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2><i class="bi bi-person-x me-1"></i> غياب وتأخر اليوم</h2>
+                <a class="btn btn-sm btn-light" asp-controller="Attendance" asp-action="Index">سجل الحضور</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.AbsentStudents.Count == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-emoji-smile"></i>لا يوجد غياب مسجّل اليوم</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                            <tr>
+                                <th>الطالب</th>
+                                <th>الشعبة</th>
+                                <th>الحالة</th>
+                                <th>إشعار ولي الأمر</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var s in Model.AbsentStudents)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-controller="Students" asp-action="Details" asp-route-id="@s.StudentId" class="fw-semibold text-reset">@s.StudentName</a>
+                                        <div class="fs-xs text-muted-3 num">@s.StudentNo</div>
+                                    </td>
+                                    <td class="text-muted-2">@s.Section</td>
+                                    <td>@s.Status.Badge()</td>
+                                    <td>
+                                        @if (s.GuardianNotified)
+                                        {
+                                            <span class="chip tone-ok"><i class="bi bi-check2"></i>تم</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="chip tone-warn">لم يُرسل</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        @if (User.Can(Permissions.DashboardFinance))
+        {
+            <div class="card h-100">
+                <div class="card-header">
+                    <h2><i class="bi bi-receipt me-1"></i> آخر المدفوعات</h2>
+                    <a class="btn btn-sm btn-light" asp-controller="Finance" asp-action="Payments">الكل</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecentPayments.Count == 0)
+                    {
+                        <div class="empty-state"><i class="bi bi-cash"></i>لا توجد مدفوعات</div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                <tr>
+                                    <th>الإيصال</th>
+                                    <th>الطالب</th>
+                                    <th>المبلغ</th>
+                                    <th>التاريخ</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var p in Model.RecentPayments)
+                                {
+                                    <tr>
+                                        <td class="num fs-xs">@p.ReceiptNo</td>
+                                        <td class="fw-semibold">@p.StudentName</td>
+                                        <td class="num fw-bold text-success">@p.Amount.ToString("N2")</td>
+                                        <td class="num fs-sm text-muted-2">@ViewHelpers.Date(p.PaymentDate)</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card h-100">
+                <div class="card-header"><h2><i class="bi bi-building me-1"></i> إشغال الشعب</h2></div>
+                <div class="card-body">
+                    @foreach (var s in Model.TopSections)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between fs-sm mb-1">
+                                <span class="fw-semibold">@s.Name</span>
+                                <span class="num text-muted-2">@s.Students / @s.Capacity</span>
+                            </div>
+                            <div class="mini-bar">
+                                <span style="width:@Math.Min(100, s.FillRate).ToString("0.#")%;
+                                             background:@(s.FillRate >= 95 ? "var(--danger)" : s.FillRate >= 80 ? "var(--warn)" : "var(--accent)")"></span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script>
+        Chart.defaults.font.family = "'Segoe UI', Tahoma, sans-serif";
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = '#5a6883';
+
+        const attLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AttendanceTrend.Select(p => p.Label)));
+        const attValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AttendanceTrend.Select(p => p.Value)));
+
+        const attCanvas = document.getElementById('chartAttendance');
+        if (attCanvas) {
+            const ctx = attCanvas.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 280);
+            grad.addColorStop(0, 'rgba(15,157,143,.28)');
+            grad.addColorStop(1, 'rgba(15,157,143,0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: attLabels,
+                    datasets: [{
+                        label: 'نسبة الحضور %',
+                        data: attValues,
+                        borderColor: '#0f9d8f',
+                        backgroundColor: grad,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: .38,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#0f9d8f',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: false, suggestedMin: 60, suggestedMax: 100, ticks: { callback: v => v + '%' }, grid: { color: '#e6eaf2' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        const stageCanvas = document.getElementById('chartStages');
+        if (stageCanvas) {
+            new Chart(stageCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudentsByStage.Select(p => p.Label))),
+                    datasets: [{
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudentsByStage.Select(p => p.Value))),
+                        backgroundColor: ['#1b3a80', '#0f9d8f', '#7c3aed', '#d97706', '#0284c7'],
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '62%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true, pointStyle: 'circle', boxWidth: 8 } } }
+                }
+            });
+        }
+
+        const revCanvas = document.getElementById('chartRevenue');
+        if (revCanvas) {
+            new Chart(revCanvas, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueByMonth.Select(p => p.Label))),
+                    datasets: [{
+                        label: 'الإيرادات',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueByMonth.Select(p => p.Value))),
+                        backgroundColor: '#1b3a80',
+                        borderRadius: 8,
+                        maxBarThickness: 46
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#e6eaf2' }, ticks: { callback: v => v.toLocaleString() } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    </script>
+}

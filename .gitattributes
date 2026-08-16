@@ -1,0 +1,25 @@
+# توحيد نهايات الأسطر عبر الأنظمة
+* text=auto eol=lf
+
+# ملفات ويندوز تبقى CRLF
+*.sln        text eol=crlf
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+*.ps1        text eol=crlf
+
+# ملفات ثنائية
+*.png        binary
+*.jpg        binary
+*.jpeg       binary
+*.gif        binary
+*.ico        binary
+*.pdf        binary
+*.woff       binary
+*.woff2      binary
+*.ttf        binary
+*.eot        binary
+*.xlsx       binary
+*.docx       binary
+
+# استبعاد مكتبات الواجهة من إحصاءات اللغات في GitHub
+SchoolSys/wwwroot/lib/**  linguist-vendored

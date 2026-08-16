@@ -1,0 +1,92 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "الملف الشخصي";
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb"><span class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">الرئيسية</a></span><span class="breadcrumb-item active">الملف الشخصي</span></nav>
+        <h1>الملف الشخصي</h1>
+        <p class="sub">إدارة بياناتك الشخصية وصورتك في النظام</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="avatar xl mx-auto mb-3">
+                    @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                    {
+                        <img src="@Model.PhotoPath" alt="" />
+                    }
+                    else
+                    {
+                        @ViewHelpers.Initials(Model.FullName)
+                    }
+                </div>
+                <h2 class="fw-bold mb-1" style="font-size:1.12rem">@Model.FullName</h2>
+                <div class="text-muted-2 fs-sm mb-3">@Model.Email</div>
+
+                <div class="d-flex flex-wrap gap-1 justify-content-center mb-3">
+                    @foreach (var r in Model.Roles)
+                    {
+                        <span class="chip tone-brand">@RoleNames.Display(r)</span>
+                    }
+                </div>
+
+                <div class="divider"></div>
+                <div class="d-flex justify-content-between fs-sm py-1">
+                    <span class="text-muted-2">تاريخ الإنشاء</span>
+                    <span class="num">@ViewHelpers.Date(Model.CreatedAt)</span>
+                </div>
+                <div class="d-flex justify-content-between fs-sm py-1">
+                    <span class="text-muted-2">آخر دخول</span>
+                    <span class="num">@ViewHelpers.DateTimeShort(Model.LastLoginAt)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h2>تعديل البيانات</h2></div>
+            <form asp-action="Profile" method="post" enctype="multipart/form-data">
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger fs-xs"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" readonly />
+                            <div class="form-text fs-xs">لتغيير البريد الإلكتروني راجع مسؤول النظام.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control" dir="ltr" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Photo" class="form-label"></label>
+                            <input asp-for="Photo" type="file" class="form-control" accept="image/*" />
+                            <span asp-validation-for="Photo" class="text-danger fs-xs"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ التغييرات</button>
+                    <a class="btn btn-light" asp-action="ChangePassword"><i class="bi bi-key me-1"></i> تغيير كلمة المرور</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

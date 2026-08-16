@@ -1,0 +1,61 @@
+@model dynamic
+@{
+    // Model: كائن يحمل PageIndex / TotalPages / TotalCount / FirstItemNumber / LastItemNumber
+    int pageIndex = Model.PageIndex;
+    int totalPages = Model.TotalPages;
+    int totalCount = Model.TotalCount;
+    int first = Model.FirstItemNumber;
+    int last = Model.LastItemNumber;
+
+    var query = ViewContext.HttpContext.Request.Query
+        .Where(kv => kv.Key != "page")
+        .ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+
+    string Url(int p)
+    {
+        var q = new Dictionary<string, string>(query) { ["page"] = p.ToString() };
+        return "?" + string.Join("&", q.Where(x => !string.IsNullOrEmpty(x.Value))
+            .Select(x => $"{Uri.EscapeDataString(x.Key)}={Uri.EscapeDataString(x.Value)}"));
+    }
+
+    var start = Math.Max(1, pageIndex - 2);
+    var end = Math.Min(totalPages, start + 4);
+    start = Math.Max(1, end - 4);
+}
+
+@if (totalCount > 0)
+{
+    <div class="pager-bar d-flex align-items-center justify-content-between flex-wrap gap-2 px-3 py-2 border-top">
+        <div class="fs-xs text-muted-2 num">
+            عرض @first – @last من أصل @totalCount.ToString("N0") سجل
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(pageIndex <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url(1)" title="الأولى"><i class="bi bi-chevron-double-right"></i></a>
+                    </li>
+                    <li class="page-item @(pageIndex <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url(pageIndex - 1)"><i class="bi bi-chevron-right"></i></a>
+                    </li>
+
+                    @for (var p = start; p <= end; p++)
+                    {
+                        <li class="page-item @(p == pageIndex ? "active" : "")">
+                            <a class="page-link num" href="@Url(p)">@p</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(pageIndex >= totalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url(pageIndex + 1)"><i class="bi bi-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item @(pageIndex >= totalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url(totalPages)" title="الأخيرة"><i class="bi bi-chevron-double-left"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+}

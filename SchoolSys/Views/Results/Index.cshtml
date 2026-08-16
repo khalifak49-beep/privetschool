@@ -1,0 +1,192 @@
+@model ResultsIndexViewModel
+@{
+    ViewData["Title"] = "النتائج والشهادات";
+}
+
+<div class="page-head">
+    <div>
+        <h1>النتائج والترتيب</h1>
+        <p class="sub">
+            @(Model.SectionName ?? "اختر شعبة") @(Model.TermName is null ? "" : $"· {Model.TermName}")
+        </p>
+    </div>
+    @if (Model.Rows.Count > 0 && User.Can(Permissions.ReportsExport))
+    {
+        <div class="actions d-flex gap-2">
+            <a class="btn btn-light" asp-action="Export" asp-route-sectionId="@Model.SectionId" asp-route-termId="@Model.TermId" asp-route-format="excel">
+                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+            </a>
+            <a class="btn btn-light" asp-action="Export" asp-route-sectionId="@Model.SectionId" asp-route-termId="@Model.TermId" asp-route-format="pdf">
+                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+            </a>
+            <button class="btn btn-light" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+        </div>
+    }
+</div>
+
+<div class="card mb-3 no-print">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">الشعبة</label>
+                <select name="sectionId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">— اختر الشعبة —</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">الفصل الدراسي</label>
+                <select name="termId" class="form-select form-select-sm" data-autosubmit>
+                    @foreach (var t in Model.Terms)
+                    {
+                        <option value="@t.Value" selected="@t.Selected">@t.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-sm btn-primary"><i class="bi bi-arrow-repeat me-1"></i> عرض النتائج</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Rows.Count == 0)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                <i class="bi bi-clipboard-data"></i>
+                اختر شعبة وفصلاً دراسياً لعرض النتائج، أو لا توجد درجات مرصودة بعد.
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-people"></i></div>
+                <div><div class="value num">@Model.TotalStudents</div><div class="label">عدد الطلاب</div></div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check2-all"></i></div>
+                <div><div class="value num">@Model.PassedCount</div><div class="label">ناجح</div></div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="ico @(Model.PassRate >= 90 ? "tone-ok" : Model.PassRate >= 70 ? "tone-warn" : "tone-danger")">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div><div class="value num">@Model.PassRate.ToString("0.#")%</div><div class="label">نسبة النجاح</div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card"><div class="ico tone-info"><i class="bi bi-graph-up"></i></div>
+                <div><div class="value num">@Model.ClassAverage.ToString("0.##")%</div><div class="label">متوسط الشعبة</div></div></div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <div class="card-header">
+            <h2>كشف النتائج — @Model.SectionName</h2>
+            <span class="chip tone-brand">@Model.TermName</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th style="width:60px">الترتيب</th>
+                    <th>الطالب</th>
+                    @foreach (var s in Model.Subjects)
+                    {
+                        <th class="text-center">@s</th>
+                    }
+                    <th class="text-center">المجموع</th>
+                    <th class="text-center">النسبة</th>
+                    <th class="text-center">التقدير</th>
+                    <th class="no-print"></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    <tr>
+                        <td>
+                            @if (r.Rank <= 3)
+                            {
+                                var medal = r.Rank switch { 1 => "tone-warn", 2 => "tone-info", _ => "tone-brand" };
+                                <span class="chip @medal num"><i class="bi bi-trophy-fill"></i>@r.Rank</span>
+                            }
+                            else
+                            {
+                                <span class="num text-muted-2">@r.Rank</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-controller="Students" asp-action="Details" asp-route-id="@r.StudentId" class="fw-semibold text-reset">@r.StudentName</a>
+                            <div class="fs-xs text-muted-3 num">@r.StudentNo</div>
+                        </td>
+                        @foreach (var s in Model.Subjects)
+                        {
+                            var score = r.SubjectScores.TryGetValue(s, out var v) ? v : null;
+                            var max = r.SubjectMax.TryGetValue(s, out var m) ? m : 0;
+                            <td class="text-center num fs-sm">
+                                @if (score.HasValue && max > 0)
+                                {
+                                    var pct = score.Value / max * 100m;
+                                    <span class="fw-semibold @(pct >= 50 ? "" : "text-danger")">@score.Value.ToString("0.##")</span>
+                                    <div class="fs-xs text-muted-3">/@max.ToString("0.##")</div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted-3">—</span>
+                                }
+                            </td>
+                        }
+                        <td class="text-center num fw-bold">@r.Total.ToString("0.##") <span class="fs-xs text-muted-3">/ @r.MaxTotal.ToString("0.##")</span></td>
+                        <td class="text-center">
+                            <span class="num fw-bold @(r.IsPass ? "text-success" : "text-danger")">@r.Percentage.ToString("0.##")%</span>
+                        </td>
+                        <td class="text-center">
+                            @if (r.GradeLetter is not null)
+                            {
+                                <span class="chip" style="background:@(r.GradeColor ?? "#e5ecfb")22;color:@(r.GradeColor ?? "#1b3a80")">
+                                    @r.GradeLetter — @r.GradeName
+                                </span>
+                            }
+                        </td>
+                        <td class="no-print">
+                            <div class="d-flex gap-1">
+                                <a class="btn btn-sm btn-light" asp-action="ReportCard" asp-route-studentId="@r.StudentId" asp-route-termId="@Model.TermId" title="كشف الدرجات">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </a>
+                                @if (User.Can(Permissions.ResultsCertificates))
+                                {
+                                    <a class="btn btn-sm btn-light" asp-action="Certificate" asp-route-studentId="@r.StudentId" asp-route-termId="@Model.TermId" target="_blank" title="الشهادة">
+                                        <i class="bi bi-award"></i>
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-3 no-print">
+        <div class="card-header"><h2>سلّم التقديرات</h2></div>
+        <div class="card-body d-flex flex-wrap gap-2">
+            @foreach (var g in Model.Scales)
+            {
+                <span class="chip" style="background:@(g.Color ?? "#eee")22;color:@(g.Color ?? "#333")">
+                    <b>@g.Letter</b> @g.Name (@g.MinPercent.ToString("0.#")% – @g.MaxPercent.ToString("0.#")%)
+                </span>
+            }
+        </div>
+    </div>
+}

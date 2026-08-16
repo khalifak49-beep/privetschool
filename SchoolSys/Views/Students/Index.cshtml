@@ -1,0 +1,229 @@
+@model StudentIndexViewModel
+@{
+    ViewData["Title"] = "الطلاب";
+    var f = Model.Filter;
+}
+
+<div class="page-head">
+    <div>
+        <h1>الطلاب</h1>
+        <p class="sub">
+            @Model.ActiveCount.ToString("N0") طالب نشط ·
+            @Model.MaleCount.ToString("N0") بنون · @Model.FemaleCount.ToString("N0") بنات
+        </p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        @if (User.Can(Permissions.StudentsCreate))
+        {
+            <a class="btn btn-primary" asp-action="Create"><i class="bi bi-person-plus me-1"></i> تسجيل طالب جديد</a>
+        }
+        @if (User.Can(Permissions.ReportsExport))
+        {
+            <div class="dropdown">
+                <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-download me-1"></i> تصدير
+                </button>
+                <ul class="dropdown-menu dropdown-menu-start">
+                    <li>
+                        <a class="dropdown-item" asp-action="Export" asp-all-route-data="@RouteValues(f, "excel")">
+                            <i class="bi bi-file-earmark-excel me-2 text-success"></i> ملف Excel
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" asp-action="Export" asp-all-route-data="@RouteValues(f, "pdf")">
+                            <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> ملف PDF
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    static Dictionary<string, string> RouteValues(StudentFilter f, string format)
+    {
+        var d = new Dictionary<string, string> { ["format"] = format };
+        if (!string.IsNullOrWhiteSpace(f.Q)) d["Q"] = f.Q;
+        if (f.StageId.HasValue) d["StageId"] = f.StageId.ToString()!;
+        if (f.GradeId.HasValue) d["GradeId"] = f.GradeId.ToString()!;
+        if (f.SectionId.HasValue) d["SectionId"] = f.SectionId.ToString()!;
+        if (f.Status.HasValue) d["Status"] = ((int)f.Status).ToString();
+        if (f.Gender.HasValue) d["Gender"] = ((int)f.Gender).ToString();
+        if (!string.IsNullOrWhiteSpace(f.Sort)) d["Sort"] = f.Sort;
+        return d;
+    }
+}
+
+@* ---------- الفلاتر ---------- *@
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label">بحث</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input name="Q" value="@f.Q" class="form-control" placeholder="الاسم، الرقم الطلابي، الهوية..." />
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">المرحلة</label>
+                <select name="StageId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Stages)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">الصف</label>
+                <select name="GradeId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var g in Model.Grades)
+                    {
+                        <option value="@g.Value" selected="@g.Selected">@g.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">الشعبة</label>
+                <select name="SectionId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-1 col-md-4">
+                <label class="form-label">الحالة</label>
+                <select name="Status" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var (v, t) in ViewHelpers.Options<StudentStatus>())
+                    {
+                        <option value="@((int)v)" selected="@(f.Status == v)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-1 col-md-4">
+                <label class="form-label">الترتيب</label>
+                <select name="Sort" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الرقم</option>
+                    <option value="name" selected="@(f.Sort == "name")">الاسم</option>
+                    <option value="section" selected="@(f.Sort == "section")">الشعبة</option>
+                    <option value="debt" selected="@(f.Sort == "debt")">المديونية</option>
+                    <option value="recent" selected="@(f.Sort == "recent")">الأحدث</option>
+                </select>
+            </div>
+            <div class="col-lg-1 col-md-4 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
+                <a asp-action="Index" class="btn btn-sm btn-light" title="مسح الفلاتر"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* ---------- الجدول ---------- *@
+<div class="table-wrap">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th style="width:110px">الرقم الطلابي</th>
+                <th>الطالب</th>
+                <th>الصف / الشعبة</th>
+                <th>ولي الأمر</th>
+                <th>الحالة</th>
+                @if (User.Can(Permissions.FinanceView))
+                {
+                    <th>المتبقي</th>
+                }
+                <th style="width:120px"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Students.TotalCount == 0)
+            {
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-search"></i>
+                            لا توجد نتائج مطابقة لمعايير البحث
+                        </div>
+                    </td>
+                </tr>
+            }
+            @foreach (var s in Model.Students.Items)
+            {
+                <tr>
+                    <td class="num fs-sm text-muted-2">@s.StudentNo</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar sm">
+                                @if (!string.IsNullOrEmpty(s.PhotoPath))
+                                {
+                                    <img src="@s.PhotoPath" alt="" />
+                                }
+                                else
+                                {
+                                    @ViewHelpers.Initials(s.FullName)
+                                }
+                            </div>
+                            <div class="min-w-0">
+                                <a asp-action="Details" asp-route-id="@s.Id" class="fw-semibold text-reset d-block text-truncate">@s.FullName</a>
+                                <div class="fs-xs text-muted-3">
+                                    <i class="bi @(s.Gender == Gender.Male ? "bi-gender-male" : "bi-gender-female")"></i>
+                                    @s.Gender.Display()
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fs-sm">@(s.Section ?? "—")</div>
+                        <div class="fs-xs text-muted-3">@s.Stage</div>
+                    </td>
+                    <td>
+                        <div class="fs-sm">@(s.GuardianName ?? "—")</div>
+                        @if (!string.IsNullOrEmpty(s.GuardianPhone))
+                        {
+                            <div class="fs-xs text-muted-3 num" dir="ltr">@s.GuardianPhone</div>
+                        }
+                    </td>
+                    <td>@s.Status.Badge()</td>
+                    @if (User.Can(Permissions.FinanceView))
+                    {
+                        <td>
+                            @if (s.Outstanding > 0)
+                            {
+                                <span class="chip tone-warn num">@s.Outstanding.ToString("N2")</span>
+                            }
+                            else
+                            {
+                                <span class="chip tone-ok">مسدد</span>
+                            }
+                        </td>
+                    }
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a class="btn btn-sm btn-light" asp-action="Details" asp-route-id="@s.Id" title="التفاصيل">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            @if (User.Can(Permissions.StudentsEdit))
+                            {
+                                <a class="btn btn-sm btn-light" asp-action="Edit" asp-route-id="@s.Id" title="تعديل">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            }
+                            <a class="btn btn-sm btn-light" asp-action="IdCard" asp-route-id="@s.Id" title="بطاقة الطالب" target="_blank">
+                                <i class="bi bi-qr-code"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Students" />
+</div>

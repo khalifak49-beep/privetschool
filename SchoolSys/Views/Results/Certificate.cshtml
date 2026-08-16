@@ -1,0 +1,151 @@
+@model ReportCardViewModel
+@{
+    ViewData["Title"] = "شهادة";
+    var s = Model.Student;
+}
+
+<div class="page-head no-print">
+    <div>
+        <h1>شهادة الطالب</h1>
+        <p class="sub">@s.FullName · @Model.TermName</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة الشهادة</button>
+    </div>
+</div>
+
+<div class="d-flex justify-content-center">
+    <div class="certificate">
+        <div class="cert-border">
+            <div class="text-center">
+                <div class="cert-crest"><i class="bi bi-mortarboard-fill"></i></div>
+                <div class="cert-school">@Model.Settings.SchoolName</div>
+                @if (!string.IsNullOrEmpty(Model.Settings.SchoolNameEn))
+                {
+                    <div class="cert-school-en">@Model.Settings.SchoolNameEn</div>
+                }
+
+                <div class="cert-title">شهادة تقدير ونتيجة</div>
+                <div class="cert-sub">@Model.YearName — @Model.TermName</div>
+
+                <div class="cert-body">
+                    تشهد إدارة المدرسة بأن الطالب/ة
+                    <div class="cert-name">@s.FullName</div>
+                    المقيّد برقم <b class="num">@s.StudentNo</b> بالصف <b>@Model.SectionName</b>
+                    قد أنهى/ت الفصل الدراسي بنسبة عامة قدرها
+                    <div class="cert-score">
+                        <span class="num">@Model.Percentage.ToString("0.##")%</span>
+                        <span class="cert-grade">@(Model.GradeLetter) — @(Model.GradeName)</span>
+                    </div>
+                    @if (Model.Rank > 0)
+                    {
+                        <div class="cert-rank">وحصل/ت على الترتيب <b class="num">@Model.Rank</b> من أصل <b class="num">@Model.ClassSize</b> طالباً</div>
+                    }
+                    <div class="cert-verdict @(Model.IsPass ? "pass" : "fail")">
+                        النتيجة النهائية: @(Model.IsPass ? "ناجح/ة" : "راسب/ة")
+                    </div>
+                </div>
+
+                <div class="cert-footer">
+                    <div>
+                        <div class="cert-line"></div>
+                        <div>رائد الفصل</div>
+                        <div class="cert-small">@(Model.HomeroomTeacher ?? "")</div>
+                    </div>
+                    <div class="cert-seal"><i class="bi bi-patch-check-fill"></i></div>
+                    <div>
+                        <div class="cert-line"></div>
+                        <div>مدير المدرسة</div>
+                        <div class="cert-small">التاريخ: @DateTime.Today.ToString("yyyy/MM/dd")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .certificate {
+            width: 820px;
+            max-width: 100%;
+            background: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .cert-border {
+            border: 3px double var(--brand-700);
+            border-radius: 4px;
+            padding: 2.4rem 2rem;
+            position: relative;
+            background:
+                radial-gradient(circle at 8% 8%, rgba(15,157,143,.07), transparent 26%),
+                radial-gradient(circle at 92% 92%, rgba(27,58,128,.07), transparent 26%);
+        }
+
+        .cert-crest {
+            width: 68px; height: 68px; margin: 0 auto 1rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-800), var(--brand-600));
+            color: #fff; display: grid; place-items: center; font-size: 2rem;
+        }
+
+        .cert-school { font-size: 1.5rem; font-weight: 800; color: var(--brand-800); }
+        .cert-school-en { font-size: .85rem; color: var(--text-3); letter-spacing: .04em; }
+
+        .cert-title {
+            font-size: 1.9rem; font-weight: 800; margin: 1.6rem 0 .2rem;
+            color: var(--brand-700);
+            letter-spacing: -.02em;
+        }
+
+        .cert-sub { color: var(--text-2); font-size: .95rem; margin-bottom: 1.8rem; }
+
+        .cert-body { font-size: 1.02rem; line-height: 2.2; color: var(--text); }
+
+        .cert-name {
+            font-size: 1.75rem; font-weight: 800; color: var(--brand-800);
+            margin: .5rem 0; letter-spacing: -.01em;
+        }
+
+        .cert-score {
+            margin: 1.2rem auto; display: inline-flex; align-items: center; gap: 1rem;
+            background: var(--brand-050); border: 1px solid var(--brand-100);
+            border-radius: 14px; padding: .7rem 1.6rem;
+        }
+
+        .cert-score .num { font-size: 2rem; font-weight: 800; color: var(--brand-700); }
+        .cert-grade { font-size: 1.05rem; font-weight: 700; color: var(--accent-dark); }
+        .cert-rank { font-size: .98rem; color: var(--text-2); }
+
+        .cert-verdict {
+            display: inline-block; margin-top: 1rem; padding: .5rem 1.8rem;
+            border-radius: 999px; font-weight: 800; font-size: 1.05rem;
+        }
+
+        .cert-verdict.pass { background: var(--ok-100); color: #14532d; }
+        .cert-verdict.fail { background: var(--danger-100); color: #7f1d1d; }
+
+        .cert-footer {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-top: 3.2rem; font-size: .88rem; color: var(--text-2);
+        }
+
+        .cert-footer > div { flex: 1; }
+        .cert-line { border-top: 1px solid var(--line-strong); margin: 0 1.5rem .4rem; }
+        .cert-small { font-size: .75rem; color: var(--text-3); }
+
+        .cert-seal {
+            flex: 0 0 auto !important;
+            font-size: 2.6rem; color: var(--accent); opacity: .5;
+        }
+
+        @@media print {
+            .certificate { box-shadow: none; width: 100%; padding: 0; }
+            .cert-border { border-color: #1b3a80; }
+            @@page { size: A4 landscape; margin: 10mm; }
+        }
+    </style>
+}

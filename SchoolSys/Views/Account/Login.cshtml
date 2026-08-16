@@ -1,0 +1,171 @@
+@model LoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "تسجيل الدخول";
+    var schoolName = ViewBag.SchoolName as string ?? "نظام إدارة المدرسة";
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1f4b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>تسجيل الدخول — @schoolName</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/responsive.css" asp-append-version="true" />
+    <style>
+        body { background: var(--bg); }
+
+        .auth-wrap { min-height: 100vh; display: flex; }
+
+        .auth-visual {
+            flex: 1.15;
+            background: linear-gradient(150deg, var(--brand-900) 0%, var(--brand-700) 55%, #0d3b6f 100%);
+            color: #fff;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-visual::after {
+            content: "";
+            position: absolute;
+            width: 520px; height: 520px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(15,157,143,.32), transparent 62%);
+            top: -140px; left: -140px;
+        }
+
+        .auth-visual::before {
+            content: "";
+            position: absolute;
+            width: 420px; height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(49,89,184,.34), transparent 65%);
+            bottom: -150px; right: -110px;
+        }
+
+        .auth-visual .inner { position: relative; z-index: 2; max-width: 520px; }
+
+        .auth-visual h1 { font-size: 2.1rem; font-weight: 800; line-height: 1.35; margin-bottom: .85rem; }
+        .auth-visual p { color: #b9c8e8; font-size: 1rem; line-height: 1.8; }
+
+        .feature-row { display: flex; align-items: center; gap: .7rem; margin-top: .9rem; color: #d5e0f5; font-size: .92rem; }
+        .feature-row i { color: #4fd1c5; font-size: 1.15rem; }
+
+        .auth-form { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; }
+        .auth-card { width: 100%; max-width: 400px; }
+
+        .auth-logo {
+            width: 62px; height: 62px; border-radius: 18px;
+            background: linear-gradient(135deg, var(--brand-700), var(--brand-500));
+            color: #fff; display: grid; place-items: center; font-size: 1.85rem;
+            box-shadow: 0 10px 26px rgba(27,58,128,.32);
+            margin-bottom: 1.1rem;
+        }
+
+        .demo-box { background: var(--surface-2); border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: .85rem 1rem; }
+        .demo-box code { font-size: .78rem; color: var(--brand-700); }
+
+        @@media (max-width: 991.98px) { .auth-visual { display: none; } }
+    </style>
+</head>
+<body>
+<div class="auth-wrap">
+    <section class="auth-visual">
+        <div class="inner">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="brand-mark" style="width:52px;height:52px;font-size:1.6rem"><i class="bi bi-mortarboard-fill"></i></div>
+                <div>
+                    <div class="fw-bold fs-5">@schoolName</div>
+                    <div style="color:#8fa3cc;font-size:.85rem">نظام الإدارة المدرسية المتكامل</div>
+                </div>
+            </div>
+
+            <h1>منصة واحدة تربط الإدارة والمعلمين والطلاب وأولياء الأمور</h1>
+            <p>إدارة شاملة للشؤون الأكاديمية والحضور والدرجات والرسوم والنقل المدرسي، مع إشعارات فورية وتقارير احترافية.</p>
+
+            <div class="feature-row"><i class="bi bi-check-circle-fill"></i> ملف أكاديمي متكامل لكل طالب</div>
+            <div class="feature-row"><i class="bi bi-check-circle-fill"></i> حضور وانصراف عبر رمز QR</div>
+            <div class="feature-row"><i class="bi bi-check-circle-fill"></i> رصد الدرجات واحتساب النتائج تلقائياً</div>
+            <div class="feature-row"><i class="bi bi-check-circle-fill"></i> متابعة الأقساط والمدفوعات والمتأخرات</div>
+            <div class="feature-row"><i class="bi bi-check-circle-fill"></i> صلاحيات دقيقة لكل مستخدم حسب دوره</div>
+        </div>
+    </section>
+
+    <section class="auth-form">
+        <div class="auth-card">
+            <a class="d-inline-flex align-items-center gap-1 mb-3 fs-sm" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-arrow-right"></i> العودة إلى موقع المدرسة
+            </a>
+            <div class="auth-logo"><i class="bi bi-shield-lock"></i></div>
+            <h2 class="fw-bold mb-1" style="font-size:1.5rem">تسجيل الدخول</h2>
+            <p class="text-muted-2 mb-4 fs-sm">أدخل بيانات حسابك للوصول إلى النظام</p>
+
+            <form asp-action="Login" method="post" novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 fs-sm mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" autocomplete="username" placeholder="admin@school.local" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger fs-xs"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" id="pwd" />
+                        <button class="btn btn-light" type="button" id="togglePwd" tabindex="-1"><i class="bi bi-eye"></i></button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger fs-xs"></span>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label fs-sm"></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">
+                    <i class="bi bi-box-arrow-in-left me-1"></i> دخول
+                </button>
+            </form>
+
+            <div class="demo-box">
+                <div class="fw-bold fs-sm mb-1"><i class="bi bi-info-circle me-1"></i> حسابات تجريبية</div>
+                <div class="fs-xs text-muted-2 lh-lg">
+                    مسؤول النظام: <code>admin@school.local</code><br />
+                    مدير المدرسة: <code>principal@school.local</code> &nbsp;|&nbsp; المحاسب: <code>accountant@school.local</code><br />
+                    المعلم: <code>teacher@school.local</code> &nbsp;|&nbsp; ولي الأمر: <code>guardian@school.local</code><br />
+                    الطالب: <code>student@school.local</code> &nbsp;|&nbsp; كلمة المرور للجميع: <code>Admin@123</code>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    document.getElementById('togglePwd').addEventListener('click', function () {
+        const i = document.getElementById('pwd');
+        const on = i.type === 'password';
+        i.type = on ? 'text' : 'password';
+        this.querySelector('i').className = on ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+</script>
+</body>
+</html>

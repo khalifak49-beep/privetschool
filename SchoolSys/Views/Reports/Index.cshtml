@@ -1,0 +1,115 @@
+@model ReportsCenterViewModel
+@{
+    ViewData["Title"] = "مركز التقارير";
+}
+
+<div class="page-head">
+    <div>
+        <h1>مركز التقارير</h1>
+        <p class="sub">جميع تقارير النظام قابلة للتصدير إلى Excel و PDF — @Model.YearName</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-mortarboard"></i></div>
+            <div><div class="value num">@Model.Students.ToString("N0")</div><div class="label">طالب</div></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="ico tone-accent"><i class="bi bi-person-badge"></i></div>
+            <div><div class="value num">@Model.Employees.ToString("N0")</div><div class="label">موظف</div></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="ico tone-purple"><i class="bi bi-building"></i></div>
+            <div><div class="value num">@Model.Sections.ToString("N0")</div><div class="label">شعبة</div></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-receipt"></i></div>
+            <div><div class="value num">@Model.Invoices.ToString("N0")</div><div class="label">فاتورة</div></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="ico tone-info"><i class="bi bi-calendar-check"></i></div>
+            <div><div class="value num">@Model.AttendanceRecords.ToString("N0")</div><div class="label">سجل حضور</div></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-journal-check"></i></div>
+            <div><div class="value num">@Model.ExamResults.ToString("N0")</div><div class="label">درجة مرصودة</div></div></div>
+    </div>
+</div>
+
+<div class="row g-3">
+    @{
+        var reports = new (string Title, string Desc, string Icon, string Tone, string Controller, string Action, bool Allowed)[]
+        {
+            ("كشف الطلاب", "قائمة الطلاب مع بيانات ولي الأمر والمديونية، مع فلاتر المرحلة والصف والشعبة.",
+                "bi-mortarboard", "brand", "Students", "Index", User.Can(Permissions.StudentsView)),
+
+            ("كشف أولياء الأمور", "بيانات التواصل وأبناء كل ولي أمر.",
+                "bi-people", "accent", "Guardians", "Index", User.Can(Permissions.GuardiansView)),
+
+            ("كشف الموظفين والمعلمين", "البيانات الوظيفية والتخصصات والنصاب التدريسي.",
+                "bi-person-badge", "purple", "Employees", "Index", User.Can(Permissions.EmployeesView)),
+
+            ("تقارير الحضور والانصراف", "تقارير مجمّعة حسب الطالب أو الشعبة أو اليوم مع نسب الحضور.",
+                "bi-calendar-check", "info", "Attendance", "Reports", User.Can(Permissions.AttendanceReports)),
+
+            ("كشوف النتائج والترتيب", "نتائج الشعبة لكل مادة مع المجموع والنسبة والتقدير والترتيب.",
+                "bi-award", "ok", "Results", "Index", User.Can(Permissions.ResultsView)),
+
+            ("التقارير المالية", "التحصيل حسب الشهر أو طريقة الدفع أو الصف الدراسي.",
+                "bi-graph-up-arrow", "ok", "Finance", "Reports", User.Can(Permissions.FinanceReports)),
+
+            ("كشف الفواتير", "الفواتير مع الإجمالي والخصم والمدفوع والمتبقي.",
+                "bi-receipt", "warn", "Finance", "Invoices", User.Can(Permissions.FinanceView)),
+
+            ("الرسوم المتأخرة", "الأقساط المتأخرة مع أيام التأخير وبيانات التواصل.",
+                "bi-exclamation-triangle", "danger", "Finance", "Overdue", User.Can(Permissions.FinanceView)),
+
+            ("اشتراكات النقل", "الطلاب المشتركون في النقل مع الخطوط والمحطات والرسوم.",
+                "bi-bus-front", "brand", "Transport", "Subscriptions", User.Can(Permissions.TransportView)),
+
+            ("سجل التدقيق", "تتبّع العمليات الحساسة في النظام حسب المستخدم والتاريخ.",
+                "bi-clock-history", "info", "Audit", "Index", User.Can(Permissions.AuditView))
+        };
+    }
+
+    @foreach (var r in reports.Where(x => x.Allowed))
+    {
+        <div class="col-lg-4 col-md-6">
+            <a class="card h-100 text-reset" asp-controller="@r.Controller" asp-action="@r.Action"
+               style="text-decoration:none;transition:transform .18s,box-shadow .18s"
+               onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='var(--shadow-md)'"
+               onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <div class="card-body">
+                    <div class="ico tone-@r.Tone mb-3"
+                         style="width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:1.45rem">
+                        <i class="bi @r.Icon"></i>
+                    </div>
+                    <div class="fw-bold mb-1">@r.Title</div>
+                    <div class="fs-sm text-muted-2">@r.Desc</div>
+                    <div class="fs-xs text-muted-3 mt-3">
+                        فتح التقرير <i class="bi bi-arrow-left"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+</div>
+
+@if (User.Can(Permissions.ReportsExport))
+{
+    <div class="card mt-3">
+        <div class="card-body d-flex align-items-center gap-3">
+            <div class="ico tone-ok" style="width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:1.2rem">
+                <i class="bi bi-download"></i>
+            </div>
+            <div>
+                <div class="fw-bold fs-sm">التصدير</div>
+                <div class="fs-sm text-muted-2">
+                    يحتوي كل تقرير على أزرار تصدير إلى <b>Excel</b> و <b>PDF</b> تراعي الفلاتر المطبّقة،
+                    وتُنسَّق بالاتجاه من اليمين إلى اليسار.
+                </div>
+            </div>
+        </div>
+    </div>
+}

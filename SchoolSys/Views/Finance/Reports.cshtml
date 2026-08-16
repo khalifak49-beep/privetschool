@@ -1,0 +1,122 @@
+@model FinanceReportViewModel
+@{
+    ViewData["Title"] = "التقارير المالية";
+    var cur = Model.Currency;
+    var max = Model.Rows.Count > 0 ? Model.Rows.Max(r => r.Amount) : 0m;
+}
+
+<div class="page-head">
+    <div>
+        <h1>التقارير المالية</h1>
+        <p class="sub">
+            من @ViewHelpers.Date(Model.From) إلى @ViewHelpers.Date(Model.To) ·
+            <b class="num text-success">@Model.Total.ToString("N2")</b> @cur في @Model.Count سند
+        </p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-light" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+    </div>
+</div>
+
+<div class="card mb-3 no-print">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">من تاريخ</label>
+                <input name="From" type="date" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">إلى تاريخ</label>
+                <input name="To" type="date" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">التجميع حسب</label>
+                <select name="GroupBy" class="form-select form-select-sm" data-autosubmit>
+                    <option value="month" selected="@(Model.GroupBy == "month")">الشهر</option>
+                    <option value="day" selected="@(Model.GroupBy == "day")">اليوم</option>
+                    <option value="method" selected="@(Model.GroupBy == "method")">طريقة الدفع</option>
+                    <option value="grade" selected="@(Model.GroupBy == "grade")">الصف الدراسي</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel me-1"></i> عرض</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-cash-stack"></i></div>
+            <div><div class="value num">@Model.Total.ToString("N2")</div><div class="label">إجمالي التحصيل (@cur)</div></div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-receipt"></i></div>
+            <div><div class="value num">@Model.Count.ToString("N0")</div><div class="label">عدد السندات</div></div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card"><div class="ico tone-info"><i class="bi bi-calculator"></i></div>
+            <div><div class="value num">@((Model.Count > 0 ? Model.Total / Model.Count : 0).ToString("N2"))</div>
+                <div class="label">متوسط السند</div></div></div>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="card-header">
+        <h2>
+            @(Model.GroupBy switch
+            {
+                "method" => "التحصيل حسب طريقة الدفع",
+                "grade" => "التحصيل حسب الصف الدراسي",
+                "day" => "التحصيل اليومي",
+                _ => "التحصيل الشهري"
+            })
+        </h2>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>البيان</th>
+                <th>عدد السندات</th>
+                <th>المبلغ (@cur)</th>
+                <th style="width:280px">النسبة من الإجمالي</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Rows.Count == 0)
+            {
+                <tr><td colspan="4"><div class="empty-state"><i class="bi bi-bar-chart"></i>لا توجد بيانات في هذه الفترة</div></td></tr>
+            }
+            @foreach (var r in Model.Rows)
+            {
+                var share = Model.Total > 0 ? (double)(r.Amount / Model.Total * 100m) : 0;
+                <tr>
+                    <td class="fw-semibold">@r.Label</td>
+                    <td class="num">@r.Count.ToString("N0")</td>
+                    <td class="num fw-bold">@r.Amount.ToString("N2")</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="mini-bar flex-grow-1">
+                                <span style="width:@(max > 0 ? (double)(r.Amount / max * 100m) : 0).ToString("0.#")%;background:var(--brand-600)"></span>
+                            </div>
+                            <span class="num fs-sm text-nowrap">@share.ToString("0.#")%</span>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+            @if (Model.Rows.Count > 0)
+            {
+                <tfoot>
+                <tr style="background:var(--surface-2)">
+                    <th>الإجمالي</th>
+                    <th class="num">@Model.Count.ToString("N0")</th>
+                    <th class="num">@Model.Total.ToString("N2")</th>
+                    <th></th>
+                </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+</div>

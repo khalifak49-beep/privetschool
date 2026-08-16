@@ -1,0 +1,32 @@
+@{
+    var code = ViewBag.Code as int? ?? 500;
+    var (title, message, icon) = code switch
+    {
+        404 => ("الصفحة غير موجودة", "الرابط الذي طلبته غير موجود أو تم نقله.", "bi-compass"),
+        403 => ("ممنوع الوصول", "ليس لديك صلاحية للوصول إلى هذا المورد.", "bi-shield-lock"),
+        401 => ("غير مصرح", "يرجى تسجيل الدخول للمتابعة.", "bi-person-lock"),
+        500 => ("خطأ في الخادم", "حدث خلل أثناء معالجة طلبك.", "bi-bug"),
+        _ => ("حدث خطأ", "تعذر إتمام الطلب.", "bi-exclamation-triangle")
+    };
+    ViewData["Title"] = title;
+}
+
+<div class="d-flex align-items-center justify-content-center" style="min-height:60vh">
+    <div class="card text-center" style="max-width:480px">
+        <div class="card-body p-5">
+            <div class="mx-auto mb-3 tone-warn"
+                 style="width:76px;height:76px;border-radius:22px;display:grid;place-items:center;font-size:2.1rem">
+                <i class="bi @icon"></i>
+            </div>
+            <div class="fw-800 text-muted-3" style="font-size:2.6rem;line-height:1">@code</div>
+            <h1 class="fw-bold mb-2" style="font-size:1.3rem">@title</h1>
+            <p class="text-muted-2 mb-4">@message</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <a class="btn btn-primary" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-house me-1"></i> لوحة التحكم
+                </a>
+                <a class="btn btn-light" href="javascript:history.back()">رجوع</a>
+            </div>
+        </div>
+    </div>
+</div>

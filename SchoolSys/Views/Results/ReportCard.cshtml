@@ -1,0 +1,191 @@
+@model ReportCardViewModel
+@{
+    ViewData["Title"] = "كشف الدرجات";
+    var s = Model.Student;
+}
+
+<div class="page-head no-print">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">النتائج</a></span>
+            <span class="breadcrumb-item active">كشف الدرجات</span>
+        </nav>
+        <h1>كشف درجات الطالب</h1>
+        <p class="sub">@s.FullName · @Model.SectionName</p>
+    </div>
+    <div class="actions d-flex gap-2">
+        <form method="get" class="d-flex gap-2">
+            <input type="hidden" name="studentId" value="@s.Id" />
+            <select name="termId" class="form-select form-select-sm" data-autosubmit>
+                @foreach (var t in Model.Terms)
+                {
+                    <option value="@t.Value" selected="@t.Selected">@t.Text</option>
+                }
+            </select>
+        </form>
+        @if (User.Can(Permissions.ResultsCertificates))
+        {
+            <a class="btn btn-light" asp-action="Certificate" asp-route-studentId="@s.Id" asp-route-termId="@Model.TermId" target="_blank">
+                <i class="bi bi-award me-1"></i> الشهادة
+            </a>
+        }
+        <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-4">
+
+        @* ---------- ترويسة ---------- *@
+        <div class="text-center mb-4 pb-3" style="border-bottom:2px solid var(--brand-700)">
+            <h2 class="fw-bold mb-1" style="font-size:1.3rem;color:var(--brand-800)">@Model.Settings.SchoolName</h2>
+            @if (!string.IsNullOrEmpty(Model.Settings.SchoolNameEn))
+            {
+                <div class="fs-sm text-muted-2">@Model.Settings.SchoolNameEn</div>
+            }
+            <div class="fw-bold mt-2" style="font-size:1.05rem">كشف الدرجات</div>
+            <div class="fs-sm text-muted-2">@Model.YearName — @Model.TermName</div>
+        </div>
+
+        @* ---------- بيانات الطالب ---------- *@
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 text-center">
+                <div class="avatar xl mx-auto">
+                    @if (!string.IsNullOrEmpty(s.PhotoPath))
+                    {
+                        <img src="@s.PhotoPath" alt="" />
+                    }
+                    else
+                    {
+                        @ViewHelpers.Initials(s.FullName)
+                    }
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="row g-2">
+                    <div class="col-6"><partial name="_InfoRow" model="@(("اسم الطالب", s.FullName))" /></div>
+                    <div class="col-6"><partial name="_InfoRow" model="@(("الرقم الطلابي", s.StudentNo))" /></div>
+                    <div class="col-6"><partial name="_InfoRow" model="@(("الصف / الشعبة", Model.SectionName ?? "—"))" /></div>
+                    <div class="col-6"><partial name="_InfoRow" model="@(("المرحلة", Model.StageName ?? "—"))" /></div>
+                    <div class="col-6"><partial name="_InfoRow" model="@(("رائد الفصل", Model.HomeroomTeacher ?? "—"))" /></div>
+                    <div class="col-6"><partial name="_InfoRow" model="@(("الترتيب", Model.Rank > 0 ? $"{Model.Rank} من {Model.ClassSize}" : "—"))" /></div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Subjects.Count == 0)
+        {
+            <div class="empty-state"><i class="bi bi-clipboard-x"></i>لا توجد درجات مرصودة لهذا الفصل الدراسي</div>
+        }
+        else
+        {
+            @* ---------- جدول الدرجات ---------- *@
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>المادة</th>
+                        <th class="text-center" style="width:120px">الدرجة</th>
+                        <th class="text-center" style="width:110px">من</th>
+                        <th class="text-center" style="width:110px">النسبة</th>
+                        <th class="text-center" style="width:100px">التقدير</th>
+                        <th class="text-center" style="width:100px">النتيجة</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var sub in Model.Subjects)
+                    {
+                        <tr>
+                            <td class="fw-semibold">
+                                @sub.Subject
+                                @if (sub.Exams.Count > 1)
+                                {
+                                    <div class="fs-xs text-muted-3">
+                                        @string.Join(" · ", sub.Exams.Select(e => $"{e.Title}: {(e.Score.HasValue ? e.Score.Value.ToString("0.##") : "—")}/{e.Max:0.##}"))
+                                    </div>
+                                }
+                            </td>
+                            <td class="text-center num fw-bold">@sub.Score.ToString("0.##")</td>
+                            <td class="text-center num text-muted-2">@sub.MaxScore.ToString("0.##")</td>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="mini-bar flex-grow-1">
+                                        <span style="width:@sub.Percentage.ToString("0.#")%;background:var(--@(ViewHelpers.ScoreTone(sub.Percentage) == "ok" ? "ok" : ViewHelpers.ScoreTone(sub.Percentage) == "info" ? "info" : ViewHelpers.ScoreTone(sub.Percentage) == "warn" ? "warn" : "danger"))"></span>
+                                    </div>
+                                    <span class="num fs-sm">@sub.Percentage.ToString("0.#")%</span>
+                                </div>
+                            </td>
+                            <td class="text-center"><span class="chip tone-brand">@(sub.Letter ?? "—")</span></td>
+                            <td class="text-center">
+                                <span class="chip @(sub.IsPass ? "tone-ok" : "tone-danger")">@(sub.IsPass ? "ناجح" : "راسب")</span>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                    <tr style="background:var(--surface-2)">
+                        <th>المجموع الكلي</th>
+                        <th class="text-center num">@Model.Total.ToString("0.##")</th>
+                        <th class="text-center num">@Model.MaxTotal.ToString("0.##")</th>
+                        <th class="text-center num">@Model.Percentage.ToString("0.##")%</th>
+                        <th class="text-center">@(Model.GradeLetter ?? "—")</th>
+                        <th class="text-center">
+                            <span class="chip @(Model.IsPass ? "tone-ok" : "tone-danger")">@(Model.IsPass ? "ناجح" : "راسب")</span>
+                        </th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            @* ---------- الملخص ---------- *@
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-percent"></i></div>
+                        <div><div class="value num">@Model.Percentage.ToString("0.##")%</div><div class="label">النسبة العامة</div></div></div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card"><div class="ico tone-accent"><i class="bi bi-award"></i></div>
+                        <div><div class="value">@(Model.GradeLetter ?? "—")</div><div class="label">@(Model.GradeName ?? "التقدير")</div></div></div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-trophy"></i></div>
+                        <div><div class="value num">@(Model.Rank > 0 ? Model.Rank.ToString() : "—")</div><div class="label">الترتيب من @Model.ClassSize</div></div></div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="ico @(Model.Attendance.Rate >= 90 ? "tone-ok" : "tone-warn")"><i class="bi bi-calendar-check"></i></div>
+                        <div><div class="value num">@Model.Attendance.Rate.ToString("0.#")%</div><div class="label">نسبة الحضور</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body py-2">
+                            <div class="d-flex flex-wrap gap-3 fs-sm">
+                                <span><b class="text-success num">@Model.Attendance.Present</b> يوم حضور</span>
+                                <span><b class="text-danger num">@Model.Attendance.Absent</b> يوم غياب</span>
+                                <span><b class="text-warning num">@Model.Attendance.Late</b> يوم تأخير</span>
+                                <span><b class="text-info num">@Model.Attendance.Excused</b> غياب بعذر</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ---------- التواقيع ---------- *@
+            <div class="row mt-5 pt-4 text-center fs-sm">
+                <div class="col-4">
+                    <div class="pt-4" style="border-top:1px solid var(--line-strong);margin:0 1rem">رائد الفصل</div>
+                </div>
+                <div class="col-4">
+                    <div class="pt-4" style="border-top:1px solid var(--line-strong);margin:0 1rem">ولي الأمر</div>
+                </div>
+                <div class="col-4">
+                    <div class="pt-4" style="border-top:1px solid var(--line-strong);margin:0 1rem">مدير المدرسة</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

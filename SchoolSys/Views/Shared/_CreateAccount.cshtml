@@ -1,0 +1,72 @@
+@model CreateAccountViewModel
+@{
+    ViewData["Title"] = "إنشاء حساب دخول";
+}
+
+<div class="page-head">
+    <div>
+        <h1>إنشاء حساب دخول</h1>
+        <p class="sub">إنشاء حساب للوصول إلى النظام لـ <b>@Model.EntityName</b></p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <form method="post">
+                <input type="hidden" asp-for="EntityId" />
+                <input type="hidden" asp-for="EntityName" />
+                <input type="hidden" asp-for="EntityType" />
+                <input type="hidden" asp-for="Role" />
+
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+                    <div class="alert alert-info fs-sm d-flex gap-2">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            سيُنشأ الحساب بدور <b>@RoleNames.Display(Model.Role)</b>،
+                            وسيتمكن صاحبه من الوصول إلى البيانات المصرّح بها لهذا الدور فقط.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" dir="ltr" />
+                        <span asp-validation-for="Email" class="text-danger fs-xs"></span>
+                    </div>
+
+                    <div class="mb-1">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="Password" class="form-control" id="pwdField" />
+                            <button class="btn btn-light" type="button" id="genPwd">توليد</button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger fs-xs"></span>
+                        <div class="form-text fs-xs">6 أحرف على الأقل. سلّم كلمة المرور لصاحب الحساب ليغيّرها بعد أول دخول.</div>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> إنشاء الحساب</button>
+                    <a class="btn btn-light" href="javascript:history.back()">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        document.getElementById('genPwd')?.addEventListener('click', function () {
+            const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789@@#';
+            let out = '';
+            for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
+            const f = document.getElementById('pwdField');
+            f.type = 'text';
+            f.value = out;
+        });
+    </script>
+}

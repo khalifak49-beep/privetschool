@@ -1,0 +1,134 @@
+@model RoleIndexViewModel
+@{
+    ViewData["Title"] = "الأدوار والصلاحيات";
+    var canManage = User.Can(Permissions.RolesManage);
+}
+
+<div class="page-head">
+    <div>
+        <h1>الأدوار والصلاحيات</h1>
+        <p class="sub">كل مستخدم يرى فقط الوظائف المسموح بها لدوره</p>
+    </div>
+    @if (canManage)
+    {
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openRole()"><i class="bi bi-plus-lg me-1"></i> دور جديد</button>
+        </div>
+    }
+</div>
+
+<div class="row g-3">
+    @foreach (var r in Model.Roles)
+    {
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="ico @(r.Name == RoleNames.SuperAdmin ? "tone-danger" : r.IsSystemRole ? "tone-brand" : "tone-accent")"
+                             style="width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:1.25rem;flex-shrink:0">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <div class="min-w-0 flex-grow-1">
+                            <div class="fw-bold">@r.DisplayName</div>
+                            <div class="fs-xs text-muted-3" dir="ltr">@r.Name</div>
+                        </div>
+                        @if (r.IsSystemRole)
+                        {
+                            <span class="chip tone-brand">نظام</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(r.Description))
+                    {
+                        <div class="fs-sm text-muted-2 mb-3">@r.Description</div>
+                    }
+
+                    <div class="d-flex justify-content-between fs-sm py-1 border-top pt-2">
+                        <span class="text-muted-2"><i class="bi bi-people me-1"></i>المستخدمون</span>
+                        <span class="fw-bold num">@r.UsersCount</span>
+                    </div>
+                    <div class="d-flex justify-content-between fs-sm py-1">
+                        <span class="text-muted-2"><i class="bi bi-key me-1"></i>الصلاحيات</span>
+                        <span class="fw-bold num">
+                            @if (r.Name == RoleNames.SuperAdmin)
+                            {
+                                <text>الكل</text>
+                            }
+                            else
+                            {
+                                @r.PermissionsCount
+                            }
+                        </span>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <a class="btn btn-sm btn-primary flex-grow-1" asp-action="Permissions" asp-route-id="@r.Id">
+                            <i class="bi bi-sliders me-1"></i> الصلاحيات
+                        </a>
+                        @if (canManage)
+                        {
+                            <button class="btn btn-sm btn-light"
+                                    onclick='openRole(@Html.Raw(Json.Serialize(new { r.Id, r.Name, r.DisplayName, r.Description, r.IsSystemRole })))'>
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            @if (!r.IsSystemRole)
+                            {
+                                <form asp-action="Delete" method="post">
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا الدور؟"><i class="bi bi-trash"></i></button>
+                                </form>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (canManage)
+{
+    <div class="modal fade" id="roleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="Save" method="post">
+                <input type="hidden" name="id" id="ro-id" value="0" />
+                <div class="modal-header">
+                    <h5 class="modal-title">دور</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">الاسم البرمجي (إنجليزي)</label>
+                        <input name="name" id="ro-name" class="form-control" dir="ltr" placeholder="Librarian" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الاسم المعروض</label>
+                        <input name="displayName" id="ro-display" class="form-control" placeholder="أمين المكتبة" />
+                    </div>
+                    <div>
+                        <label class="form-label">الوصف</label>
+                        <textarea name="description" id="ro-desc" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function openRole(d) {
+            d = d || { Id: 0, Name: '', DisplayName: '', Description: '', IsSystemRole: false };
+            document.getElementById('ro-id').value = d.Id;
+            document.getElementById('ro-name').value = d.Name || '';
+            document.getElementById('ro-name').readOnly = !!d.IsSystemRole;
+            document.getElementById('ro-display').value = d.DisplayName || '';
+            document.getElementById('ro-desc').value = d.Description || '';
+            new bootstrap.Modal(document.getElementById('roleModal')).show();
+        }
+    </script>
+}

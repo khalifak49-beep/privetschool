@@ -1,0 +1,75 @@
+@model List<StudentAttendance>
+@{
+    var studentName = ViewBag.StudentName as string;
+    ViewData["Title"] = studentName is null ? "سجل حضوري" : $"حضور {studentName}";
+
+    var total = Model.Count;
+    var present = Model.Count(a => a.Status == AttendanceStatus.Present);
+    var late = Model.Count(a => a.Status == AttendanceStatus.Late);
+    var absent = Model.Count(a => a.Status == AttendanceStatus.Absent);
+    var excused = Model.Count(a => a.Status == AttendanceStatus.Excused);
+    var rate = total > 0 ? Math.Round((double)(present + late) / total * 100, 1) : 0;
+}
+
+<div class="page-head">
+    <div>
+        <h1>@(studentName is null ? "سجل الحضور" : $"حضور {studentName}")</h1>
+        <p class="sub">آخر @total سجل</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-light" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg">
+        <div class="stat-card">
+            <div class="ico @(rate >= 90 ? "tone-ok" : rate >= 75 ? "tone-warn" : "tone-danger")"><i class="bi bi-percent"></i></div>
+            <div><div class="value num">@rate.ToString("0.#")%</div><div class="label">نسبة الحضور</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-ok"><i class="bi bi-check-circle"></i></div>
+            <div><div class="value num">@present</div><div class="label">حاضر</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-danger"><i class="bi bi-x-circle"></i></div>
+            <div><div class="value num">@absent</div><div class="label">غائب</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-clock"></i></div>
+            <div><div class="value num">@late</div><div class="label">متأخر</div></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card"><div class="ico tone-info"><i class="bi bi-file-earmark-check"></i></div>
+            <div><div class="value num">@excused</div><div class="label">بعذر</div></div></div>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="card-header"><h2>سجل الحضور اليومي</h2></div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr><th>التاريخ</th><th>اليوم</th><th>الحالة</th><th>وقت الحضور</th><th>التأخير</th><th>ملاحظات</th></tr>
+            </thead>
+            <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr><td colspan="6"><div class="empty-state"><i class="bi bi-calendar"></i>لا توجد سجلات حضور</div></td></tr>
+            }
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td class="num">@ViewHelpers.Date(a.Date)</td>
+                    <td class="fs-sm text-muted-2">@ViewHelpers.DayName((int)a.Date.DayOfWeek)</td>
+                    <td>@a.Status.Badge()</td>
+                    <td class="num fs-sm">@ViewHelpers.Time(a.CheckInTime)</td>
+                    <td class="num fs-sm">@(a.LateMinutes > 0 ? $"{a.LateMinutes} دقيقة" : "—")</td>
+                    <td class="fs-sm text-muted-2">@(a.Notes ?? "—")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

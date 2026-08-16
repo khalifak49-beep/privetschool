@@ -1,0 +1,139 @@
+@model HomeworkIndexViewModel
+@{
+    ViewData["Title"] = "الواجبات";
+}
+
+<div class="page-head">
+    <div>
+        <h1>الواجبات المدرسية</h1>
+        <p class="sub">
+            <span class="chip tone-info">@Model.ActiveCount نشط</span>
+            @if (Model.PendingGrading > 0)
+            {
+                <span class="chip tone-warn">@Model.PendingGrading بانتظار التصحيح</span>
+            }
+        </p>
+    </div>
+    @if (User.Can(Permissions.HomeworkManage))
+    {
+        <div class="actions">
+            <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i> واجب جديد</a>
+        </div>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">بحث</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input name="q" value="@Model.Q" class="form-control" placeholder="عنوان الواجب..." />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">الشعبة</label>
+                <select name="sectionId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">المادة</label>
+                <select name="subjectId" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">الكل</option>
+                    @foreach (var s in Model.Subjects)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
+                <a asp-action="Index" class="btn btn-sm btn-light"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>الواجب</th>
+                <th>المادة</th>
+                <th>الشعبة</th>
+                <th>موعد التسليم</th>
+                <th style="width:180px">التسليم</th>
+                <th>التصحيح</th>
+                <th style="width:110px"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.TotalCount == 0)
+            {
+                <tr><td colspan="7"><div class="empty-state"><i class="bi bi-pencil-square"></i>لا توجد واجبات</div></td></tr>
+            }
+            @foreach (var h in Model.Items.Items)
+            {
+                <tr>
+                    <td>
+                        <div class="fw-semibold">@h.Title</div>
+                        <div class="fs-xs text-muted-3">
+                            @h.Teacher · الدرجة @h.MaxScore.ToString("0.##")
+                            @if (!h.IsPublished)
+                            {
+                                <span class="chip tone-warn">غير منشور</span>
+                            }
+                        </div>
+                    </td>
+                    <td>@h.Subject</td>
+                    <td class="text-muted-2 fs-sm">@h.Section</td>
+                    <td>
+                        <div class="num fs-sm">@ViewHelpers.Date(h.DueDate)</div>
+                        @if (h.IsOverdue)
+                        {
+                            <span class="chip tone-danger">انتهى</span>
+                        }
+                        else
+                        {
+                            var d = (h.DueDate.Date - DateTime.Today).Days;
+                            <span class="chip tone-info">@(d == 0 ? "اليوم" : $"بعد {d} يوم")</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="mini-bar flex-grow-1">
+                                <span style="width:@h.SubmitRate.ToString("0.#")%;background:@(h.SubmitRate >= 80 ? "var(--ok)" : h.SubmitRate >= 50 ? "var(--warn)" : "var(--danger)")"></span>
+                            </div>
+                            <span class="fs-xs num text-nowrap">@h.Submitted/@h.Total</span>
+                        </div>
+                    </td>
+                    <td class="num fs-sm">@h.Graded / @h.Total</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a class="btn btn-sm btn-light" asp-action="Grade" asp-route-id="@h.Id" title="التصحيح">
+                                <i class="bi bi-check2-square"></i>
+                            </a>
+                            @if (User.Can(Permissions.HomeworkManage))
+                            {
+                                <a class="btn btn-sm btn-light" asp-action="Edit" asp-route-id="@h.Id"><i class="bi bi-pencil"></i></a>
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@h.Id" />
+                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف الواجب وجميع تسليماته؟"><i class="bi bi-trash"></i></button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model.Items" />
+</div>

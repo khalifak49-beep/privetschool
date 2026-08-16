@@ -1,0 +1,112 @@
+@model ComposeMessageViewModel
+@{
+    ViewData["Title"] = "رسالة جديدة";
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Messages">الرسائل</a></span>
+            <span class="breadcrumb-item active">رسالة جديدة</span>
+        </nav>
+        <h1>إنشاء رسالة</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <form asp-action="Compose" method="post" enctype="multipart/form-data">
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-sm"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">إرسال إلى</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="TargetType" value="role" id="tt-role"
+                                   checked="@(Model.TargetType == "role")" autocomplete="off" />
+                            <label class="btn btn-outline-primary" for="tt-role"><i class="bi bi-people me-1"></i> دور كامل</label>
+
+                            <input type="radio" class="btn-check" name="TargetType" value="section" id="tt-section"
+                                   checked="@(Model.TargetType == "section")" autocomplete="off" />
+                            <label class="btn btn-outline-primary" for="tt-section"><i class="bi bi-building me-1"></i> شعبة (طلاب وأولياء أمور)</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="roleBox">
+                        <label asp-for="Role" class="form-label"></label>
+                        <select asp-for="Role" class="form-select" asp-items="Model.Roles">
+                            <option value="">— اختر الدور —</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="sectionBox">
+                        <label asp-for="SectionId" class="form-label"></label>
+                        <select asp-for="SectionId" class="form-select" asp-items="Model.Sections">
+                            <option value="">— اختر الشعبة —</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Subject" class="form-label"></label>
+                        <input asp-for="Subject" class="form-control" />
+                        <span asp-validation-for="Subject" class="text-danger fs-xs"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Body" class="form-label"></label>
+                        <textarea asp-for="Body" class="form-control" rows="8"></textarea>
+                        <span asp-validation-for="Body" class="text-danger fs-xs"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Attachment" class="form-label"></label>
+                        <input asp-for="Attachment" type="file" class="form-control" />
+                    </div>
+
+                    @if (User.Can(Permissions.NotificationsSend))
+                    {
+                        <div class="form-check">
+                            <input asp-for="AlsoExternal" class="form-check-input" />
+                            <label asp-for="AlsoExternal" class="form-check-label"></label>
+                            <div class="form-text fs-xs">تُضاف الرسالة إلى صادر SMS / واتساب لإرسالها خارجياً.</div>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i> إرسال</button>
+                    <a class="btn btn-light" asp-action="Messages">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="fw-bold fs-sm mb-2"><i class="bi bi-info-circle me-1"></i> ملاحظات</div>
+                <ul class="fs-sm text-muted-2 ps-3 mb-0 lh-lg">
+                    <li>عند اختيار «دور كامل» تصل الرسالة لكل المستخدمين النشطين بذلك الدور.</li>
+                    <li>عند اختيار «شعبة» تصل لطلاب الشعبة وأولياء أمورهم ممن لديهم حسابات.</li>
+                    <li>يصل إشعار فوري داخل النظام لكل مستلم.</li>
+                    <li>لن تصلك نسخة من رسالتك في صندوق الوارد.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function toggleTarget() {
+            const isSection = document.getElementById('tt-section').checked;
+            document.getElementById('roleBox').classList.toggle('d-none', isSection);
+            document.getElementById('sectionBox').classList.toggle('d-none', !isSection);
+        }
+        document.getElementById('tt-role').addEventListener('change', toggleTarget);
+        document.getElementById('tt-section').addEventListener('change', toggleTarget);
+        toggleTarget();
+    </script>
+}

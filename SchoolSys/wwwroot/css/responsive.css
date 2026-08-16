@@ -1,0 +1,471 @@
+/* =====================================================================
+   طبقة الاستجابة — الجوالات والأجهزة اللوحية (Android / iOS)
+   تُحمَّل بعد app.css لتتجاوز قواعده عند الحاجة
+   ===================================================================== */
+
+/* ---------------------------------------------------------------
+   أساسيات عبر كل المقاسات
+   --------------------------------------------------------------- */
+html {
+    -webkit-text-size-adjust: 100%;   /* منع تكبير النص تلقائياً في iOS عند الدوران */
+    text-size-adjust: 100%;
+}
+
+body {
+    -webkit-tap-highlight-color: rgba(27, 58, 128, .12);
+    overscroll-behavior-y: none;      /* منع الارتداد المزعج في iOS */
+}
+
+/* منع أي تجاوز أفقي يسبب اهتزاز الصفحة */
+html, body { max-width: 100%; }
+
+img, svg, video, canvas { max-width: 100%; height: auto; }
+
+/* تمرير سلس داخل الحاويات على iOS */
+.table-responsive,
+.sidebar-scroll,
+.notif-list,
+.modal-body {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* مساحات الأمان (نتوء iPhone) */
+.app-topbar { padding-top: env(safe-area-inset-top); height: calc(var(--topbar-h) + env(safe-area-inset-top)); }
+.app-sidebar { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+.app-main { padding-top: calc(var(--topbar-h) + env(safe-area-inset-top) + 1.35rem); }
+
+/* ---------------------------------------------------------------
+   الأجهزة اللوحية — 992px إلى 1199px
+   --------------------------------------------------------------- */
+@media (max-width: 1199.98px) {
+    :root { --sidebar-w: 236px; }
+
+    html { font-size: 14.5px; }
+
+    .stat-card { padding: 1rem; gap: .8rem; }
+    .stat-card .value { font-size: 1.5rem; }
+    .stat-card .ico { width: 44px; height: 44px; font-size: 1.2rem; }
+
+    .card-body { padding: 1rem; }
+    .card-header { padding: .85rem 1rem; }
+}
+
+/* ---------------------------------------------------------------
+   لوحي أفقي / صغير — حتى 991px (القائمة الجانبية تصبح منزلقة)
+   --------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+    :root { --sidebar-w: 280px; }
+
+    /* القائمة مثبّتة على الحافة اليسرى، لذا يجب أن تنزلق خارج الشاشة يساراً.
+       الانزلاق يميناً كان يوسّع المستند ويُحدث تمريراً أفقياً. */
+    .app-sidebar {
+        width: var(--sidebar-w);
+        transform: translateX(-100%);
+        box-shadow: none;
+    }
+
+    .app-sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+
+    /* حاجز أمان ضد أي تجاوز أفقي متبقٍ */
+    html, body { overflow-x: hidden; }
+
+    /* زر إغلاق القائمة */
+    .sidebar-close {
+        display: grid; place-items: center;
+        width: 36px; height: 36px; border-radius: 10px;
+        background: rgba(255, 255, 255, .12);
+        border: 0; color: #fff; font-size: 1.05rem;
+        margin-inline-start: auto;
+    }
+
+    .page-head { margin-bottom: 1rem; }
+    .page-head h1 { font-size: 1.25rem; }
+
+    /* الفلاتر تتحول لعمودين */
+    .card-body > form.row > [class*="col-lg-"] { margin-bottom: .25rem; }
+}
+
+@media (min-width: 992px) {
+    .sidebar-close { display: none; }
+}
+
+/* ---------------------------------------------------------------
+   الجوال — حتى 767px
+   --------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+
+    html { font-size: 15px; }
+
+    .app-main {
+        padding-inline: .8rem;
+        /* مساحة لشريط التنقل السفلي */
+        padding-bottom: calc(4.6rem + env(safe-area-inset-bottom));
+    }
+
+    /* ===== الشريط العلوي ===== */
+    .app-topbar { padding-inline: .8rem; gap: .5rem; }
+    .icon-btn { width: 42px; height: 42px; }
+    .user-chip { padding: .25rem; }
+    .user-chip .u-meta,
+    .user-chip .bi-chevron-down { display: none; }
+
+    /* ===== ترويسة الصفحة ===== */
+    .page-head { flex-direction: column; align-items: stretch; gap: .75rem; }
+    .page-head h1 { font-size: 1.18rem; }
+    .page-head .sub { font-size: .82rem; }
+    .page-head .actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .page-head .actions .btn { flex: 1 1 auto; justify-content: center; }
+    .breadcrumb { font-size: .74rem; }
+
+    /* ===== الجداول تتحول إلى بطاقات ===== */
+    .table-wrap {
+        border: 0; background: transparent; box-shadow: none;
+        border-radius: 0; overflow: visible;
+    }
+
+    .table-wrap > .card-header {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: var(--radius); margin-bottom: .75rem;
+        flex-direction: column; align-items: stretch; gap: .6rem;
+    }
+
+    .table-wrap > .card-header .btn,
+    .table-wrap > .card-header form { width: 100%; }
+    .table-wrap > .card-header .btn { justify-content: center; }
+
+    .table-stack-host { overflow: visible !important; }
+
+    .table-stack { background: transparent; }
+    .table-stack > thead { display: none; }
+
+    .table-stack,
+    .table-stack > tbody,
+    .table-stack > tbody > tr,
+    .table-stack > tbody > tr > td {
+        display: block;
+        width: 100%;
+    }
+
+    .table-stack > tbody > tr {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-xs);
+        margin-bottom: .7rem;
+        padding: .25rem .1rem;
+    }
+
+    .table-stack > tbody > tr:hover { background: var(--surface); }
+
+    .table-stack > tbody > tr > td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .9rem;
+        border: 0;
+        border-bottom: 1px dashed var(--line);
+        padding: .55rem .85rem;
+        text-align: start;
+        min-height: 44px;
+    }
+
+    .table-stack > tbody > tr > td:last-child { border-bottom: 0; }
+
+    .table-stack > tbody > tr > td::before {
+        content: attr(data-label);
+        flex: 0 0 38%;
+        font-size: .74rem;
+        font-weight: 700;
+        color: var(--text-3);
+        line-height: 1.5;
+    }
+
+    /* خلايا بلا عنوان (أزرار الإجراءات / خانات الاختيار) */
+    .table-stack > tbody > tr > td[data-label=""]::before { content: none; }
+    .table-stack > tbody > tr > td[data-label=""] { justify-content: flex-start; }
+
+    /* صفوف الحالة الفارغة تمتد بالكامل */
+    .table-stack > tbody > tr > td[colspan] { display: block; }
+    .table-stack > tbody > tr > td[colspan]::before { content: none; }
+    .table-stack > tbody > tr:has(> td[colspan]) { padding: 0; }
+
+    /* أزرار الإجراءات داخل البطاقة */
+    .table-stack > tbody > tr > td .d-flex.gap-1 { gap: .45rem !important; }
+    .table-stack .btn-sm { min-height: 38px; min-width: 38px; }
+
+    /* الجداول التي تبقى أفقية (مثل الجدول الدراسي) */
+    .no-stack { min-width: 680px; }
+
+    .table-responsive.has-scroll { position: relative; }
+
+    /* شريط الترقيم */
+    .pager-bar {
+        background: var(--surface); border: 1px solid var(--line) !important;
+        border-radius: var(--radius); margin-top: .5rem;
+        flex-direction: column; gap: .6rem; text-align: center;
+    }
+
+    /* ===== النماذج ===== */
+    /* 16px تمنع تكبير iOS التلقائي عند التركيز على الحقل */
+    .form-control,
+    .form-select,
+    input[type="text"], input[type="number"], input[type="email"],
+    input[type="password"], input[type="search"], input[type="tel"],
+    input[type="date"], input[type="time"], textarea, select {
+        font-size: 16px !important;
+    }
+
+    .form-control-sm, .form-select-sm { padding: .5rem .7rem; }
+    .form-label { font-size: .8rem; }
+
+    /* أعمدة الفلاتر تصبح كاملة العرض */
+    form.row > [class*="col-"] { margin-bottom: .5rem; }
+    form.row .btn { width: 100%; justify-content: center; }
+    form.row .d-flex.gap-1 { width: 100%; }
+
+    /* ===== الفلاتر قابلة للطي لتوفير المساحة ===== */
+    .filter-toggle {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        gap: .5rem;
+        justify-content: space-between;
+        background: transparent;
+        border: 0;
+        padding: .9rem 1rem;
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--text);
+        min-height: 48px;
+    }
+
+    .filter-toggle .ft-left { display: flex; align-items: center; gap: .5rem; }
+    .filter-toggle .ft-caret { transition: transform .22s ease; color: var(--text-3); }
+    .filter-toggle.open .ft-caret { transform: rotate(180deg); }
+    .filter-body.collapsed { display: none; }
+    .filter-body { padding-top: 0 !important; }
+
+    /* ===== أزرار ولمس ===== */
+    .btn { min-height: 42px; padding: .55rem 1rem; }
+    .btn-sm { min-height: 38px; padding: .4rem .75rem; }
+    .form-check-input { width: 1.2em; height: 1.2em; }
+    .dropdown-item { padding: .65rem .8rem; }
+
+    /* ===== البطاقات الإحصائية ===== */
+    .stat-card { padding: .85rem; gap: .65rem; border-radius: 12px; }
+    .stat-card .ico { width: 40px; height: 40px; font-size: 1.1rem; border-radius: 11px; }
+    .stat-card .value { font-size: 1.3rem; }
+    .stat-card .label { font-size: .76rem; }
+    .stat-card .trend { font-size: .7rem; }
+
+    /* ===== التبويبات تنزلق أفقياً ===== */
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tabs .nav-link { white-space: nowrap; padding: .55rem .8rem; font-size: .82rem; }
+
+    /* ===== الرسوم البيانية ===== */
+    .chart-box { height: 220px !important; }
+
+    /* ===== النوافذ المنبثقة ===== */
+    .modal-dialog { margin: .6rem; }
+    .modal-content { border-radius: 18px; }
+    .modal-body { padding: 1rem; max-height: 70vh; max-height: 70dvh; overflow-y: auto; }
+    .modal-header, .modal-footer { padding: .85rem 1rem; }
+    .modal-footer { flex-direction: column-reverse; gap: .5rem; }
+    .modal-footer > .btn { width: 100%; margin: 0; }
+
+    /* ===== الإشعارات ===== */
+    .dropdown-menu[style*="width:340px"],
+    .dropdown-menu[style*="width: 340px"] {
+        width: calc(100vw - 1.6rem) !important;
+        max-width: 340px;
+    }
+
+    /* ===== مجموعة أزرار الحضور ===== */
+    .att-group {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .35rem;
+    }
+
+    .att-group > .btn {
+        border-radius: 9px !important;
+        font-size: .74rem !important;
+        padding: .45rem .25rem !important;
+        min-height: 40px;
+    }
+
+    /* ===== المعلومات الثنائية ===== */
+    .avatar.xl { width: 84px; height: 84px; font-size: 1.6rem; border-radius: 18px; }
+    .avatar.lg { width: 54px; height: 54px; font-size: 1.05rem; }
+
+    /* ===== الخط الزمني ===== */
+    .timeline { padding-inline-start: 1.5rem; }
+
+    /* ===== البطاقات الخاصة ===== */
+    .id-card { width: 100%; max-width: 340px; }
+    .receipt { padding: 1.1rem; }
+    .rc-head { flex-direction: column; }
+    .rc-badge { width: 100%; }
+    .rc-amount { flex-direction: column; align-items: flex-start; gap: .6rem; }
+    .rc-words { max-width: 100%; text-align: start; }
+    .rc-summary { flex-direction: column; gap: .5rem; }
+    .rc-table th { width: 34%; font-size: .78rem; }
+    .rc-table td { font-size: .8rem; }
+    .certificate { padding: 8px; }
+    .cert-border { padding: 1.5rem 1rem; }
+    .cert-footer { flex-direction: column; gap: 1.4rem; }
+}
+
+/* ---------------------------------------------------------------
+   جوال صغير — حتى 480px
+   --------------------------------------------------------------- */
+@media (max-width: 480px) {
+    .page-head .actions .btn { flex: 1 1 100%; }
+
+    .stat-card { flex-direction: column; align-items: flex-start; }
+    .stat-card .value { font-size: 1.22rem; }
+
+    .table-stack > tbody > tr > td { padding: .5rem .7rem; }
+    .table-stack > tbody > tr > td::before { flex-basis: 42%; font-size: .72rem; }
+
+    .att-group { grid-template-columns: repeat(2, 1fr); }
+
+    .chart-box { height: 190px !important; }
+
+    .modal-dialog { margin: .4rem; }
+}
+
+/* ---------------------------------------------------------------
+   شريط التنقل السفلي (الجوال فقط)
+   --------------------------------------------------------------- */
+.mobile-nav { display: none; }
+
+@media (max-width: 767.98px) {
+    .mobile-nav {
+        display: grid;
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 1045;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        background: rgba(255, 255, 255, .96);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid var(--line);
+        padding-bottom: env(safe-area-inset-bottom);
+        box-shadow: 0 -4px 20px rgba(16, 30, 60, .08);
+    }
+
+    .mobile-nav a,
+    .mobile-nav button {
+        background: none;
+        border: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .12rem;
+        padding: .5rem .2rem .55rem;
+        color: var(--text-3);
+        font-size: .66rem;
+        font-weight: 600;
+        min-height: 56px;
+        position: relative;
+        transition: color .15s;
+    }
+
+    .mobile-nav i { font-size: 1.22rem; }
+
+    .mobile-nav a.active { color: var(--brand-700); }
+
+    .mobile-nav a.active::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        inset-inline: 28%;
+        height: 3px;
+        border-radius: 0 0 3px 3px;
+        background: var(--brand-700);
+    }
+
+    .mobile-nav .mn-badge {
+        position: absolute;
+        top: .35rem;
+        inset-inline-end: 22%;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 8px;
+        background: var(--danger);
+        color: #fff;
+        font-size: .6rem;
+        font-weight: 700;
+        display: grid;
+        place-items: center;
+        border: 2px solid #fff;
+    }
+}
+
+/* ---------------------------------------------------------------
+   الوضع الأفقي على الجوال (ارتفاع صغير)
+   --------------------------------------------------------------- */
+@media (max-height: 480px) and (orientation: landscape) {
+    .mobile-nav { display: none; }
+    .app-main { padding-bottom: 1.5rem; }
+    .app-sidebar .brand { padding: .6rem 1rem; }
+    .nav-group-title { padding-top: .5rem; }
+}
+
+/* ---------------------------------------------------------------
+   معالجة ارتفاع الشاشة في iOS (100vh غير دقيق)
+   --------------------------------------------------------------- */
+.auth-wrap { min-height: 100vh; min-height: 100dvh; }
+.app-main { min-height: 100vh; min-height: 100dvh; }
+
+/* ---------------------------------------------------------------
+   أجهزة اللمس عموماً — تكبير مساحات اللمس
+   --------------------------------------------------------------- */
+@media (hover: none) and (pointer: coarse) {
+    .app-sidebar .nav-link { padding: .7rem .75rem; }
+    .form-check-label { padding-inline-start: .2rem; }
+
+    /* أهداف لمس مريحة على كل الأجهزة اللمسية بما فيها الأجهزة اللوحية */
+    .btn-sm { min-height: 40px; min-width: 40px; }
+    .table td a.btn, .table td button.btn { min-height: 40px; min-width: 40px; }
+    .page-link { min-width: 40px; min-height: 40px; display: grid; place-items: center; }
+
+    /* 16px تمنع تكبير Safari التلقائي عند التركيز على الحقل (يشمل الآيباد) */
+    .form-control, .form-select,
+    input[type="text"], input[type="number"], input[type="email"],
+    input[type="password"], input[type="search"], input[type="tel"],
+    input[type="date"], input[type="time"], textarea, select {
+        font-size: 16px !important;
+    }
+
+    /* إلغاء تأثيرات المرور التي تعلق على اللمس */
+    .stat-card:hover,
+    .act-card:hover,
+    .feat:hover,
+    .prog-card:hover,
+    .stage-card:hover { transform: none; }
+}
+
+/* ---------------------------------------------------------------
+   الطباعة — إخفاء عناصر الجوال
+   --------------------------------------------------------------- */
+@media print {
+    .mobile-nav, .sidebar-close { display: none !important; }
+
+    .table-stack > thead { display: table-header-group !important; }
+    .table-stack, .table-stack > tbody, .table-stack > tbody > tr, .table-stack > tbody > tr > td {
+        display: revert !important;
+    }
+    .table-stack > tbody > tr > td::before { content: none !important; }
+}

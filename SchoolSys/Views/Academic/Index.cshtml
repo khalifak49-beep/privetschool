@@ -1,0 +1,504 @@
+@model AcademicIndexViewModel
+@{
+    ViewData["Title"] = "البنية الأكاديمية";
+    var canManage = User.Can(Permissions.AcademicManage);
+    string TabClass(string t) => Model.ActiveTab == t ? "active" : "";
+    string PaneClass(string t) => Model.ActiveTab == t ? "show active" : "";
+}
+
+<div class="page-head">
+    <div>
+        <h1>البنية الأكاديمية</h1>
+        <p class="sub">
+            الأعوام والفصول والمراحل والصفوف والشعب والمواد
+            @if (Model.CurrentYearName is not null)
+            {
+                <span class="chip tone-brand">العام الحالي: @Model.CurrentYearName</span>
+            }
+        </p>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link @TabClass("years")" href="?tab=years"><i class="bi bi-calendar-range me-1"></i> الأعوام الدراسية</a></li>
+    <li class="nav-item"><a class="nav-link @TabClass("terms")" href="?tab=terms"><i class="bi bi-calendar2-week me-1"></i> الفصول الدراسية</a></li>
+    <li class="nav-item"><a class="nav-link @TabClass("stages")" href="?tab=stages"><i class="bi bi-layers me-1"></i> المراحل</a></li>
+    <li class="nav-item"><a class="nav-link @TabClass("grades")" href="?tab=grades"><i class="bi bi-bar-chart-steps me-1"></i> الصفوف</a></li>
+    <li class="nav-item"><a class="nav-link @TabClass("sections")" href="?tab=sections"><i class="bi bi-grid-3x3 me-1"></i> الشعب</a></li>
+    <li class="nav-item"><a class="nav-link @TabClass("subjects")" href="?tab=subjects"><i class="bi bi-book me-1"></i> المواد</a></li>
+</ul>
+
+<div class="tab-content">
+
+    @* ==================== الأعوام الدراسية ==================== *@
+    <div class="tab-pane fade @PaneClass("years")">
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>الأعوام الدراسية</h2>
+                @if (canManage)
+                {
+                    <button class="btn btn-sm btn-primary" onclick="openYear()"><i class="bi bi-plus-lg me-1"></i> عام دراسي جديد</button>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>العام الدراسي</th><th>من</th><th>إلى</th><th>الفصول</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var y in Model.Years)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@y.Name</td>
+                            <td class="num">@ViewHelpers.Date(y.StartDate)</td>
+                            <td class="num">@ViewHelpers.Date(y.EndDate)</td>
+                            <td class="num">@Model.Terms.Count(t => t.AcademicYearId == y.Id)</td>
+                            <td>
+                                @if (y.IsCurrent)
+                                {
+                                    <span class="chip tone-ok"><i class="bi bi-check-circle-fill"></i>العام الحالي</span>
+                                }
+                                @if (y.IsClosed)
+                                {
+                                    <span class="chip tone-danger">مغلق</span>
+                                }
+                            </td>
+                            <td>
+                                @if (canManage)
+                                {
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-light" onclick='openYear(@Html.Raw(Json.Serialize(new { y.Id, y.Name, StartDate = y.StartDate.ToString("yyyy-MM-dd"), EndDate = y.EndDate.ToString("yyyy-MM-dd"), y.IsClosed })))'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        @if (!y.IsCurrent)
+                                        {
+                                            <form asp-action="SetCurrentYear" method="post">
+                                                <input type="hidden" name="id" value="@y.Id" />
+                                                <button class="btn btn-sm btn-light" data-confirm="تعيين هذا العام كعام دراسي حالي؟" title="تعيين كعام حالي">
+                                                    <i class="bi bi-check2-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ==================== الفصول الدراسية ==================== *@
+    <div class="tab-pane fade @PaneClass("terms")">
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>الفصول الدراسية</h2>
+                @if (canManage)
+                {
+                    <button class="btn btn-sm btn-primary" onclick="openTerm()"><i class="bi bi-plus-lg me-1"></i> فصل دراسي جديد</button>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>الفصل</th><th>العام الدراسي</th><th>الترتيب</th><th>من</th><th>إلى</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var t in Model.Terms)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@t.Name</td>
+                            <td class="text-muted-2">@t.AcademicYear.Name</td>
+                            <td class="num">@t.SeqNo</td>
+                            <td class="num">@ViewHelpers.Date(t.StartDate)</td>
+                            <td class="num">@ViewHelpers.Date(t.EndDate)</td>
+                            <td>
+                                @if (t.IsCurrent)
+                                {
+                                    <span class="chip tone-ok">الفصل الحالي</span>
+                                }
+                            </td>
+                            <td>
+                                @if (canManage)
+                                {
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-light" onclick='openTerm(@Html.Raw(Json.Serialize(new { t.Id, t.Name, t.SeqNo, t.AcademicYearId, StartDate = t.StartDate.ToString("yyyy-MM-dd"), EndDate = t.EndDate.ToString("yyyy-MM-dd") })))'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        @if (!t.IsCurrent)
+                                        {
+                                            <form asp-action="SetCurrentTerm" method="post">
+                                                <input type="hidden" name="id" value="@t.Id" />
+                                                <button class="btn btn-sm btn-light" data-confirm="تعيين هذا الفصل كفصل حالي؟"><i class="bi bi-check2-circle"></i></button>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ==================== المراحل ==================== *@
+    <div class="tab-pane fade @PaneClass("stages")">
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>المراحل الدراسية</h2>
+                @if (canManage)
+                {
+                    <button class="btn btn-sm btn-primary" onclick="openStage()"><i class="bi bi-plus-lg me-1"></i> مرحلة جديدة</button>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>الترتيب</th><th>المرحلة</th><th>عدد الصفوف</th><th>عدد الطلاب</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var s in Model.Stages)
+                    {
+                        <tr>
+                            <td class="num">@s.SeqNo</td>
+                            <td class="fw-semibold">@s.Name</td>
+                            <td class="num">@s.GradesCount</td>
+                            <td class="num">@s.StudentsCount.ToString("N0")</td>
+                            <td>@(s.IsActive ? Html.Raw("<span class='chip tone-ok'>نشط</span>") : Html.Raw("<span class='chip tone-danger'>معطّل</span>"))</td>
+                            <td>
+                                @if (canManage)
+                                {
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-light" onclick='openStage(@Html.Raw(Json.Serialize(new { s.Id, s.Name, s.SeqNo, s.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <form asp-action="DeleteStage" method="post">
+                                            <input type="hidden" name="id" value="@s.Id" />
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه المرحلة؟"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ==================== الصفوف ==================== *@
+    <div class="tab-pane fade @PaneClass("grades")">
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>الصفوف الدراسية</h2>
+                @if (canManage)
+                {
+                    <button class="btn btn-sm btn-primary" onclick="openGrade()"><i class="bi bi-plus-lg me-1"></i> صف جديد</button>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>الترتيب</th><th>الصف</th><th>المرحلة</th><th>الشعب</th><th>الطلاب</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var g in Model.Grades)
+                    {
+                        <tr>
+                            <td class="num">@g.SeqNo</td>
+                            <td class="fw-semibold">@g.Name</td>
+                            <td class="text-muted-2">@g.StageName</td>
+                            <td class="num">@g.SectionsCount</td>
+                            <td class="num">@g.StudentsCount.ToString("N0")</td>
+                            <td>@(g.IsActive ? Html.Raw("<span class='chip tone-ok'>نشط</span>") : Html.Raw("<span class='chip tone-danger'>معطّل</span>"))</td>
+                            <td>
+                                @if (canManage)
+                                {
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-light" onclick='openGrade(@Html.Raw(Json.Serialize(new { g.Id, g.Name, g.SeqNo, g.StageId, g.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <form asp-action="DeleteGrade" method="post">
+                                            <input type="hidden" name="id" value="@g.Id" />
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا الصف؟"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ==================== الشعب ==================== *@
+    <div class="tab-pane fade @PaneClass("sections")">
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>الشعب — @Model.CurrentYearName</h2>
+                @if (canManage)
+                {
+                    <button class="btn btn-sm btn-primary" onclick="openSection()"><i class="bi bi-plus-lg me-1"></i> شعبة جديدة</button>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>الشعبة</th><th>المرحلة</th><th>رائد الفصل</th><th>القاعة</th><th>الإشغال</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@s.GradeName - @s.Name</td>
+                            <td class="text-muted-2 fs-sm">@s.StageName</td>
+                            <td class="fs-sm">@(s.HomeroomTeacher ?? "—")</td>
+                            <td class="num fs-sm">@(s.Room ?? "—")</td>
+                            <td style="min-width:150px">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="mini-bar flex-grow-1">
+                                        <span style="width:@Math.Min(100, s.FillRate).ToString("0.#")%;background:@(s.FillRate >= 100 ? "var(--danger)" : s.FillRate >= 85 ? "var(--warn)" : "var(--accent)")"></span>
+                                    </div>
+                                    <span class="fs-xs num text-nowrap">@s.StudentsCount/@s.Capacity</span>
+                                </div>
+                            </td>
+                            <td>@(s.IsActive ? Html.Raw("<span class='chip tone-ok'>نشط</span>") : Html.Raw("<span class='chip tone-danger'>معطّل</span>"))</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a class="btn btn-sm btn-light" asp-controller="Students" asp-action="Index" asp-route-sectionId="@s.Id" title="طلاب الشعبة"><i class="bi bi-people"></i></a>
+                                    @if (canManage)
+                                    {
+                                        <button class="btn btn-sm btn-light" onclick='openSection(@Html.Raw(Json.Serialize(new { s.Id, s.Name, s.GradeId, s.Capacity, s.Room, s.HomeroomTeacherId, s.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <form asp-action="DeleteSection" method="post">
+                                            <input type="hidden" name="id" value="@s.Id" />
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه الشعبة؟"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ==================== المواد ==================== *@
+    <div class="tab-pane fade @PaneClass("subjects")">
+        <div class="table-wrap">
+            <div class="card-header">
+                <h2>المواد الدراسية</h2>
+                @if (canManage)
+                {
+                    <button class="btn btn-sm btn-primary" onclick="openSubject()"><i class="bi bi-plus-lg me-1"></i> مادة جديدة</button>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>الرمز</th><th>المادة</th><th>المرحلة</th><th>الدرجة العظمى</th><th>درجة النجاح</th><th>حصص/أسبوع</th><th>المعلمون</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var s in Model.Subjects)
+                    {
+                        <tr>
+                            <td><span class="chip tone-brand num">@s.Code</span></td>
+                            <td class="fw-semibold">@s.Name</td>
+                            <td class="text-muted-2 fs-sm">@(s.StageName ?? "جميع المراحل")</td>
+                            <td class="num">@s.MaxScore.ToString("0.##")</td>
+                            <td class="num">@s.PassScore.ToString("0.##")</td>
+                            <td class="num">@s.WeeklyPeriods</td>
+                            <td class="num">@s.TeachersCount</td>
+                            <td>@(s.IsActive ? Html.Raw("<span class='chip tone-ok'>نشط</span>") : Html.Raw("<span class='chip tone-danger'>معطّل</span>"))</td>
+                            <td>
+                                @if (canManage)
+                                {
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-light" onclick='openSubject(@Html.Raw(Json.Serialize(new { s.Id, s.Code, s.Name, s.StageId, s.MaxScore, s.PassScore, s.WeeklyPeriods, s.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <form asp-action="DeleteSubject" method="post">
+                                            <input type="hidden" name="id" value="@s.Id" />
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه المادة؟"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (canManage)
+{
+    @* ---------- نوافذ التحرير ---------- *@
+    <div class="modal fade" id="yearModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveYear" method="post">
+                <input type="hidden" name="Id" id="y-id" value="0" />
+                <div class="modal-header"><h5 class="modal-title" id="y-title">عام دراسي</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label">اسم العام الدراسي</label><input name="Name" id="y-name" class="form-control" placeholder="2026 / 2027" required /></div>
+                    <div class="row g-2">
+                        <div class="col-6"><label class="form-label">من</label><input name="StartDate" id="y-start" type="date" class="form-control" required /></div>
+                        <div class="col-6"><label class="form-label">إلى</label><input name="EndDate" id="y-end" type="date" class="form-control" required /></div>
+                    </div>
+                    <div class="form-check mt-3"><input class="form-check-input" type="checkbox" name="IsClosed" value="true" id="y-closed" /><label class="form-check-label" for="y-closed">عام مغلق</label></div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary">حفظ</button><button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="termModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveTerm" method="post">
+                <input type="hidden" name="Id" id="t-id" value="0" />
+                <div class="modal-header"><h5 class="modal-title">فصل دراسي</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label">اسم الفصل</label><input name="Name" id="t-name" class="form-control" required /></div>
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <label class="form-label">العام الدراسي</label>
+                            <select name="AcademicYearId" id="t-year" class="form-select" required asp-items="Model.YearOptions"><option value="">— اختر —</option></select>
+                        </div>
+                        <div class="col-4"><label class="form-label">الترتيب</label><input name="SeqNo" id="t-seq" type="number" class="form-control" value="1" /></div>
+                        <div class="col-6"><label class="form-label">من</label><input name="StartDate" id="t-start" type="date" class="form-control" required /></div>
+                        <div class="col-6"><label class="form-label">إلى</label><input name="EndDate" id="t-end" type="date" class="form-control" required /></div>
+                    </div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary">حفظ</button><button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="stageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveStage" method="post">
+                <input type="hidden" name="Id" id="s-id" value="0" />
+                <div class="modal-header"><h5 class="modal-title">مرحلة دراسية</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label">اسم المرحلة</label><input name="Name" id="s-name" class="form-control" required /></div>
+                    <div class="mb-3"><label class="form-label">الترتيب</label><input name="SeqNo" id="s-seq" type="number" class="form-control" value="1" /></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" name="IsActive" value="true" id="s-active" checked /><label class="form-check-label" for="s-active">نشط</label></div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary">حفظ</button><button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="gradeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveGrade" method="post">
+                <input type="hidden" name="Id" id="g-id" value="0" />
+                <div class="modal-header"><h5 class="modal-title">صف دراسي</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label">اسم الصف</label><input name="Name" id="g-name" class="form-control" required /></div>
+                    <div class="mb-3">
+                        <label class="form-label">المرحلة</label>
+                        <select name="StageId" id="g-stage" class="form-select" required asp-items="Model.StageOptions"><option value="">— اختر —</option></select>
+                    </div>
+                    <div class="mb-3"><label class="form-label">الترتيب</label><input name="SeqNo" id="g-seq" type="number" class="form-control" value="1" /></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" name="IsActive" value="true" id="g-active" checked /><label class="form-check-label" for="g-active">نشط</label></div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary">حفظ</button><button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="sectionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveSection" method="post">
+                <input type="hidden" name="Id" id="sec-id" value="0" />
+                <input type="hidden" name="AcademicYearId" value="@Model.CurrentYearId" />
+                <div class="modal-header"><h5 class="modal-title">شعبة</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-4"><label class="form-label">اسم الشعبة</label><input name="Name" id="sec-name" class="form-control" placeholder="أ" required /></div>
+                        <div class="col-8">
+                            <label class="form-label">الصف</label>
+                            <select name="GradeId" id="sec-grade" class="form-select" required asp-items="Model.GradeOptions"><option value="">— اختر —</option></select>
+                        </div>
+                        <div class="col-6"><label class="form-label">السعة</label><input name="Capacity" id="sec-cap" type="number" class="form-control" value="30" /></div>
+                        <div class="col-6"><label class="form-label">القاعة</label><input name="Room" id="sec-room" class="form-control" /></div>
+                        <div class="col-12">
+                            <label class="form-label">رائد الفصل</label>
+                            <select name="HomeroomTeacherId" id="sec-teacher" class="form-select" asp-items="Model.TeacherOptions"><option value="">— بدون —</option></select>
+                        </div>
+                    </div>
+                    <div class="form-check mt-3"><input class="form-check-input" type="checkbox" name="IsActive" value="true" id="sec-active" checked /><label class="form-check-label" for="sec-active">نشط</label></div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary">حفظ</button><button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="subjectModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveSubject" method="post">
+                <input type="hidden" name="Id" id="sub-id" value="0" />
+                <div class="modal-header"><h5 class="modal-title">مادة دراسية</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-4"><label class="form-label">الرمز</label><input name="Code" id="sub-code" class="form-control" placeholder="MTH" required /></div>
+                        <div class="col-8"><label class="form-label">اسم المادة</label><input name="Name" id="sub-name" class="form-control" required /></div>
+                        <div class="col-12">
+                            <label class="form-label">المرحلة (اختياري)</label>
+                            <select name="StageId" id="sub-stage" class="form-select" asp-items="Model.StageOptions"><option value="">جميع المراحل</option></select>
+                        </div>
+                        <div class="col-4"><label class="form-label">الدرجة العظمى</label><input name="MaxScore" id="sub-max" type="number" step="0.01" class="form-control" value="100" /></div>
+                        <div class="col-4"><label class="form-label">درجة النجاح</label><input name="PassScore" id="sub-pass" type="number" step="0.01" class="form-control" value="50" /></div>
+                        <div class="col-4"><label class="form-label">حصص/أسبوع</label><input name="WeeklyPeriods" id="sub-weekly" type="number" class="form-control" value="4" /></div>
+                    </div>
+                    <div class="form-check mt-3"><input class="form-check-input" type="checkbox" name="IsActive" value="true" id="sub-active" checked /><label class="form-check-label" for="sub-active">نشط</label></div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary">حفظ</button><button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function set(id, v) { const el = document.getElementById(id); if (el) el.value = v ?? ''; }
+        function check(id, v) { const el = document.getElementById(id); if (el) el.checked = !!v; }
+        function show(id) { new bootstrap.Modal(document.getElementById(id)).show(); }
+
+        function openYear(d) {
+            d = d || { Id: 0, Name: '', StartDate: '', EndDate: '', IsClosed: false };
+            set('y-id', d.Id); set('y-name', d.Name); set('y-start', d.StartDate); set('y-end', d.EndDate);
+            check('y-closed', d.IsClosed);
+            show('yearModal');
+        }
+
+        function openTerm(d) {
+            d = d || { Id: 0, Name: '', SeqNo: 1, AcademicYearId: '', StartDate: '', EndDate: '' };
+            set('t-id', d.Id); set('t-name', d.Name); set('t-seq', d.SeqNo);
+            set('t-year', d.AcademicYearId); set('t-start', d.StartDate); set('t-end', d.EndDate);
+            show('termModal');
+        }
+
+        function openStage(d) {
+            d = d || { Id: 0, Name: '', SeqNo: 1, IsActive: true };
+            set('s-id', d.Id); set('s-name', d.Name); set('s-seq', d.SeqNo); check('s-active', d.IsActive);
+            show('stageModal');
+        }
+
+        function openGrade(d) {
+            d = d || { Id: 0, Name: '', SeqNo: 1, StageId: '', IsActive: true };
+            set('g-id', d.Id); set('g-name', d.Name); set('g-seq', d.SeqNo);
+            set('g-stage', d.StageId); check('g-active', d.IsActive);
+            show('gradeModal');
+        }
+
+        function openSection(d) {
+            d = d || { Id: 0, Name: '', GradeId: '', Capacity: 30, Room: '', HomeroomTeacherId: '', IsActive: true };
+            set('sec-id', d.Id); set('sec-name', d.Name); set('sec-grade', d.GradeId);
+            set('sec-cap', d.Capacity); set('sec-room', d.Room); set('sec-teacher', d.HomeroomTeacherId);
+            check('sec-active', d.IsActive);
+            show('sectionModal');
+        }
+
+        function openSubject(d) {
+            d = d || { Id: 0, Code: '', Name: '', StageId: '', MaxScore: 100, PassScore: 50, WeeklyPeriods: 4, IsActive: true };
+            set('sub-id', d.Id); set('sub-code', d.Code); set('sub-name', d.Name); set('sub-stage', d.StageId);
+            set('sub-max', d.MaxScore); set('sub-pass', d.PassScore); set('sub-weekly', d.WeeklyPeriods);
+            check('sub-active', d.IsActive);
+            show('subjectModal');
+        }
+    </script>
+}

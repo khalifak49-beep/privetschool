@@ -1,0 +1,221 @@
+@model TimetableViewModel
+@{
+    ViewData["Title"] = "الجدول الدراسي";
+    var canManage = User.Can(Permissions.TimetableManage);
+    var map = ViewBag.SubjectTeacherMap as Dictionary<string, dynamic>;
+}
+
+<div class="page-head">
+    <div>
+        <h1>الجدول الدراسي</h1>
+        <p class="sub">@(Model.Title ?? "اختر شعبة أو معلماً لعرض الجدول")</p>
+    </div>
+    <div class="actions d-flex gap-2">
+        <button class="btn btn-light" onclick="window.print()"><i class="bi bi-printer me-1"></i> طباعة</button>
+        @if (canManage && Model.Mode == "section" && Model.SectionId.HasValue)
+        {
+            <button class="btn btn-primary" onclick="openSlot()"><i class="bi bi-plus-lg me-1"></i> إضافة حصة</button>
+        }
+    </div>
+</div>
+
+<div class="card mb-3 no-print">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">طريقة العرض</label>
+                <select name="mode" class="form-select form-select-sm" data-autosubmit>
+                    <option value="section" selected="@(Model.Mode == "section")">حسب الشعبة</option>
+                    <option value="teacher" selected="@(Model.Mode == "teacher")">حسب المعلم</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">الشعبة</label>
+                <select name="sectionId" class="form-select form-select-sm" data-autosubmit @(Model.Mode == "teacher" ? "disabled" : "")>
+                    <option value="">— اختر —</option>
+                    @foreach (var s in Model.Sections)
+                    {
+                        <option value="@s.Value" selected="@s.Selected">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">المعلم</label>
+                <select name="teacherId" class="form-select form-select-sm" data-autosubmit @(Model.Mode == "section" ? "disabled" : "")>
+                    <option value="">— اختر —</option>
+                    @foreach (var t in Model.Teachers)
+                    {
+                        <option value="@t.Value" selected="@t.Selected">@t.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-sm btn-primary w-100"><i class="bi bi-arrow-repeat"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-responsive">
+        @* الجدول يبقى شبكة أفقية على الجوال بدل التكديس *@
+        <table class="table table-bordered align-middle mb-0 no-stack" style="min-width:900px">
+            <thead>
+            <tr>
+                <th style="width:110px">اليوم / الحصة</th>
+                @for (var p = 1; p <= Model.MaxPeriods; p++)
+                {
+                    var pt = Model.PeriodTimes.FirstOrDefault(x => x.PeriodNo == p);
+                    <th class="text-center">
+                        <div>الحصة @p</div>
+                        @if (pt is not null)
+                        {
+                            <div class="fs-xs text-muted-3 num fw-normal">@ViewHelpers.Time(pt.Start)</div>
+                        }
+                    </th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var day in Model.Days)
+            {
+                <tr>
+                    <th class="text-center" style="background:var(--surface-2)">@ViewHelpers.DayName(day)</th>
+                    @for (var p = 1; p <= Model.MaxPeriods; p++)
+                    {
+                        var cell = Model.Cells.TryGetValue((day, p), out var c) ? c : null;
+                        <td class="text-center p-1" style="height:78px">
+                            @if (cell is not null)
+                            {
+                                <div class="p-2 rounded-3 h-100 d-flex flex-column justify-content-center position-relative"
+                                     style="background:var(--brand-050);border:1px solid var(--brand-100)">
+                                    <div class="fw-semibold fs-sm">@cell.Subject</div>
+                                    <div class="fs-xs text-muted-2">
+                                        @(Model.Mode == "teacher" ? cell.Section : cell.Teacher)
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(cell.Room))
+                                    {
+                                        <div class="fs-xs text-muted-3">قاعة @cell.Room</div>
+                                    }
+                                    @if (canManage && Model.Mode == "section")
+                                    {
+                                        <form asp-action="DeleteSlot" method="post" class="position-absolute no-print"
+                                              style="top:2px;left:2px">
+                                            <input type="hidden" name="id" value="@cell.Id" />
+                                            <input type="hidden" name="sectionId" value="@Model.SectionId" />
+                                            <button class="btn btn-sm btn-link text-danger p-0" style="font-size:.7rem"
+                                                    data-confirm="حذف هذه الحصة؟"><i class="bi bi-x-circle-fill"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            }
+                            else if (canManage && Model.Mode == "section" && Model.SectionId.HasValue)
+                            {
+                                <button class="btn btn-sm btn-link text-muted-3 no-print w-100 h-100"
+                                        onclick="openSlot(null, @day, @p)" title="إضافة حصة">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted-3 fs-xs">—</span>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (canManage && Model.SectionId.HasValue)
+{
+    <div class="modal fade" id="slotModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" asp-action="SaveSlot" method="post">
+                <input type="hidden" name="id" id="sl-id" value="0" />
+                <input type="hidden" name="sectionId" value="@Model.SectionId" />
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة / تعديل حصة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    @if (Model.SubjectOptions.Count == 0)
+                    {
+                        <div class="alert alert-warning fs-sm">
+                            لا توجد مواد مسندة لهذه الشعبة.
+                            <a asp-controller="Academic" asp-action="TeachingLoad" asp-route-sectionId="@Model.SectionId">
+                                قم بتوزيع المواد على المعلمين أولاً
+                            </a>.
+                        </div>
+                    }
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">اليوم</label>
+                            <select name="dayOfWeek" id="sl-day" class="form-select" required>
+                                @foreach (var d in Model.Days)
+                                {
+                                    <option value="@d">@ViewHelpers.DayName(d)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">رقم الحصة</label>
+                            <select name="periodNo" id="sl-period" class="form-select" required>
+                                @foreach (var pt in Model.PeriodTimes)
+                                {
+                                    <option value="@pt.PeriodNo">الحصة @pt.PeriodNo (@ViewHelpers.Time(pt.Start))</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">المادة</label>
+                            <select name="subjectId" id="sl-subject" class="form-select" required asp-items="Model.SubjectOptions">
+                                <option value="">— اختر المادة —</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">المعلم</label>
+                            <select name="teacherId" id="sl-teacher" class="form-select" required asp-items="Model.TeacherOptions">
+                                <option value="">— اختر المعلم —</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">القاعة (اختياري)</label>
+                            <input name="room" id="sl-room" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        const subjectTeachers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(map ?? new Dictionary<string, dynamic>()));
+
+        function openSlot(id, day, period) {
+            const modalEl = document.getElementById('slotModal');
+            if (!modalEl) return;
+            document.getElementById('sl-id').value = id || 0;
+            if (day !== undefined && day !== null) document.getElementById('sl-day').value = day;
+            if (period !== undefined && period !== null) document.getElementById('sl-period').value = period;
+            new bootstrap.Modal(modalEl).show();
+        }
+
+        // تقييد قائمة المعلمين بمن يدرّس المادة المختارة في هذه الشعبة
+        document.getElementById('sl-subject')?.addEventListener('change', function () {
+            const teacherSel = document.getElementById('sl-teacher');
+            const list = subjectTeachers[this.value];
+            if (!list) return;
+            teacherSel.innerHTML = '<option value="">— اختر المعلم —</option>' +
+                list.map(t => '<option value="' + t.id + '">' + t.name + '</option>').join('');
+        });
+    </script>
+}

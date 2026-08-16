@@ -1,0 +1,69 @@
+@{
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var isStudent = User.IsInRole(RoleNames.Student);
+    var isGuardian = User.IsInRole(RoleNames.Guardian);
+}
+
+@* شريط تنقل سفلي يظهر على الجوال فقط *@
+<nav class="mobile-nav" aria-label="التنقل السريع">
+
+    @if (isGuardian)
+    {
+        <a asp-area="Portal" asp-controller="Guardian" asp-action="Index" data-match="/portal/guardian">
+            <i class="bi bi-house-door-fill"></i><span>الرئيسية</span>
+        </a>
+        <a asp-area="Portal" asp-controller="Guardian" asp-action="Fees" data-match="/portal/guardian/fees">
+            <i class="bi bi-cash-coin"></i><span>الرسوم</span>
+        </a>
+    }
+    else if (isStudent)
+    {
+        <a asp-area="Portal" asp-controller="Student" asp-action="Index" data-match="/portal/student">
+            <i class="bi bi-house-door-fill"></i><span>الرئيسية</span>
+        </a>
+        <a asp-area="Portal" asp-controller="Student" asp-action="Homework" data-match="/portal/student/homework">
+            <i class="bi bi-pencil-square"></i><span>واجباتي</span>
+        </a>
+    }
+    else
+    {
+        <a asp-controller="Dashboard" asp-action="Index" data-match="/dashboard">
+            <i class="bi bi-speedometer2"></i><span>الرئيسية</span>
+        </a>
+
+        @if (User.Can(Permissions.StudentsView))
+        {
+            <a asp-controller="Students" asp-action="Index" data-match="/students">
+                <i class="bi bi-mortarboard-fill"></i><span>الطلاب</span>
+            </a>
+        }
+        else if (User.Can(Permissions.FinanceView))
+        {
+            <a asp-controller="Finance" asp-action="Index" data-match="/finance">
+                <i class="bi bi-cash-coin"></i><span>المالية</span>
+            </a>
+        }
+
+        @if (User.Can(Permissions.AttendanceTakeStudents))
+        {
+            <a asp-controller="Attendance" asp-action="Index" data-match="/attendance">
+                <i class="bi bi-calendar-check-fill"></i><span>الحضور</span>
+            </a>
+        }
+        else if (User.Can(Permissions.TransportView))
+        {
+            <a asp-controller="Transport" asp-action="Index" data-match="/transport">
+                <i class="bi bi-bus-front-fill"></i><span>النقل</span>
+            </a>
+        }
+    }
+
+    <a asp-controller="Communication" asp-action="Notifications" data-match="/communication/notifications">
+        <i class="bi bi-bell-fill"></i><span>الإشعارات</span>
+        <span class="mn-badge d-none" id="mobileNotifBadge">0</span>
+    </a>
+
+    <button type="button" id="mobileMenuBtn" aria-label="القائمة">
+        <i class="bi bi-grid-3x3-gap-fill"></i><span>القائمة</span>
+    </button>
+</nav>

@@ -1,0 +1,182 @@
+@model GuardianPortalViewModel
+@{
+    ViewData["Title"] = "بوابة ولي الأمر";
+    var cur = Model.Currency;
+}
+
+<div class="page-head">
+    <div>
+        <h1>مرحباً، @Model.GuardianName</h1>
+        <p class="sub">
+            @Model.Children.Count من الأبناء
+            @if (Model.TotalOverdue > 0)
+            {
+                <span class="chip tone-danger num">متأخرات @Model.TotalOverdue.ToString("N2") @cur</span>
+            }
+        </p>
+    </div>
+    <div class="actions d-flex gap-2 flex-wrap">
+        <a class="btn btn-light" asp-action="Fees"><i class="bi bi-cash-coin me-1"></i> الرسوم والأقساط</a>
+        <a class="btn btn-light" asp-controller="Communication" asp-action="Messages" asp-area="">
+            <i class="bi bi-chat-dots me-1"></i> الرسائل
+        </a>
+    </div>
+</div>
+
+@if (Model.Children.Count == 0)
+{
+    <div class="card"><div class="card-body"><div class="empty-state"><i class="bi bi-people"></i>لا يوجد أبناء مرتبطون بحسابك</div></div></div>
+    return;
+}
+
+@* ---------- ملخص عام ---------- *@
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-brand"><i class="bi bi-people-fill"></i></div>
+            <div><div class="value num">@Model.Children.Count</div><div class="label">الأبناء</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico @(Model.Children.Any(c => c.AbsentToday) ? "tone-danger" : "tone-ok")">
+                <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div>
+                <div class="value num">@Model.Children.Count(c => c.AbsentToday)</div>
+                <div class="label">غياب اليوم</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="ico tone-warn"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="value num">@Model.TotalOutstanding.ToString("N0")</div><div class="label">إجمالي المتبقي (@cur)</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="ico @(Model.TotalOverdue > 0 ? "tone-danger" : "tone-ok")"><i class="bi bi-exclamation-triangle"></i></div>
+            <div><div class="value num">@Model.TotalOverdue.ToString("N0")</div><div class="label">متأخرات مستحقة</div></div>
+        </div>
+    </div>
+</div>
+
+@* ---------- بطاقات الأبناء ---------- *@
+<div class="row g-3 mb-3">
+    @foreach (var c in Model.Children)
+    {
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="avatar lg">
+                            @if (!string.IsNullOrEmpty(c.PhotoPath))
+                            {
+                                <img src="@c.PhotoPath" alt="" />
+                            }
+                            else
+                            {
+                                @ViewHelpers.Initials(c.FullName)
+                            }
+                        </div>
+                        <div class="min-w-0 flex-grow-1">
+                            <div class="fw-bold" style="font-size:1.05rem">@c.FullName</div>
+                            <div class="fs-sm text-muted-2">@(c.Section ?? "—")</div>
+                            <div class="fs-xs text-muted-3 num">@c.StudentNo</div>
+                            @if (c.AbsentToday)
+                            {
+                                <span class="chip tone-danger mt-1"><i class="bi bi-exclamation-circle"></i>غائب اليوم</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row g-2 text-center mb-3">
+                        <div class="col-4">
+                            <div class="p-2 rounded-3" style="background:var(--surface-2)">
+                                <div class="fw-800 num @(c.AttendanceRate >= 90 ? "text-success" : c.AttendanceRate >= 75 ? "text-warning" : "text-danger")"
+                                     style="font-size:1.15rem">@c.AttendanceRate.ToString("0.#")%</div>
+                                <div class="fs-xs text-muted-2">الحضور</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3" style="background:var(--surface-2)">
+                                <div class="fw-800 num" style="font-size:1.15rem">@c.AveragePercent.ToString("0.#")%</div>
+                                <div class="fs-xs text-muted-2">المعدل</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3" style="background:var(--surface-2)">
+                                <div class="fw-800 num @(c.PendingHomework > 0 ? "text-danger" : "text-success")"
+                                     style="font-size:1.15rem">@c.PendingHomework</div>
+                                <div class="fs-xs text-muted-2">واجب معلّق</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between fs-sm py-1 border-top pt-2">
+                        <span class="text-muted-2">أيام الغياب</span>
+                        <span class="fw-semibold num">@c.AbsentDays يوم</span>
+                    </div>
+                    <div class="d-flex justify-content-between fs-sm py-1">
+                        <span class="text-muted-2">الرسوم المتبقية</span>
+                        <span class="fw-semibold num @(c.Outstanding > 0 ? "text-warning" : "text-success")">
+                            @c.Outstanding.ToString("N2") @cur
+                        </span>
+                    </div>
+                    @if (c.Overdue > 0)
+                    {
+                        <div class="d-flex justify-content-between fs-sm py-1">
+                            <span class="text-muted-2">متأخرات</span>
+                            <span class="fw-bold num text-danger">@c.Overdue.ToString("N2") @cur</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(c.TransportRoute))
+                    {
+                        <div class="d-flex justify-content-between fs-sm py-1">
+                            <span class="text-muted-2"><i class="bi bi-bus-front me-1"></i>النقل</span>
+                            <span class="fw-semibold">@c.TransportRoute @(c.TransportStop is null ? "" : $"· {c.TransportStop}")</span>
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2 mt-3">
+                        <a class="btn btn-sm btn-primary flex-grow-1" asp-action="Child" asp-route-id="@c.StudentId">
+                            <i class="bi bi-eye me-1"></i> التفاصيل الكاملة
+                        </a>
+                        <a class="btn btn-sm btn-light" asp-action="Attendance" asp-route-id="@c.StudentId" title="سجل الحضور">
+                            <i class="bi bi-calendar-check"></i>
+                        </a>
+                        <a class="btn btn-sm btn-light" asp-controller="Results" asp-action="ReportCard" asp-area=""
+                           asp-route-studentId="@c.StudentId" title="كشف الدرجات">
+                            <i class="bi bi-award"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* ---------- الإعلانات ---------- *@
+<div class="card">
+    <div class="card-header">
+        <h2><i class="bi bi-megaphone me-1"></i> إعلانات المدرسة</h2>
+        <a class="btn btn-sm btn-light" asp-controller="Communication" asp-action="Announcements" asp-area="">الكل</a>
+    </div>
+    <div class="card-body">
+        @if (Model.Announcements.Count == 0)
+        {
+            <div class="empty-state"><i class="bi bi-megaphone"></i>لا توجد إعلانات</div>
+        }
+        @foreach (var a in Model.Announcements)
+        {
+            <div class="d-flex gap-2 py-2 @(a != Model.Announcements.Last() ? "border-bottom" : "")">
+                <div class="ico tone-@(a.IsPinned ? "warn" : "brand")"
+                     style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0">
+                    <i class="bi @(a.IsPinned ? "bi-pin-angle-fill" : "bi-megaphone")"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="fw-semibold fs-sm">@a.Title</div>
+                    <div class="fs-xs text-muted-2">@a.Body</div>
+                    <div class="fs-xs text-muted-3">@ViewHelpers.Date(a.PublishDate)</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
