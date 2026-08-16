@@ -1,0 +1,41 @@
+# =====================================================================
+#  مخطّط النشر على Render (Blueprint)
+#  ينشئ خدمة الويب وقاعدة بيانات PostgreSQL ويربطهما تلقائياً
+# =====================================================================
+services:
+  - type: web
+    name: schoolsys
+    runtime: docker
+    plan: free
+    region: frankfurt          # الأقرب لمنطقة الخليج
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+
+    envVars:
+      # سلسلة الاتصال تُحقن تلقائياً من قاعدة البيانات أدناه
+      - key: DATABASE_URL
+        fromDatabase:
+          name: schoolsys-db
+          property: connectionString
+
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+
+      # اجعلها false بعد أول نشر إذا لم تعد ترغب بالبيانات التجريبية
+      - key: Seed__DemoData
+        value: "true"
+
+      - key: PDF_FONT
+        value: Noto Sans Arabic
+
+      - key: TZ
+        value: Asia/Muscat
+
+databases:
+  - name: schoolsys-db
+    databaseName: schoolsys
+    user: schoolsys
+    plan: free
+    region: frankfurt

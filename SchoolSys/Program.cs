@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using SchoolSys.Data;
 using SchoolSys.Hubs;
@@ -13,16 +14,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 QuestPDF.Settings.License = LicenseType.Community;
 
-// ---------------- قاعدة البيانات ----------------
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("لم يتم العثور على سلسلة الاتصال 'DefaultConnection'.");
+// ---------------- بيئة الحاويات (Render / Docker) ----------------
+var port = Environment.GetEnvironmentVariable("PORT");
+var inContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true"
+                  || !string.IsNullOrEmpty(port);
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sql =>
-    {
-        sql.EnableRetryOnFailure(3);
-        sql.CommandTimeout(180);
-    }));
+// منصات الاستضافة تُحدّد المنفذ عبر متغير البيئة PORT
+if (!string.IsNullOrEmpty(port))
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+// ---------------- قاعدة البيانات ----------------
+// SQL Server محلياً، و PostgreSQL تلقائياً عند وجود DATABASE_URL
+var provider = builder.Services.AddApplicationDatabase(builder.Configuration);
 
 // ---------------- الهوية والصلاحيات ----------------
 builder.Services
@@ -48,7 +51,16 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
     options.Cookie.Name = "SchoolSys.Auth";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = inContainer
+        ? CookieSecurePolicy.Always      // Render ينهي TLS عند الوسيط
+        : CookieSecurePolicy.SameAsRequest;
 });
+
+// حفظ مفاتيح حماية البيانات في قاعدة البيانات حتى لا تُبطَل الجلسات عند إعادة النشر
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<ApplicationDbContext>()
+    .SetApplicationName("SchoolSys");
 
 // تحديث بيانات الجلسة كل 5 دقائق حتى تسري تغييرات الصلاحيات سريعاً
 builder.Services.Configure<SecurityStampValidatorOptions>(o =>
@@ -71,6 +83,18 @@ builder.Services.AddSingleton<IExportService, ExportService>();
 builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
+
+// زرع البيانات التجريبية في الخلفية بعد الإقلاع
+builder.Services.AddHostedService<DemoDataHostedService>();
+
+// الثقة برؤوس الوسيط العكسي (Render / أي reverse proxy)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 var app = builder.Build();
 
@@ -85,6 +109,7 @@ culture.NumberFormat.CurrencyGroupSeparator = ",";
 culture.NumberFormat.CurrencyDecimalSeparator = ".";
 culture.NumberFormat.PercentGroupSeparator = ",";
 culture.NumberFormat.PercentDecimalSeparator = ".";
+
 CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
@@ -95,10 +120,13 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = [culture]
 });
 
+// يجب أن يسبق بقية الوسائط ليعرف التطبيق أن الطلب الأصلي كان HTTPS
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+    if (!inContainer) app.UseHsts();
 }
 else
 {
@@ -106,7 +134,10 @@ else
 }
 
 app.UseStatusCodePagesWithReExecute("/Home/StatusCode", "?code={0}");
-app.UseHttpsRedirection();
+
+// داخل الحاوية ينهي الوسيط TLS، فإعادة التوجيه هنا تسبب حلقة لا نهائية
+if (!inContainer) app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
@@ -122,6 +153,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHealthChecks("/healthz");
 
 // ---------------- تهيئة قاعدة البيانات ----------------
 using (var scope = app.Services.CreateScope())
@@ -129,9 +161,12 @@ using (var scope = app.Services.CreateScope())
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
-        logger.LogInformation("جارٍ تهيئة قاعدة البيانات وزرع البيانات التجريبية...");
-        await DbSeeder.SeedAsync(app.Services);
-        logger.LogInformation("اكتملت تهيئة قاعدة البيانات.");
+        logger.LogInformation("مزوّد قاعدة البيانات: {Provider}", provider);
+        logger.LogInformation("جارٍ تطبيق الترحيلات والتهيئة الأساسية...");
+
+        await DbSeeder.MigrateAndSeedCoreAsync(app.Services);
+
+        logger.LogInformation("اكتملت التهيئة الأساسية. البيانات التجريبية ستُزرع في الخلفية.");
     }
     catch (Exception ex)
     {

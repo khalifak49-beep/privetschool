@@ -18,7 +18,14 @@ public interface IExportService
 
 public class ExportService : IExportService
 {
-    private const string ArabicFont = "Arial";
+    /// <summary>
+    /// خط عربي متوفّر في بيئة التشغيل. على ويندوز يوجد Arial،
+    /// وفي حاويات لينكس نعتمد Noto Sans Arabic المثبّت عبر Dockerfile.
+    /// يمكن تجاوزه بمتغير البيئة PDF_FONT.
+    /// </summary>
+    private static readonly string ArabicFont =
+        Environment.GetEnvironmentVariable("PDF_FONT")
+        ?? (OperatingSystem.IsWindows() ? "Arial" : "Noto Sans Arabic");
 
     public byte[] ToExcel(string sheetTitle, IReadOnlyList<ExportColumn> columns, IEnumerable<string?[]> rows)
     {

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +9,19 @@ namespace SchoolSys.Data;
 public class ApplicationDbContext
     : IdentityDbContext<ApplicationUser, ApplicationRole, int,
         IdentityUserClaim<int>, ApplicationUserRole, IdentityUserLogin<int>,
-        IdentityRoleClaim<int>, IdentityUserToken<int>>
+        IdentityRoleClaim<int>, IdentityUserToken<int>>,
+      IDataProtectionKeyContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+
+    /// <summary>مُنشئ محمي تستخدمه السياقات المشتقة (PostgreSQL).</summary>
+    protected ApplicationDbContext(DbContextOptions options) : base(options) { }
+
+    /// <summary>
+    /// تخزين مفاتيح حماية البيانات في قاعدة البيانات بدل نظام الملفات،
+    /// حتى لا تُبطَل جلسات المستخدمين عند إعادة تشغيل الحاوية أو النشر.
+    /// </summary>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     // الأكاديمي
     public DbSet<AcademicYear> AcademicYears => Set<AcademicYear>();

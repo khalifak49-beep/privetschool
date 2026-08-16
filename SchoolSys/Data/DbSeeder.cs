@@ -12,7 +12,11 @@ public static class DbSeeder
     public const string DefaultAdminEmail = "admin@school.local";
     public const string DefaultPassword = "Admin@123";
 
-    public static async Task SeedAsync(IServiceProvider services)
+    /// <summary>
+    /// التهيئة الأساسية السريعة: الترحيلات، الأدوار، الإعدادات، سلّم التقديرات، حساب المسؤول.
+    /// تُنفَّذ قبل بدء استقبال الطلبات.
+    /// </summary>
+    public static async Task MigrateAndSeedCoreAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var sp = scope.ServiceProvider;
@@ -26,6 +30,19 @@ public static class DbSeeder
         await SeedSettingsAsync(db);
         await SeedGradeScalesAsync(db);
         await SeedAdminAsync(userManager);
+    }
+
+    /// <summary>
+    /// البيانات التجريبية الضخمة (1250 طالب وما يتبعها).
+    /// تُنفَّذ في الخلفية بعد إقلاع التطبيق حتى لا تؤخّر فحص الجاهزية على منصات الاستضافة.
+    /// </summary>
+    public static async Task SeedDemoAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var sp = scope.ServiceProvider;
+        var db = sp.GetRequiredService<ApplicationDbContext>();
+        var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
+
         await DemoDataSeeder.SeedAsync(db, userManager);
     }
 
