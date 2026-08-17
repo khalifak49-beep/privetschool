@@ -35,12 +35,21 @@
 
                 <div class="divider"></div>
 
+                <div class="mb-2 d-none" id="camPickWrap">
+                    <label class="form-label fs-sm" for="camPick">الكاميرا المستخدمة</label>
+                    <select class="form-select form-select-sm" id="camPick"></select>
+                </div>
+
                 <button class="btn btn-primary w-100" id="startCam">
                     <i class="bi bi-camera-video me-1"></i> تشغيل الكاميرا
                 </button>
                 <button class="btn btn-light w-100 mt-2 d-none" id="stopCam">
                     <i class="bi bi-stop-circle me-1"></i> إيقاف الكاميرا
                 </button>
+
+                @* رسائل الكاميرا تظهر هنا داخل الصفحة بدل نافذة منبثقة بنص إنجليزي *@
+                <div id="camMsg" class="mt-3" role="alert" aria-live="assertive"></div>
+
                 <div id="reader" class="mt-3 rounded-3 overflow-hidden"></div>
             </div>
         </div>
@@ -158,36 +167,149 @@
             }
         });
 
-        // الكاميرا
+        // ============================ الكاميرا ============================
         let scanner = null;
-        document.getElementById('startCam').addEventListener('click', async function () {
-            if (typeof Html5Qrcode === 'undefined') {
-                alert('مكتبة قراءة الرموز غير متاحة.');
-                return;
+        const btnStart = document.getElementById('startCam');
+        const btnStop = document.getElementById('stopCam');
+        const camMsg = document.getElementById('camMsg');
+        const camPick = document.getElementById('camPick');
+        const camPickWrap = document.getElementById('camPickWrap');
+
+        function showMsg(tone, title, lines) {
+            const icon = tone === 'danger' ? 'bi-exclamation-octagon-fill'
+                : tone === 'warning' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill';
+            camMsg.innerHTML =
+                '<div class="alert alert-' + tone + ' mb-0 py-2 px-3">' +
+                '<div class="fw-bold mb-1"><i class="bi ' + icon + ' me-1"></i>' + title + '</div>' +
+                '<ul class="mb-0 ps-3 fs-sm">' + lines.map(l => '<li>' + l + '</li>').join('') + '</ul></div>';
+        }
+        function clearMsg() { camMsg.innerHTML = ''; }
+
+        // ترجمة أخطاء getUserMedia إلى سبب وعلاج، فالنص الأصلي إنجليزي وغير مفهوم للمستخدم
+        function explain(err) {
+            const name = (err && (err.name || '')) + ' ' + (err && (err.message || err)) || '';
+
+            if (/NotReadable|TrackStart|Could not start video source/i.test(name)) {
+                return ['danger', 'الكاميرا مشغولة بتطبيق آخر', [
+                    'أغلق أي برنامج يستخدم الكاميرا الآن: Teams أو Zoom أو تطبيق «الكاميرا» في ويندوز.',
+                    'أغلق تبويبات المتصفح الأخرى التي فتحت الكاميرا من قبل.',
+                    'إن بقيت المشكلة فافصل الكاميرا الخارجية وأعد وصلها، أو أعد تشغيل الجهاز.',
+                    'حتى ذلك الحين استخدم حقل «رمز الطالب» أعلاه أو جهاز الماسح الضوئي — التسجيل يعمل بالكامل بدونها.'
+                ]];
             }
+            if (/NotAllowed|Permission|Dismissed/i.test(name)) {
+                return ['warning', 'إذن الكاميرا مرفوض', [
+                    'اضغط أيقونة القفل بجوار عنوان الصفحة ثم اسمح بالكاميرا وأعد تحميل الصفحة.',
+                    'في ويندوز: الإعدادات ← الخصوصية والأمان ← الكاميرا، وفعّل وصول التطبيقات إليها.'
+                ]];
+            }
+            if (/NotFound|DevicesNotFound|OverconstrainedError|no camera/i.test(name)) {
+                return ['warning', 'لم يُعثر على كاميرا متصلة', [
+                    'تأكد من توصيل الكاميرا وظهورها في «إدارة الأجهزة».',
+                    'استخدم حقل «رمز الطالب» أو جهاز الماسح الضوئي بدلاً منها.'
+                ]];
+            }
+            if (/SecurityError|insecure|getUserMedia is not/i.test(name) || !window.isSecureContext) {
+                return ['warning', 'المتصفح يمنع الكاميرا على اتصال غير آمن', [
+                    'المتصفحات تسمح بالكاميرا على https أو على localhost فقط.',
+                    'إن كنت تفتح النظام من جهاز آخر عبر عنوان الشبكة، فافتحه عبر https.'
+                ]];
+            }
+            return ['danger', 'تعذّر تشغيل الكاميرا', [
+                'أعد تحميل الصفحة وحاول مجدداً.',
+                'التفاصيل التقنية: ' + name.trim(),
+                'يمكنك متابعة التسجيل من حقل «رمز الطالب» أو بجهاز الماسح الضوئي.'
+            ]];
+        }
+
+        async function destroyScanner() {
+            if (!scanner) return;
+            try { await scanner.stop(); } catch (e) { /* لم تبدأ أصلاً */ }
+            try { scanner.clear(); } catch (e) { }
+            scanner = null;
+        }
+
+        function onScanned(text) { submitCode(text.trim()); }
+        const scanCfg = { fps: 10, qrbox: { width: 240, height: 240 } };
+
+        // محاولة التشغيل على كاميرا بعينها؛ ترجع الخطأ بدل رميه لنجرّب التالية
+        async function tryStart(source) {
             scanner = new Html5Qrcode('reader');
             try {
-                await scanner.start(
-                    { facingMode: 'environment' },
-                    { fps: 10, qrbox: { width: 240, height: 240 } },
-                    function (text) { submitCode(text.trim()); },
-                    function () { /* تجاهل أخطاء الإطار */ }
-                );
-                document.getElementById('startCam').classList.add('d-none');
-                document.getElementById('stopCam').classList.remove('d-none');
+                await scanner.start(source, scanCfg, onScanned, function () { });
+                return null;
             } catch (err) {
-                alert('تعذّر تشغيل الكاميرا: ' + err);
+                await destroyScanner();
+                return err;
+            }
+        }
+
+        btnStart.addEventListener('click', async function () {
+            if (typeof Html5Qrcode === 'undefined') {
+                showMsg('danger', 'مكتبة قراءة الرموز غير متاحة', ['أعد تحميل الصفحة؛ إن تكرّر الأمر فراجع مسؤول النظام.']);
+                return;
+            }
+
+            clearMsg();
+            btnStart.disabled = true;
+            const label = btnStart.innerHTML;
+            btnStart.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ تشغيل الكاميرا...';
+
+            try {
+                // كاميرا اختارها المستخدم صراحةً
+                let lastErr = null;
+                if (camPick.value) {
+                    lastErr = await tryStart({ deviceId: { exact: camPick.value } });
+                } else {
+                    // الكاميرا الخلفية أولاً، ثم بقية الكاميرات واحدة واحدة:
+                    // NotReadableError كثيراً ما يخصّ كاميرا بعينها لا الجهاز كله
+                    lastErr = await tryStart({ facingMode: 'environment' });
+
+                    if (lastErr) {
+                        let cams = [];
+                        try { cams = await Html5Qrcode.getCameras(); } catch (e) { }
+
+                        if (cams.length > 1) {
+                            camPick.innerHTML = cams
+                                .map(c => '<option value="' + c.id + '">' + (c.label || 'كاميرا') + '</option>').join('');
+                            camPickWrap.classList.remove('d-none');
+                        }
+
+                        for (const cam of cams) {
+                            lastErr = await tryStart({ deviceId: { exact: cam.id } });
+                            if (!lastErr) { camPick.value = cam.id; break; }
+                        }
+                    }
+                }
+
+                if (lastErr) {
+                    const [tone, title, lines] = explain(lastErr);
+                    showMsg(tone, title, lines);
+                    manual.focus();     // أعد المستخدم إلى الطريق الذي يعمل
+                    return;
+                }
+
+                btnStart.classList.add('d-none');
+                btnStop.classList.remove('d-none');
+            } finally {
+                btnStart.disabled = false;
+                btnStart.innerHTML = label;
             }
         });
 
-        document.getElementById('stopCam').addEventListener('click', async function () {
-            if (scanner) {
-                await scanner.stop();
-                scanner.clear();
-                scanner = null;
-            }
-            document.getElementById('startCam').classList.remove('d-none');
-            document.getElementById('stopCam').classList.add('d-none');
+        camPick.addEventListener('change', function () {
+            if (scanner) btnStop.click();
+            btnStart.click();
         });
+
+        btnStop.addEventListener('click', async function () {
+            await destroyScanner();
+            btnStart.classList.remove('d-none');
+            btnStop.classList.add('d-none');
+            clearMsg();
+        });
+
+        // تحرير الكاميرا عند مغادرة الصفحة حتى لا تبقى محجوزة لغيرها
+        window.addEventListener('pagehide', function () { destroyScanner(); });
     </script>
 }
