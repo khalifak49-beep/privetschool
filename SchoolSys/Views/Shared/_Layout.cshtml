@@ -17,6 +17,15 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    @* يُطبَّق جانب القائمة قبل أول رسم حتى لا تقفز الصفحة عند التحميل *@
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('sidebarSide') === 'left')
+                    document.documentElement.setAttribute('data-sidebar', 'left');
+            } catch (e) { }
+        })();
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0b1f4b" />
@@ -51,229 +60,316 @@
         </button>
     </div>
 
-    <nav class="sidebar-scroll">
-        <a class="nav-link @Active("Dashboard")" asp-controller="Dashboard" asp-action="Index">
-            <i class="bi bi-speedometer2"></i> لوحة التحكم
+    <nav class="sidebar-scroll" id="sidebarNav">
+        @* رابط مفرد خارج المجموعات *@
+        <a class="nav-link @Active("Dashboard")" asp-area="" asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-speedometer2" aria-hidden="true"></i> لوحة التحكم
         </a>
 
         @if (User.CanAny(Permissions.StudentsView, Permissions.GuardiansView))
         {
-            <div class="nav-group-title">شؤون الطلاب</div>
-            @if (User.Can(Permissions.StudentsView))
-            {
-                <a class="nav-link @Active("Students")" asp-controller="Students" asp-action="Index">
-                    <i class="bi bi-mortarboard"></i> الطلاب
-                </a>
-            }
-            @if (User.Can(Permissions.GuardiansView))
-            {
-                <a class="nav-link @Active("Guardians")" asp-controller="Guardians" asp-action="Index">
-                    <i class="bi bi-people"></i> أولياء الأمور
-                </a>
-            }
+            <div class="nav-group" data-group="students">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-people-fill ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">شؤون الطلاب</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    @if (User.Can(Permissions.StudentsView))
+                    {
+                        <a class="nav-link @Active("Students")" asp-area="" asp-controller="Students" asp-action="Index">
+                            <i class="bi bi-mortarboard" aria-hidden="true"></i> الطلاب
+                        </a>
+                    }
+                    @if (User.Can(Permissions.GuardiansView))
+                    {
+                        <a class="nav-link @Active("Guardians")" asp-area="" asp-controller="Guardians" asp-action="Index">
+                            <i class="bi bi-people" aria-hidden="true"></i> أولياء الأمور
+                        </a>
+                    }
+                </div></div>
+            </div>
         }
 
         @if (User.Can(Permissions.EmployeesView))
         {
-            <div class="nav-group-title">الكادر المدرسي</div>
-            <a class="nav-link @Active("Employees")" asp-controller="Employees" asp-action="Index">
-                <i class="bi bi-person-badge"></i> الموظفون والمعلمون
-            </a>
+            <div class="nav-group" data-group="staff">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-person-badge-fill ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">الكادر المدرسي</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    <a class="nav-link @Active("Employees")" asp-area="" asp-controller="Employees" asp-action="Index">
+                        <i class="bi bi-person-badge" aria-hidden="true"></i> الموظفون والمعلمون
+                    </a>
+                </div></div>
+            </div>
         }
 
         @if (User.CanAny(Permissions.AcademicView, Permissions.TimetableView))
         {
-            <div class="nav-group-title">الشؤون الأكاديمية</div>
-            @if (User.Can(Permissions.AcademicView))
-            {
-                <a class="nav-link @Active("Academic", "Index")" asp-controller="Academic" asp-action="Index">
-                    <i class="bi bi-building"></i> البنية الأكاديمية
-                </a>
-                <a class="nav-link @Active("Academic", "TeachingLoad")" asp-controller="Academic" asp-action="TeachingLoad">
-                    <i class="bi bi-diagram-3"></i> توزيع المواد
-                </a>
-            }
-            @if (User.Can(Permissions.TimetableView))
-            {
-                <a class="nav-link @Active("Timetable")" asp-controller="Timetable" asp-action="Index">
-                    <i class="bi bi-calendar3-week"></i> الجداول الدراسية
-                </a>
-            }
+            <div class="nav-group" data-group="academic">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-building-fill ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">الشؤون الأكاديمية</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    @if (User.Can(Permissions.AcademicView))
+                    {
+                        <a class="nav-link @Active("Academic", "Index")" asp-area="" asp-controller="Academic" asp-action="Index">
+                            <i class="bi bi-building" aria-hidden="true"></i> البنية الأكاديمية
+                        </a>
+                        <a class="nav-link @Active("Academic", "TeachingLoad")" asp-area="" asp-controller="Academic" asp-action="TeachingLoad">
+                            <i class="bi bi-diagram-3" aria-hidden="true"></i> توزيع المواد
+                        </a>
+                    }
+                    @if (User.Can(Permissions.TimetableView))
+                    {
+                        <a class="nav-link @Active("Timetable")" asp-area="" asp-controller="Timetable" asp-action="Index">
+                            <i class="bi bi-calendar3-week" aria-hidden="true"></i> الجداول الدراسية
+                        </a>
+                    }
+                </div></div>
+            </div>
         }
 
         @if (User.Can(Permissions.AttendanceView))
         {
-            <div class="nav-group-title">الحضور والانصراف</div>
-            <a class="nav-link @Active("Attendance", "Index")" asp-controller="Attendance" asp-action="Index">
-                <i class="bi bi-calendar-check"></i> حضور الطلاب
-            </a>
-            @if (User.Can(Permissions.AttendanceTakeStaff))
-            {
-                <a class="nav-link @Active("Attendance", "Staff")" asp-controller="Attendance" asp-action="Staff">
-                    <i class="bi bi-person-check"></i> حضور الموظفين
-                </a>
-            }
-            @if (User.Can(Permissions.AttendanceTakeStudents))
-            {
-                <a class="nav-link @Active("Attendance", "Scan")" asp-controller="Attendance" asp-action="Scan">
-                    <i class="bi bi-qr-code-scan"></i> تسجيل بـ QR
-                </a>
-            }
-            @if (User.Can(Permissions.AttendanceReports))
-            {
-                <a class="nav-link @Active("Attendance", "Reports")" asp-controller="Attendance" asp-action="Reports">
-                    <i class="bi bi-clipboard-data"></i> تقارير الحضور
-                </a>
-            }
+            <div class="nav-group" data-group="attendance">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-calendar-check-fill ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">الحضور والانصراف</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    <a class="nav-link @Active("Attendance", "Index")" asp-area="" asp-controller="Attendance" asp-action="Index">
+                        <i class="bi bi-calendar-check" aria-hidden="true"></i> حضور الطلاب
+                    </a>
+                    @if (User.Can(Permissions.AttendanceTakeStaff))
+                    {
+                        <a class="nav-link @Active("Attendance", "Staff")" asp-area="" asp-controller="Attendance" asp-action="Staff">
+                            <i class="bi bi-person-check" aria-hidden="true"></i> حضور الموظفين
+                        </a>
+                    }
+                    @if (User.Can(Permissions.AttendanceTakeStudents))
+                    {
+                        <a class="nav-link @Active("Attendance", "Scan")" asp-area="" asp-controller="Attendance" asp-action="Scan">
+                            <i class="bi bi-qr-code-scan" aria-hidden="true"></i> تسجيل بـ QR
+                        </a>
+                    }
+                    @if (User.Can(Permissions.AttendanceReports))
+                    {
+                        <a class="nav-link @Active("Attendance", "Reports")" asp-area="" asp-controller="Attendance" asp-action="Reports">
+                            <i class="bi bi-clipboard-data" aria-hidden="true"></i> تقارير الحضور
+                        </a>
+                    }
+                </div></div>
+            </div>
         }
 
         @if (User.CanAny(Permissions.ExamsView, Permissions.ResultsView, Permissions.HomeworkView))
         {
-            <div class="nav-group-title">التقييم والدرجات</div>
-            @if (User.Can(Permissions.ExamsView))
-            {
-                <a class="nav-link @Active("Exams")" asp-controller="Exams" asp-action="Index">
-                    <i class="bi bi-journal-check"></i> الاختبارات
-                </a>
-            }
-            @if (User.Can(Permissions.ResultsView))
-            {
-                <a class="nav-link @Active("Results")" asp-controller="Results" asp-action="Index">
-                    <i class="bi bi-award"></i> النتائج والشهادات
-                </a>
-            }
-            @if (User.Can(Permissions.HomeworkView))
-            {
-                <a class="nav-link @Active("Homework")" asp-controller="Homework" asp-action="Index">
-                    <i class="bi bi-pencil-square"></i> الواجبات
-                </a>
-            }
+            <div class="nav-group" data-group="assessment">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-journal-check ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">التقييم والدرجات</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    @if (User.Can(Permissions.ExamsView))
+                    {
+                        <a class="nav-link @Active("Exams")" asp-area="" asp-controller="Exams" asp-action="Index">
+                            <i class="bi bi-journal-check" aria-hidden="true"></i> الاختبارات
+                        </a>
+                    }
+                    @if (User.Can(Permissions.ResultsView))
+                    {
+                        <a class="nav-link @Active("Results")" asp-area="" asp-controller="Results" asp-action="Index">
+                            <i class="bi bi-award" aria-hidden="true"></i> النتائج والشهادات
+                        </a>
+                    }
+                    @if (User.Can(Permissions.HomeworkView))
+                    {
+                        <a class="nav-link @Active("Homework")" asp-area="" asp-controller="Homework" asp-action="Index">
+                            <i class="bi bi-pencil-square" aria-hidden="true"></i> الواجبات
+                        </a>
+                    }
+                </div></div>
+            </div>
         }
 
         @if (User.Can(Permissions.FinanceView))
         {
-            <div class="nav-group-title">الرسوم والمحاسبة</div>
-            <a class="nav-link @Active("Finance", "Index")" asp-controller="Finance" asp-action="Index">
-                <i class="bi bi-cash-coin"></i> نظرة عامة
-            </a>
-            <a class="nav-link @Active("Finance", "Invoices")" asp-controller="Finance" asp-action="Invoices">
-                <i class="bi bi-receipt"></i> الفواتير
-            </a>
-            <a class="nav-link @Active("Finance", "Payments")" asp-controller="Finance" asp-action="Payments">
-                <i class="bi bi-credit-card"></i> المدفوعات
-            </a>
-            <a class="nav-link @Active("Finance", "Overdue")" asp-controller="Finance" asp-action="Overdue">
-                <i class="bi bi-exclamation-triangle"></i> المتأخرات
-            </a>
-            @if (User.Can(Permissions.FinanceFeeItems))
-            {
-                <a class="nav-link @Active("Finance", "FeeItems")" asp-controller="Finance" asp-action="FeeItems">
-                    <i class="bi bi-list-check"></i> بنود الرسوم
-                </a>
-            }
+            <div class="nav-group" data-group="finance">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-cash-coin ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">الرسوم والمحاسبة</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    <a class="nav-link @Active("Finance", "Index")" asp-area="" asp-controller="Finance" asp-action="Index">
+                        <i class="bi bi-graph-up" aria-hidden="true"></i> نظرة عامة
+                    </a>
+                    <a class="nav-link @Active("Finance", "Invoices")" asp-area="" asp-controller="Finance" asp-action="Invoices">
+                        <i class="bi bi-receipt" aria-hidden="true"></i> الفواتير
+                    </a>
+                    <a class="nav-link @Active("Finance", "Payments")" asp-area="" asp-controller="Finance" asp-action="Payments">
+                        <i class="bi bi-credit-card" aria-hidden="true"></i> المدفوعات
+                    </a>
+                    <a class="nav-link @Active("Finance", "Overdue")" asp-area="" asp-controller="Finance" asp-action="Overdue">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> المتأخرات
+                    </a>
+                    @if (User.Can(Permissions.FinanceFeeItems))
+                    {
+                        <a class="nav-link @Active("Finance", "FeeItems")" asp-area="" asp-controller="Finance" asp-action="FeeItems">
+                            <i class="bi bi-list-check" aria-hidden="true"></i> بنود الرسوم
+                        </a>
+                    }
+                </div></div>
+            </div>
         }
 
         @if (User.Can(Permissions.TransportView))
         {
-            <div class="nav-group-title">النقل المدرسي</div>
-            <a class="nav-link @Active("Transport", "Index")" asp-controller="Transport" asp-action="Index">
-                <i class="bi bi-bus-front"></i> الحافلات
-            </a>
-            <a class="nav-link @Active("Transport", "Routes")" asp-controller="Transport" asp-action="Routes">
-                <i class="bi bi-signpost-split"></i> خطوط السير
-            </a>
-            <a class="nav-link @Active("Transport", "Subscriptions")" asp-controller="Transport" asp-action="Subscriptions">
-                <i class="bi bi-person-vcard"></i> اشتراكات الطلاب
-            </a>
-            @if (User.Can(Permissions.TransportLog))
-            {
-                <a class="nav-link @Active("Transport", "Logs")" asp-controller="Transport" asp-action="Logs">
-                    <i class="bi bi-box-arrow-in-left"></i> الصعود والنزول
-                </a>
-            }
+            <div class="nav-group" data-group="transport">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-bus-front-fill ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">النقل المدرسي</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    <a class="nav-link @Active("Transport", "Index")" asp-area="" asp-controller="Transport" asp-action="Index">
+                        <i class="bi bi-bus-front" aria-hidden="true"></i> الحافلات
+                    </a>
+                    <a class="nav-link @Active("Transport", "Routes")" asp-area="" asp-controller="Transport" asp-action="Routes">
+                        <i class="bi bi-signpost-split" aria-hidden="true"></i> خطوط السير
+                    </a>
+                    <a class="nav-link @Active("Transport", "Subscriptions")" asp-area="" asp-controller="Transport" asp-action="Subscriptions">
+                        <i class="bi bi-person-vcard" aria-hidden="true"></i> اشتراكات الطلاب
+                    </a>
+                    @if (User.Can(Permissions.TransportLog))
+                    {
+                        <a class="nav-link @Active("Transport", "Logs")" asp-area="" asp-controller="Transport" asp-action="Logs">
+                            <i class="bi bi-box-arrow-in-left" aria-hidden="true"></i> الصعود والنزول
+                        </a>
+                    }
+                </div></div>
+            </div>
         }
 
-        <div class="nav-group-title">التواصل</div>
-        @if (User.Can(Permissions.AnnouncementsView))
-        {
-            <a class="nav-link @Active("Communication", "Announcements")" asp-controller="Communication" asp-action="Announcements">
-                <i class="bi bi-megaphone"></i> الإعلانات
-            </a>
-        }
-        @if (User.Can(Permissions.MessagesUse))
-        {
-            <a class="nav-link @Active("Communication", "Messages")" asp-controller="Communication" asp-action="Messages">
-                <i class="bi bi-chat-dots"></i> الرسائل الداخلية
-            </a>
-        }
-        <a class="nav-link @Active("Communication", "Notifications")" asp-controller="Communication" asp-action="Notifications">
-            <i class="bi bi-bell"></i> الإشعارات
-        </a>
-        @if (User.Can(Permissions.NotificationsSend))
-        {
-            <a class="nav-link @Active("Communication", "Outbox")" asp-controller="Communication" asp-action="Outbox">
-                <i class="bi bi-send"></i> صادر SMS / واتساب
-            </a>
-        }
+        <div class="nav-group" data-group="comms">
+            <button class="nav-group-head" type="button" aria-expanded="false">
+                <i class="bi bi-chat-dots-fill ngh-icon" aria-hidden="true"></i>
+                <span class="ngh-text">التواصل</span>
+                <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+            </button>
+            <div class="nav-group-body"><div class="ngb-inner">
+                @if (User.Can(Permissions.AnnouncementsView))
+                {
+                    <a class="nav-link @Active("Communication", "Announcements")" asp-area="" asp-controller="Communication" asp-action="Announcements">
+                        <i class="bi bi-megaphone" aria-hidden="true"></i> الإعلانات
+                    </a>
+                }
+                @if (User.Can(Permissions.MessagesUse))
+                {
+                    <a class="nav-link @Active("Communication", "Messages")" asp-area="" asp-controller="Communication" asp-action="Messages">
+                        <i class="bi bi-chat-dots" aria-hidden="true"></i> الرسائل الداخلية
+                    </a>
+                }
+                <a class="nav-link @Active("Communication", "Notifications")" asp-area="" asp-controller="Communication" asp-action="Notifications">
+                    <i class="bi bi-bell" aria-hidden="true"></i> الإشعارات
+                </a>
+                @if (User.Can(Permissions.NotificationsSend))
+                {
+                    <a class="nav-link @Active("Communication", "Outbox")" asp-area="" asp-controller="Communication" asp-action="Outbox">
+                        <i class="bi bi-send" aria-hidden="true"></i> صادر SMS / واتساب
+                    </a>
+                }
+            </div></div>
+        </div>
 
         @if (User.IsInRole(RoleNames.Student) || User.IsInRole(RoleNames.Guardian) || User.IsInRole(RoleNames.Teacher))
         {
-            <div class="nav-group-title">بوابتي</div>
+            @* بوابة المستخدم تبقى ظاهرة دائماً لأنها وجهته الأساسية *@
             @if (User.IsInRole(RoleNames.Student))
             {
                 <a class="nav-link @Active("Student", null, "Portal")" asp-area="Portal" asp-controller="Student" asp-action="Index">
-                    <i class="bi bi-person-workspace"></i> بوابة الطالب
+                    <i class="bi bi-person-workspace" aria-hidden="true"></i> بوابة الطالب
+                </a>
+                <a class="nav-link @Active("Student", "Timetable", "Portal")" asp-area="Portal" asp-controller="Student" asp-action="Timetable">
+                    <i class="bi bi-calendar3-week" aria-hidden="true"></i> جدولي الدراسي
+                </a>
+                <a class="nav-link @Active("Student", "Homework", "Portal")" asp-area="Portal" asp-controller="Student" asp-action="Homework">
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i> واجباتي
+                </a>
+                <a class="nav-link @Active("Student", "Attendance", "Portal")" asp-area="Portal" asp-controller="Student" asp-action="Attendance">
+                    <i class="bi bi-calendar-check" aria-hidden="true"></i> سجل حضوري
+                </a>
+                <a class="nav-link @Active("Student", "Grades", "Portal")" asp-area="Portal" asp-controller="Student" asp-action="Grades">
+                    <i class="bi bi-award" aria-hidden="true"></i> كشف درجاتي
                 </a>
             }
             @if (User.IsInRole(RoleNames.Guardian))
             {
                 <a class="nav-link @Active("Guardian", null, "Portal")" asp-area="Portal" asp-controller="Guardian" asp-action="Index">
-                    <i class="bi bi-people-fill"></i> بوابة ولي الأمر
+                    <i class="bi bi-people-fill" aria-hidden="true"></i> بوابة ولي الأمر
+                </a>
+                <a class="nav-link @Active("Guardian", "Fees", "Portal")" asp-area="Portal" asp-controller="Guardian" asp-action="Fees">
+                    <i class="bi bi-cash-coin" aria-hidden="true"></i> الرسوم والأقساط
                 </a>
             }
             @if (User.IsInRole(RoleNames.Teacher))
             {
                 <a class="nav-link @Active("Teacher", null, "Portal")" asp-area="Portal" asp-controller="Teacher" asp-action="Index">
-                    <i class="bi bi-easel"></i> بوابة المعلم
+                    <i class="bi bi-easel" aria-hidden="true"></i> بوابة المعلم
                 </a>
             }
         }
 
         @if (User.Can(Permissions.ReportsView))
         {
-            <div class="nav-group-title">التقارير</div>
-            <a class="nav-link @Active("Reports")" asp-controller="Reports" asp-action="Index">
-                <i class="bi bi-file-earmark-bar-graph"></i> مركز التقارير
+            <a class="nav-link @Active("Reports")" asp-area="" asp-controller="Reports" asp-action="Index">
+                <i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i> مركز التقارير
             </a>
         }
 
         @if (User.CanAny(Permissions.UsersView, Permissions.RolesView, Permissions.SettingsManage, Permissions.AuditView))
         {
-            <div class="nav-group-title">إدارة النظام</div>
-            @if (User.Can(Permissions.UsersView))
-            {
-                <a class="nav-link @Active("Users")" asp-controller="Users" asp-action="Index">
-                    <i class="bi bi-person-gear"></i> المستخدمون
-                </a>
-            }
-            @if (User.Can(Permissions.RolesView))
-            {
-                <a class="nav-link @Active("Roles")" asp-controller="Roles" asp-action="Index">
-                    <i class="bi bi-shield-lock"></i> الأدوار والصلاحيات
-                </a>
-            }
-            @if (User.Can(Permissions.SettingsManage))
-            {
-                <a class="nav-link @Active("Settings")" asp-controller="Settings" asp-action="Index">
-                    <i class="bi bi-gear"></i> إعدادات المدرسة
-                </a>
-            }
-            @if (User.Can(Permissions.AuditView))
-            {
-                <a class="nav-link @Active("Audit")" asp-controller="Audit" asp-action="Index">
-                    <i class="bi bi-clock-history"></i> سجل التدقيق
-                </a>
-            }
+            <div class="nav-group" data-group="system">
+                <button class="nav-group-head" type="button" aria-expanded="false">
+                    <i class="bi bi-gear-fill ngh-icon" aria-hidden="true"></i>
+                    <span class="ngh-text">إدارة النظام</span>
+                    <i class="bi bi-chevron-down ngh-caret" aria-hidden="true"></i>
+                </button>
+                <div class="nav-group-body"><div class="ngb-inner">
+                    @if (User.Can(Permissions.UsersView))
+                    {
+                        <a class="nav-link @Active("Users")" asp-area="" asp-controller="Users" asp-action="Index">
+                            <i class="bi bi-person-gear" aria-hidden="true"></i> المستخدمون
+                        </a>
+                    }
+                    @if (User.Can(Permissions.RolesView))
+                    {
+                        <a class="nav-link @Active("Roles")" asp-area="" asp-controller="Roles" asp-action="Index">
+                            <i class="bi bi-shield-lock" aria-hidden="true"></i> الأدوار والصلاحيات
+                        </a>
+                    }
+                    @if (User.Can(Permissions.SettingsManage))
+                    {
+                        <a class="nav-link @Active("Settings")" asp-area="" asp-controller="Settings" asp-action="Index">
+                            <i class="bi bi-gear" aria-hidden="true"></i> إعدادات المدرسة
+                        </a>
+                    }
+                    @if (User.Can(Permissions.AuditView))
+                    {
+                        <a class="nav-link @Active("Audit")" asp-area="" asp-controller="Audit" asp-action="Index">
+                            <i class="bi bi-clock-history" aria-hidden="true"></i> سجل التدقيق
+                        </a>
+                    }
+                </div></div>
+            </div>
         }
     </nav>
 </aside>
@@ -294,9 +390,19 @@
     </form>
 
     <div class="ms-auto d-flex align-items-center gap-2">
-        <a class="icon-btn d-none d-sm-grid" asp-controller="Attendance" asp-action="Scan" title="تسجيل الحضور بـ QR">
-            <i class="bi bi-qr-code-scan"></i>
-        </a>
+        @if (User.Can(Permissions.AttendanceTakeStudents))
+        {
+            <a class="icon-btn d-none d-sm-grid" asp-area="" asp-controller="Attendance" asp-action="Scan"
+               aria-label="تسجيل الحضور برمز QR" title="تسجيل الحضور بـ QR">
+                <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+            </a>
+        }
+
+        @* تبديل جانب القائمة بين اليمين واليسار *@
+        <button class="icon-btn d-none d-lg-grid" type="button" id="sideToggle"
+                aria-label="نقل القائمة الجانبية إلى الجانب الآخر" title="تبديل جانب القائمة">
+            <i class="bi bi-layout-sidebar-inset-reverse" id="sideToggleIcon" aria-hidden="true"></i>
+        </button>
 
         <div class="dropdown">
             <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside"

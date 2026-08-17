@@ -299,14 +299,68 @@ public class StudentController : BaseController
         return RedirectToAction("ReportCard", "Results", new { area = "", studentId });
     }
 
+    /// <summary>
+    /// جدول الطالب داخل بوابته. لا يُوجَّه إلى الشاشة الإدارية لأنها تسمح
+    /// باستعراض جدول أي شعبة أخرى.
+    /// </summary>
     public async Task<IActionResult> Timetable()
     {
         var studentId = await MyStudentIdAsync();
         if (studentId is null) return RedirectToAction(nameof(Index));
 
-        var sectionId = await _db.Students.Where(s => s.Id == studentId)
-            .Select(s => s.CurrentSectionId).FirstOrDefaultAsync();
+        var year = await GetCurrentYearAsync();
+        var student = await _db.Students.AsNoTracking()
+            .Include(s => s.CurrentSection).ThenInclude(sec => sec!.Grade)
+            .FirstOrDefaultAsync(s => s.Id == studentId);
 
-        return RedirectToAction("Index", "Timetable", new { area = "", sectionId });
+        var vm = new TimetableViewModel
+        {
+            Mode = "section",
+            SectionId = student?.CurrentSectionId,
+            Title = student?.CurrentSection is null
+                ? null
+                : $"{student.CurrentSection.Grade.Name} - {student.CurrentSection.Name}"
+        };
+
+        if (student?.CurrentSectionId is null) return View(vm);
+
+        var slots = await _db.TimetableSlots.AsNoTracking()
+            .Where(t => t.SectionId == student.CurrentSectionId &&
+                        (year == null || t.AcademicYearId == year.Id))
+            .Select(t => new
+            {
+                t.Id,
+                t.DayOfWeek,
+                t.PeriodNo,
+                Subject = t.Subject.Name,
+                Teacher = t.Teacher.FullName,
+                Room = t.Room ?? t.Section.Room,
+                t.StartTime,
+                t.EndTime
+            })
+            .ToListAsync();
+
+        foreach (var s in slots)
+        {
+            vm.Cells[(s.DayOfWeek, s.PeriodNo)] = new TimetableCell
+            {
+                Id = s.Id,
+                Subject = s.Subject,
+                Teacher = s.Teacher,
+                Room = s.Room,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime
+            };
+        }
+
+        vm.MaxPeriods = slots.Count > 0 ? Math.Max(6, slots.Max(s => s.PeriodNo)) : 6;
+
+        vm.PeriodTimes = slots
+            .GroupBy(s => s.PeriodNo)
+            .OrderBy(g => g.Key)
+            .Select(g => new PeriodTime(g.Key, g.First().StartTime, g.First().EndTime))
+            .ToList();
+
+        return View(vm);
     }
 }

@@ -75,6 +75,30 @@ public static class DbSeeder
             foreach (var p in permissions.Where(p => !existing.Contains(p)))
                 await roleManager.AddClaimAsync(role, new Claim(Permissions.ClaimType, p));
         }
+
+        await RevokeForbiddenPortalPermissionsAsync(roleManager);
+    }
+
+    /// <summary>
+    /// تصحيح أمني: يسحب من دورَي الطالب وولي الأمر أي صلاحية تفتح شاشة إدارية.
+    /// يعمل على قواعد البيانات القائمة التي مُنحت فيها هذه الصلاحيات سابقاً.
+    /// </summary>
+    private static async Task RevokeForbiddenPortalPermissionsAsync(RoleManager<ApplicationRole> roleManager)
+    {
+        foreach (var roleName in new[] { RoleNames.Student, RoleNames.Guardian })
+        {
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role is null) continue;
+
+            var claims = await roleManager.GetClaimsAsync(role);
+
+            foreach (var claim in claims.Where(c =>
+                         c.Type == Permissions.ClaimType &&
+                         ForbiddenForPortalRoles.Contains(c.Value, StringComparer.OrdinalIgnoreCase)))
+            {
+                await roleManager.RemoveClaimAsync(role, claim);
+            }
+        }
     }
 
     /// <summary>خريطة الصلاحيات الافتراضية لكل دور.</summary>
@@ -188,23 +212,40 @@ public static class DbSeeder
             Permissions.ReportsView
         ],
 
+        // الطالب وولي الأمر يعملان داخل بواباتهما فقط، وهي تُقيّد البيانات
+        // بحساب المستخدم نفسه. لا تُمنح لهما صلاحيات الشاشات الإدارية
+        // (الحضور، النتائج، الواجبات، الجداول، المالية، النقل) لأنها تعرض
+        // بيانات كل الطلاب، ومنحها كان يسمح بالوصول إليها بكتابة المسار مباشرة.
         [RoleNames.Student] =
         [
             Permissions.DashboardView,
-            Permissions.TimetableView, Permissions.AttendanceView,
-            Permissions.ResultsView, Permissions.HomeworkView, Permissions.HomeworkSubmit,
+            Permissions.HomeworkSubmit,
             Permissions.MessagesUse, Permissions.AnnouncementsView
         ],
 
         [RoleNames.Guardian] =
         [
             Permissions.DashboardView,
-            Permissions.TimetableView, Permissions.AttendanceView,
-            Permissions.ResultsView, Permissions.HomeworkView,
-            Permissions.FinanceView, Permissions.TransportView,
             Permissions.MessagesUse, Permissions.AnnouncementsView
         ]
     };
+
+    /// <summary>
+    /// صلاحيات لا يجوز أن يحملها الطالب أو ولي الأمر لأنها تفتح شاشات إدارية
+    /// تعرض بيانات طلاب آخرين. تُزال عند الإقلاع من قواعد البيانات القائمة.
+    /// </summary>
+    private static readonly string[] ForbiddenForPortalRoles =
+    [
+        Permissions.AttendanceView, Permissions.AttendanceTakeStudents, Permissions.AttendanceReports,
+        Permissions.ResultsView, Permissions.ResultsCertificates,
+        Permissions.HomeworkView, Permissions.HomeworkManage, Permissions.HomeworkGrade,
+        Permissions.TimetableView, Permissions.TimetableManage,
+        Permissions.FinanceView, Permissions.FinanceInvoices, Permissions.FinancePayments,
+        Permissions.FinanceReports,
+        Permissions.TransportView, Permissions.TransportManage,
+        Permissions.StudentsView, Permissions.GuardiansView, Permissions.EmployeesView,
+        Permissions.AcademicView, Permissions.ExamsView, Permissions.ReportsView
+    ];
 
     // ------------------------------------------------------------------
     private static async Task SeedSettingsAsync(ApplicationDbContext db)

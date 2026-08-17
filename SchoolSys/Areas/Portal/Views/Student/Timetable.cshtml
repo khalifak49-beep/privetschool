@@ -1,0 +1,93 @@
+@model TimetableViewModel
+@{
+    ViewData["Title"] = "جدولي الدراسي";
+}
+
+<div class="page-head">
+    <div>
+        <nav class="breadcrumb">
+            <span class="breadcrumb-item"><a asp-action="Index">بوابة الطالب</a></span>
+            <span class="breadcrumb-item active">الجدول الدراسي</span>
+        </nav>
+        <h1>جدولي الدراسي</h1>
+        <p class="sub">@(Model.Title ?? "غير مسجّل في شعبة")</p>
+    </div>
+    <div class="actions">
+        <button class="btn btn-light" onclick="window.print()">
+            <i class="bi bi-printer me-1" aria-hidden="true"></i> طباعة
+        </button>
+    </div>
+</div>
+
+@if (Model.SectionId is null)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state"><i class="bi bi-calendar3"></i>لست مسجّلاً في شعبة بعد</div>
+        </div>
+    </div>
+}
+else if (Model.Cells.Count == 0)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state"><i class="bi bi-calendar3"></i>لم يُعتمد جدول شعبتك بعد</div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <div class="table-responsive">
+            @* يبقى شبكة أفقية على الجوال لأن تكديسه يفقده معناه *@
+            <table class="table table-bordered align-middle mb-0 no-stack" style="min-width:880px">
+                <thead>
+                <tr>
+                    <th style="width:110px">اليوم / الحصة</th>
+                    @for (var p = 1; p <= Model.MaxPeriods; p++)
+                    {
+                        var pt = Model.PeriodTimes.FirstOrDefault(x => x.PeriodNo == p);
+                        <th class="text-center">
+                            <div>الحصة @p</div>
+                            @if (pt is not null)
+                            {
+                                <div class="fs-xs text-muted-3 num fw-normal">@ViewHelpers.Time(pt.Start)</div>
+                            }
+                        </th>
+                    }
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var day in Model.Days)
+                {
+                    <tr>
+                        <th class="text-center" style="background:var(--surface-2)">@ViewHelpers.DayName(day)</th>
+                        @for (var p = 1; p <= Model.MaxPeriods; p++)
+                        {
+                            var cell = Model.Cells.TryGetValue((day, p), out var c) ? c : null;
+                            <td class="text-center p-1" style="height:76px">
+                                @if (cell is not null)
+                                {
+                                    <div class="p-2 rounded-3 h-100 d-flex flex-column justify-content-center"
+                                         style="background:var(--brand-050);border:1px solid var(--brand-100)">
+                                        <div class="fw-semibold fs-sm">@cell.Subject</div>
+                                        <div class="fs-xs text-muted-2">@cell.Teacher</div>
+                                        @if (!string.IsNullOrEmpty(cell.Room))
+                                        {
+                                            <div class="fs-xs text-muted-3">قاعة @cell.Room</div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted-3 fs-xs">—</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

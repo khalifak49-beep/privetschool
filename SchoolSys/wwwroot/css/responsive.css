@@ -56,15 +56,30 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 @media (max-width: 991.98px) {
     :root { --sidebar-w: 280px; }
 
-    /* القائمة مثبّتة على الحافة اليسرى، لذا يجب أن تنزلق خارج الشاشة يساراً.
-       الانزلاق يميناً كان يوسّع المستند ويُحدث تمريراً أفقياً. */
+    /* القائمة تنزلق خارج الشاشة نحو الحافة التي هي مثبّتة عليها.
+       الاتجاه الخاطئ يوسّع المستند ويُحدث تمريراً أفقياً. */
     .app-sidebar {
         width: var(--sidebar-w);
-        transform: translateX(-100%);
+        transform: translateX(100%);      /* مثبّتة يميناً ➜ تخرج يميناً */
         box-shadow: none;
     }
 
-    .app-sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+    [data-sidebar="left"] .app-sidebar {
+        transform: translateX(-100%);     /* مثبّتة يساراً ➜ تخرج يساراً */
+    }
+
+    .app-sidebar.open,
+    [data-sidebar="left"] .app-sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* على الجوال تمتد الترويسة والمحتوى بعرض الشاشة كاملاً */
+    .app-topbar,
+    [data-sidebar="left"] .app-topbar { inset-inline: 0; }
+
+    .app-main,
+    [data-sidebar="left"] .app-main { margin-inline: 0; }
 
     /* حاجز أمان ضد أي تجاوز أفقي متبقٍ */
     html, body { overflow-x: hidden; }

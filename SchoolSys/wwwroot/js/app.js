@@ -54,6 +54,78 @@
         });
     });
 
+    // ------------------ مجموعات القائمة الجانبية القابلة للطي ------------------
+    (function () {
+        const groups = document.querySelectorAll('.nav-group');
+        if (!groups.length) return;
+
+        let saved = [];
+        try { saved = JSON.parse(localStorage.getItem('navGroups') || '[]'); } catch (e) { }
+
+        function persist() {
+            const open = [...document.querySelectorAll('.nav-group.open')]
+                .map(g => g.getAttribute('data-group'));
+            try { localStorage.setItem('navGroups', JSON.stringify(open)); } catch (e) { }
+        }
+
+        groups.forEach(function (group) {
+            const head = group.querySelector('.nav-group-head');
+            const body = group.querySelector('.nav-group-body');
+            const key = group.getAttribute('data-group');
+            if (!head || !body) return;
+
+            if (!body.id) body.id = 'navgrp-' + key;
+            head.setAttribute('aria-controls', body.id);
+
+            // المجموعة التي تحوي الصفحة الحالية تُفتح دائماً
+            const hasActive = !!group.querySelector('.nav-link.active');
+            group.classList.toggle('has-active', hasActive);
+
+            const shouldOpen = hasActive || saved.indexOf(key) !== -1;
+            group.classList.toggle('open', shouldOpen);
+            head.setAttribute('aria-expanded', String(shouldOpen));
+
+            head.addEventListener('click', function () {
+                const isOpen = group.classList.toggle('open');
+                head.setAttribute('aria-expanded', String(isOpen));
+                persist();
+            });
+        });
+    })();
+
+    // ------------------ تبديل جانب القائمة الجانبية ------------------
+    (function () {
+        const root = document.documentElement;
+        const btn = document.getElementById('sideToggle');
+        const icon = document.getElementById('sideToggleIcon');
+
+        function paint() {
+            const onLeft = root.getAttribute('data-sidebar') === 'left';
+            if (icon) {
+                icon.className = onLeft
+                    ? 'bi bi-layout-sidebar-inset'
+                    : 'bi bi-layout-sidebar-inset-reverse';
+            }
+            btn?.setAttribute('title', onLeft ? 'نقل القائمة إلى اليمين' : 'نقل القائمة إلى اليسار');
+            btn?.setAttribute('aria-label', onLeft ? 'نقل القائمة إلى اليمين' : 'نقل القائمة إلى اليسار');
+        }
+
+        paint();
+
+        btn?.addEventListener('click', function () {
+            const onLeft = root.getAttribute('data-sidebar') === 'left';
+            if (onLeft) root.removeAttribute('data-sidebar');
+            else root.setAttribute('data-sidebar', 'left');
+
+            try { localStorage.setItem('sidebarSide', onLeft ? 'right' : 'left'); } catch (e) { }
+
+            paint();
+
+            const live = document.getElementById('liveStatus');
+            if (live) live.textContent = onLeft ? 'تم نقل القائمة إلى اليمين' : 'تم نقل القائمة إلى اليسار';
+        });
+    })();
+
     // ------------------ تأكيد الحذف ------------------
     document.addEventListener('click', function (e) {
         const el = e.target.closest('[data-confirm]');

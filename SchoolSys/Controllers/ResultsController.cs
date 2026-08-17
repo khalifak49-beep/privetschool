@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ using SchoolSys.ViewModels;
 
 namespace SchoolSys.Controllers;
 
-[HasPermission(Permissions.ResultsView)]
+[Authorize]
 public class ResultsController : BaseController
 {
     private readonly ApplicationDbContext _db;
@@ -24,8 +25,9 @@ public class ResultsController : BaseController
     }
 
     // ==================================================================
-    // نتائج الشعبة مع الترتيب
+    // نتائج الشعبة مع الترتيب — شاشة إدارية تعرض كل طلاب الشعبة
     // ==================================================================
+    [HasPermission(Permissions.ResultsView)]
     public async Task<IActionResult> Index(int? sectionId, int? termId)
     {
         var year = await GetCurrentYearAsync();
@@ -133,7 +135,9 @@ public class ResultsController : BaseController
     }
 
     // ==================================================================
-    // كشف درجات الطالب
+    // كشف درجات طالب واحد.
+    // متاح للكادر بصلاحية عرض النتائج، وللطالب وولي الأمر عن نفسه فقط
+    // (يتحقق CanViewStudentAsync من الملكية) — لذا لا نشترط الصلاحية هنا.
     // ==================================================================
     public async Task<IActionResult> ReportCard(int studentId, int? termId)
     {
@@ -144,7 +148,6 @@ public class ResultsController : BaseController
 
         if (student is null) return NotFound();
 
-        // الطالب وولي الأمر يريان بياناتهما فقط
         if (!await CanViewStudentAsync(studentId)) return Forbid();
 
         var year = await GetCurrentYearAsync();
@@ -255,7 +258,8 @@ public class ResultsController : BaseController
 
     private async Task<bool> CanViewStudentAsync(int studentId)
     {
-        if (User.Can(Permissions.StudentsView)) return true;
+        // الكادر المخوّل بعرض النتائج يرى أي طالب
+        if (User.Can(Permissions.ResultsView) || User.Can(Permissions.StudentsView)) return true;
 
         if (User.IsInRole(RoleNames.Student))
             return await _user.GetStudentIdAsync() == studentId;
