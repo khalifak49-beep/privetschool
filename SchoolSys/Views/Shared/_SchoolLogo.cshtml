@@ -1,0 +1,28 @@
+@model LogoOptions?
+@*
+    شعار المدرسة — جزئية واحدة يستعملها النظام كلّه.
+    ترجع إلى الشعار المرفوع من الإعدادات، وإن لم يُرفع بعد رسمت العلامة
+    الافتراضية بدلاً منه، فلا يظهر مربع فارغ في أي شاشة.
+
+    الصورة زخرفية (alt="") لأن اسم المدرسة مكتوب بجوارها في كل موضع،
+    فلا يسمعه قارئ الشاشة مرتين.
+*@
+@{
+    var o = Model ?? new LogoOptions();
+    var logo = ViewBag.LogoPath as string;
+    var hasLogo = !string.IsNullOrEmpty(logo);
+    var css = "school-logo"
+              + (hasLogo ? " has-img" : "")
+              + (o.Plain ? " plain" : "")
+              + (string.IsNullOrEmpty(o.Extra) ? "" : " " + o.Extra);
+}
+<span class="@css" style="--slg-size:@o.Size;--slg-radius:@o.Radius">
+    @if (hasLogo)
+    {
+        <img src="@logo" alt="" loading="lazy" decoding="async" />
+    }
+    else
+    {
+        <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+    }
+</span>

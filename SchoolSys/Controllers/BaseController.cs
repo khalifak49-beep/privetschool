@@ -44,6 +44,10 @@ public abstract class BaseController : Controller
     {
         var settings = await GetSettingsAsync();
         ViewBag.SchoolName = settings.SchoolName;
+        ViewBag.SchoolNameEn = settings.SchoolNameEn;
+        // الشعار متاح لكل صفحة في النظام: القائمة والترويسة وشاشة الدخول
+        // والمستندات المطبوعة وأيقونة المتصفح
+        ViewBag.LogoPath = settings.LogoPath;
         ViewBag.Currency = settings.Currency;
         await next();
     }

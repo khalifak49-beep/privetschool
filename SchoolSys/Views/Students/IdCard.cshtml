@@ -23,9 +23,14 @@
 <div class="d-flex justify-content-center">
     <div class="id-card">
         <div class="idc-head">
-            <div class="fw-bold" style="font-size:1.05rem">@(settings?.SchoolName ?? "المدرسة")</div>
-            <div style="font-size:.72rem;opacity:.85">@(settings?.SchoolNameEn ?? "")</div>
-            <div style="font-size:.7rem;opacity:.75;margin-top:.15rem">بطاقة طالب — STUDENT ID</div>
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                @await Html.PartialAsync("_SchoolLogo", new LogoOptions("34px", "9px"))
+                <div class="text-start">
+                    <div class="fw-bold" style="font-size:1.05rem;line-height:1.2">@(settings?.SchoolName ?? "المدرسة")</div>
+                    <div style="font-size:.72rem;opacity:.85">@(settings?.SchoolNameEn ?? "")</div>
+                </div>
+            </div>
+            <div style="font-size:.7rem;opacity:.75">بطاقة طالب — STUDENT ID</div>
         </div>
 
         <div class="p-3">

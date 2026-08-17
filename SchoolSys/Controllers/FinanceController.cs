@@ -857,7 +857,8 @@ public class FinanceController : BaseController
         });
 
         if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
-            return File(_export.ToPdf("كشف الفواتير", $"عدد الفواتير: {rows.Count}", columns, data, settings.SchoolName),
+            return File(_export.ToPdf("كشف الفواتير", $"عدد الفواتير: {rows.Count}", columns, data,
+                    settings.SchoolName, logoPath: settings.LogoPath),
                 "application/pdf", $"invoices-{DateTime.Now:yyyyMMdd}.pdf");
 
         return File(_export.ToExcel("كشف الفواتير", columns, data),

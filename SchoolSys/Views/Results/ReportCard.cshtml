@@ -38,6 +38,9 @@
 
         @* ---------- ترويسة ---------- *@
         <div class="text-center mb-4 pb-3" style="border-bottom:2px solid var(--brand-700)">
+            <div class="d-flex justify-content-center mb-2">
+                @await Html.PartialAsync("_SchoolLogo", new LogoOptions("64px", "14px", Plain: true))
+            </div>
             <h2 class="fw-bold mb-1" style="font-size:1.3rem;color:var(--brand-800)">@Model.Settings.SchoolName</h2>
             @if (!string.IsNullOrEmpty(Model.Settings.SchoolNameEn))
             {

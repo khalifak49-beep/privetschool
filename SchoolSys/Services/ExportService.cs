@@ -13,12 +13,15 @@ public interface IExportService
     byte[] ToExcel(string sheetTitle, IReadOnlyList<ExportColumn> columns, IEnumerable<string?[]> rows);
 
     byte[] ToPdf(string title, string? subtitle, IReadOnlyList<ExportColumn> columns,
-        IEnumerable<string?[]> rows, string schoolName, string? footerNote = null);
+        IEnumerable<string?[]> rows, string schoolName, string? footerNote = null,
+        string? logoPath = null);
 }
 
 public class ExportService : IExportService
 {
     private readonly string ArabicFont;
+    private readonly string _webRoot;
+    private readonly ILogger<ExportService> _logger;
 
     /// <summary>
     /// يسجّل خط Cairo المرفق مع المشروع في QuestPDF لتتطابق ملفات PDF
@@ -27,12 +30,15 @@ public class ExportService : IExportService
     /// </summary>
     public ExportService(IWebHostEnvironment env, ILogger<ExportService> logger)
     {
+        _logger = logger;
+        _webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
+
         var explicitFont = Environment.GetEnvironmentVariable("PDF_FONT");
         var fallback = OperatingSystem.IsWindows() ? "Arial" : "Noto Sans Arabic";
 
         try
         {
-            var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
+            var webRoot = _webRoot;
             var path = Path.Combine(webRoot, "lib", "cairo", "pdf", "Cairo-Variable.ttf");
 
             if (File.Exists(path))
@@ -103,10 +109,39 @@ public class ExportService : IExportService
         return ms.ToArray();
     }
 
+    /// <summary>
+    /// يقرأ شعار المدرسة من مسار الويب المحفوظ في الإعدادات (مثل
+    /// "/uploads/school/logo.png"). يعود بـ null بصمت عند أي تعذّر —
+    /// فالتقرير يجب أن يخرج بشعار أو بدونه، لا أن يفشل.
+    /// </summary>
+    private byte[]? TryReadLogo(string? logoPath)
+    {
+        if (string.IsNullOrWhiteSpace(logoPath)) return null;
+
+        try
+        {
+            var relative = logoPath.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+            var full = Path.GetFullPath(Path.Combine(_webRoot, relative));
+
+            // لا نقرأ خارج wwwroot مهما كان المسار المحفوظ
+            var root = Path.GetFullPath(_webRoot);
+            if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return null;
+
+            return File.Exists(full) ? File.ReadAllBytes(full) : null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "تعذّرت قراءة شعار المدرسة من {Path} لإدراجه في PDF.", logoPath);
+            return null;
+        }
+    }
+
     public byte[] ToPdf(string title, string? subtitle, IReadOnlyList<ExportColumn> columns,
-        IEnumerable<string?[]> rows, string schoolName, string? footerNote = null)
+        IEnumerable<string?[]> rows, string schoolName, string? footerNote = null,
+        string? logoPath = null)
     {
         var data = rows.ToList();
+        var logo = TryReadLogo(logoPath);
 
         var doc = Document.Create(container =>
         {
@@ -119,11 +154,29 @@ public class ExportService : IExportService
 
                 page.Header().Column(col =>
                 {
-                    col.Item().Text(schoolName).FontSize(14).Bold().FontColor(Colors.Blue.Darken3)
-                        .AlignCenter();
-                    col.Item().Text(title).FontSize(12).SemiBold().AlignCenter();
-                    if (!string.IsNullOrWhiteSpace(subtitle))
-                        col.Item().Text(subtitle).FontSize(9).FontColor(Colors.Grey.Darken1).AlignCenter();
+                    // الشعار يمين الترويسة (الاتجاه من اليمين لليسار) والعناوين
+                    // في الوسط، فتتطابق التقارير المصدَّرة مع مستندات النظام
+                    col.Item().Row(row =>
+                    {
+                        if (logo is not null)
+                            row.ConstantItem(48).Height(48).AlignMiddle().Image(logo).FitArea();
+                        else
+                            row.ConstantItem(48);
+
+                        row.RelativeItem().AlignMiddle().Column(t =>
+                        {
+                            t.Item().Text(schoolName).FontSize(14).Bold()
+                                .FontColor(Colors.Blue.Darken3).AlignCenter();
+                            t.Item().Text(title).FontSize(12).SemiBold().AlignCenter();
+                            if (!string.IsNullOrWhiteSpace(subtitle))
+                                t.Item().Text(subtitle).FontSize(9)
+                                    .FontColor(Colors.Grey.Darken1).AlignCenter();
+                        });
+
+                        // عمود مقابل بنفس عرض الشعار حتى تبقى العناوين في المنتصف
+                        row.ConstantItem(48);
+                    });
+
                     col.Item().PaddingTop(4).LineHorizontal(1).LineColor(Colors.Blue.Darken3);
                 });
 

@@ -335,7 +335,8 @@ public class GuardiansController : BaseController
         var data = rows.Select(r => new string?[] { r.FullName, r.Phone, r.AltPhone, r.Email, r.Job, r.Children });
 
         if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
-            return File(_export.ToPdf("كشف أولياء الأمور", $"عدد السجلات: {rows.Count}", columns, data, settings.SchoolName),
+            return File(_export.ToPdf("كشف أولياء الأمور", $"عدد السجلات: {rows.Count}", columns, data,
+                    settings.SchoolName, logoPath: settings.LogoPath),
                 "application/pdf", $"guardians-{DateTime.Now:yyyyMMdd}.pdf");
 
         return File(_export.ToExcel("كشف أولياء الأمور", columns, data),

@@ -228,6 +228,63 @@ a { text-decoration: none; }
     flex-shrink: 0;
 }
 
+/* =====================================================================
+   شعار المدرسة — جزئية "_SchoolLogo" المشتركة
+   المقاس يأتي من الاستدعاء عبر --slg-size فيخدم القالب الواحد كل
+   المواضع: القائمة والترويسة وشاشة الدخول والبطاقة والشهادة والإيصال.
+   ===================================================================== */
+.school-logo {
+    width: var(--slg-size, 44px);
+    height: var(--slg-size, 44px);
+    border-radius: var(--slg-radius, 13px);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--accent) 0%, #14b8a6 100%);
+    color: #fff;
+    font-size: calc(var(--slg-size, 44px) * .48);
+    line-height: 1;
+    box-shadow: 0 6px 16px rgba(15, 157, 143, .35);
+}
+
+/* شعار مرفوع: أرضية بيضاء ليظهر الشعار الشفاف أو الداكن بوضوح،
+   و object-fit: contain حتى لا يُقتص أي شعار مهما كانت نسبته */
+.school-logo.has-img {
+    background: #fff;
+    padding: 3px;
+    box-shadow: 0 4px 14px rgba(16, 30, 60, .18);
+}
+
+.school-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* المستندات المطبوعة: بلا خلفية ولا ظل، فالورق أبيض والحبر يُوفَّر */
+.school-logo.plain,
+.school-logo.plain.has-img {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    color: var(--brand-700);
+}
+
+/* شعار الترويسة على الجوال */
+.topbar-brand {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 10px;
+}
+
+.topbar-brand:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+
 .app-sidebar .brand-text b {
     display: block;
     color: #fff;

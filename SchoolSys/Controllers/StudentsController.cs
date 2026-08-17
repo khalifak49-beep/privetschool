@@ -797,7 +797,8 @@ public class StudentsController : BaseController
 
         if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
         {
-            var pdf = _export.ToPdf("كشف الطلاب", $"عدد السجلات: {rows.Count}", columns, data, settings.SchoolName);
+            var pdf = _export.ToPdf("كشف الطلاب", $"عدد السجلات: {rows.Count}", columns, data,
+                settings.SchoolName, logoPath: settings.LogoPath);
             return File(pdf, "application/pdf", $"students-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
         }
 

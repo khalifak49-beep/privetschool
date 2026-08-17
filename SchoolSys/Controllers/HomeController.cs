@@ -111,19 +111,42 @@ public class HomeController : Controller
         return View(vm);
     }
 
+    /// <summary>
+    /// اسم المدرسة وشعارها لصفحات الخطأ — فهي ترث القالب العام لكن هذا
+    /// المتحكّم لا يرث BaseController الذي يهيّئهما. يبتلع أي عطل لأن
+    /// صفحة الخطأ نفسها يجب ألّا تنهار.
+    /// </summary>
+    private async Task SetBrandingAsync()
+    {
+        try
+        {
+            var s = await _db.SchoolSettings.AsNoTracking().FirstOrDefaultAsync();
+            if (s is null) return;
+            ViewBag.SchoolName = s.SchoolName;
+            ViewBag.SchoolNameEn = s.SchoolNameEn;
+            ViewBag.LogoPath = s.LogoPath;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "تعذّرت قراءة إعدادات المدرسة لصفحة الخطأ.");
+        }
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    public async Task<IActionResult> Error()
     {
         var feature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
         if (feature is not null)
             _logger.LogError(feature.Error, "خطأ غير متوقع في المسار {Path}", feature.Path);
 
+        await SetBrandingAsync();
         ViewBag.RequestId = HttpContext.TraceIdentifier;
         return View();
     }
 
-    public IActionResult StatusCode(int? code)
+    public async Task<IActionResult> StatusCode(int? code)
     {
+        await SetBrandingAsync();
         ViewBag.Code = code ?? 500;
         return View("StatusCodeError");
     }

@@ -13,6 +13,7 @@
     }
 
     var schoolName = ViewBag.SchoolName as string ?? "نظام إدارة المدرسة";
+    var logoPath = ViewBag.LogoPath as string;
 }
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -34,6 +35,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="@schoolName" />
     <title>@ViewData["Title"] — @schoolName</title>
+    @* أيقونة التبويب وأيقونة الاختصار على الجوال تتبعان شعار المدرسة *@
+    @if (!string.IsNullOrEmpty(logoPath))
+    {
+        <link rel="icon" href="@logoPath" />
+        <link rel="apple-touch-icon" href="@logoPath" />
+    }
+    else
+    {
+        <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="~/favicon.svg" />
+    }
     @* المقطع العربي هو الحرج للعرض الأول، فنحمّله مبكراً *@
     <link rel="preload" href="~/lib/cairo/files/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="~/lib/cairo/cairo.css" asp-append-version="true" />
@@ -50,7 +62,7 @@
 
 <aside class="app-sidebar" id="appSidebar" aria-label="القائمة الرئيسية">
     <div class="brand">
-        <div class="brand-mark"><i class="bi bi-mortarboard-fill"></i></div>
+        @await Html.PartialAsync("_SchoolLogo", new LogoOptions("42px", "12px"))
         <div class="brand-text">
             <b>@schoolName</b>
             <span>نظام الإدارة المتكامل</span>
@@ -380,6 +392,12 @@
     <button class="icon-btn d-lg-none" id="sidebarToggle" type="button" aria-label="القائمة">
         <i class="bi bi-list"></i>
     </button>
+
+    @* على الجوال تكون القائمة الجانبية مغلقة، فيحضر الشعار في الترويسة *@
+    <a class="topbar-brand d-lg-none" asp-area="" asp-controller="Dashboard" asp-action="Index"
+       aria-label="@schoolName — الانتقال إلى لوحة التحكم">
+        @await Html.PartialAsync("_SchoolLogo", new LogoOptions("32px", "9px"))
+    </a>
 
     <form class="topbar-search" asp-controller="Students" asp-action="Index" method="get" role="search">
         <label for="topbarSearch" class="visually-hidden">بحث عن طالب</label>

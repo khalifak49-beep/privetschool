@@ -3,6 +3,7 @@
     Layout = null;
     ViewData["Title"] = "تسجيل الدخول";
     var schoolName = ViewBag.SchoolName as string ?? "نظام إدارة المدرسة";
+    var logoPath = ViewBag.LogoPath as string;
 }
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -13,6 +14,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>تسجيل الدخول — @schoolName</title>
+    @if (!string.IsNullOrEmpty(logoPath))
+    {
+        <link rel="icon" href="@logoPath" />
+        <link rel="apple-touch-icon" href="@logoPath" />
+    }
+    else
+    {
+        <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="~/favicon.svg" />
+    }
     <link rel="preload" href="~/lib/cairo/files/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="~/lib/cairo/cairo.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
@@ -84,7 +95,7 @@
     <section class="auth-visual">
         <div class="inner">
             <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="brand-mark" style="width:52px;height:52px;font-size:1.6rem"><i class="bi bi-mortarboard-fill"></i></div>
+                @await Html.PartialAsync("_SchoolLogo", new LogoOptions("52px", "15px"))
                 <div>
                     <div class="fw-bold fs-5">@schoolName</div>
                     <div style="color:#8fa3cc;font-size:.85rem">نظام الإدارة المدرسية المتكامل</div>
@@ -107,7 +118,15 @@
             <a class="d-inline-flex align-items-center gap-1 mb-3 fs-sm" asp-controller="Home" asp-action="Index">
                 <i class="bi bi-arrow-right"></i> العودة إلى موقع المدرسة
             </a>
-            <div class="auth-logo"><i class="bi bi-shield-lock"></i></div>
+            @* اللوحة اليمنى تختفي دون 992px، فالشعار هنا هو حضور الهوية
+               الوحيد على الجوال — ومعه الاسم لأن اللوحة التي تحمله غائبة *@
+            <div class="d-flex align-items-center gap-3 mb-3">
+                @await Html.PartialAsync("_SchoolLogo", new LogoOptions("62px", "18px"))
+                <div class="d-lg-none">
+                    <div class="fw-bold" style="font-size:1.05rem;line-height:1.3">@schoolName</div>
+                    <div class="text-muted-2 fs-xs">نظام الإدارة المدرسية المتكامل</div>
+                </div>
+            </div>
             <h2 class="fw-bold mb-1" style="font-size:1.5rem">تسجيل الدخول</h2>
             <p class="text-muted-2 mb-4 fs-sm">أدخل بيانات حسابك للوصول إلى النظام</p>
 

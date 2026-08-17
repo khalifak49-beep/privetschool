@@ -569,7 +569,8 @@ public class AttendanceController : BaseController
         var title = $"تقرير الحضور من {vm.From:yyyy/MM/dd} إلى {vm.To:yyyy/MM/dd}";
 
         if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
-            return File(_export.ToPdf(title, $"نسبة الحضور العامة: {vm.OverallRate:0.#}%", columns, data, settings.SchoolName),
+            return File(_export.ToPdf(title, $"نسبة الحضور العامة: {vm.OverallRate:0.#}%", columns, data,
+                    settings.SchoolName, logoPath: settings.LogoPath),
                 "application/pdf", $"attendance-{DateTime.Now:yyyyMMdd}.pdf");
 
         return File(_export.ToExcel(title, columns, data),

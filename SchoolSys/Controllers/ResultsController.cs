@@ -307,7 +307,8 @@ public class ResultsController : BaseController
         var title = $"كشف نتائج {sectionName} — {termName}";
 
         if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
-            return File(_export.ToPdf(title, $"عدد الطلاب: {rows.Count}", columns, data, settings.SchoolName),
+            return File(_export.ToPdf(title, $"عدد الطلاب: {rows.Count}", columns, data,
+                    settings.SchoolName, logoPath: settings.LogoPath),
                 "application/pdf", $"results-{sectionId}-{termId}.pdf");
 
         return File(_export.ToExcel(title, columns, data),

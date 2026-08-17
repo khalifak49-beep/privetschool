@@ -30,18 +30,21 @@
         }
 
         <div class="rc-head">
-            <div>
-                <div class="rc-school">@Model.Settings.SchoolName</div>
-                @if (!string.IsNullOrEmpty(Model.Settings.SchoolNameEn))
-                {
-                    <div class="rc-school-en">@Model.Settings.SchoolNameEn</div>
-                }
-                <div class="rc-contact">
-                    @Model.Settings.Address
-                    @if (!string.IsNullOrEmpty(Model.Settings.Phone))
+            <div class="d-flex align-items-start gap-3">
+                @await Html.PartialAsync("_SchoolLogo", new LogoOptions("54px", "12px", Plain: true))
+                <div>
+                    <div class="rc-school">@Model.Settings.SchoolName</div>
+                    @if (!string.IsNullOrEmpty(Model.Settings.SchoolNameEn))
                     {
-                        <text> · @Model.Settings.Phone</text>
+                        <div class="rc-school-en">@Model.Settings.SchoolNameEn</div>
                     }
+                    <div class="rc-contact">
+                        @Model.Settings.Address
+                        @if (!string.IsNullOrEmpty(Model.Settings.Phone))
+                        {
+                            <text> · @Model.Settings.Phone</text>
+                        }
+                    </div>
                 </div>
             </div>
             <div class="rc-badge">

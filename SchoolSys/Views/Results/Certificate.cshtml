@@ -18,7 +18,7 @@
     <div class="certificate">
         <div class="cert-border">
             <div class="text-center">
-                <div class="cert-crest"><i class="bi bi-mortarboard-fill"></i></div>
+                @await Html.PartialAsync("_SchoolLogo", new LogoOptions("68px", "50%", Extra: "cert-crest"))
                 <div class="cert-school">@Model.Settings.SchoolName</div>
                 @if (!string.IsNullOrEmpty(Model.Settings.SchoolNameEn))
                 {
@@ -85,12 +85,14 @@
                 radial-gradient(circle at 92% 92%, rgba(27,58,128,.07), transparent 26%);
         }
 
-        .cert-crest {
-            width: 68px; height: 68px; margin: 0 auto 1rem;
-            border-radius: 50%;
+        /* الشعار في وسط الشهادة — كحلي رسمي بدل التركوازي حين لا شعار مرفوع */
+        .school-logo.cert-crest {
+            margin: 0 auto 1rem;
             background: linear-gradient(135deg, var(--brand-800), var(--brand-600));
-            color: #fff; display: grid; place-items: center; font-size: 2rem;
+            box-shadow: none;
         }
+
+        .school-logo.cert-crest.has-img { background: #fff; border: 2px solid var(--brand-100); }
 
         .cert-school { font-size: 1.5rem; font-weight: 800; color: var(--brand-800); }
         .cert-school-en { font-size: .85rem; color: var(--text-3); letter-spacing: .04em; }

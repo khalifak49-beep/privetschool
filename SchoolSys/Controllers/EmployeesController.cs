@@ -413,7 +413,8 @@ public class EmployeesController : BaseController
         });
 
         if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
-            return File(_export.ToPdf("كشف الموظفين", $"عدد السجلات: {rows.Count}", columns, data, settings.SchoolName),
+            return File(_export.ToPdf("كشف الموظفين", $"عدد السجلات: {rows.Count}", columns, data,
+                    settings.SchoolName, logoPath: settings.LogoPath),
                 "application/pdf", $"employees-{DateTime.Now:yyyyMMdd}.pdf");
 
         return File(_export.ToExcel("كشف الموظفين", columns, data),
