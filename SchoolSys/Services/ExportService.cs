@@ -18,14 +18,43 @@ public interface IExportService
 
 public class ExportService : IExportService
 {
+    private readonly string ArabicFont;
+
     /// <summary>
-    /// خط عربي متوفّر في بيئة التشغيل. على ويندوز يوجد Arial،
-    /// وفي حاويات لينكس نعتمد Noto Sans Arabic المثبّت عبر Dockerfile.
-    /// يمكن تجاوزه بمتغير البيئة PDF_FONT.
+    /// يسجّل خط Cairo المرفق مع المشروع في QuestPDF لتتطابق ملفات PDF
+    /// مع الخط المعروض على الشاشة. عند تعذّر ذلك نعود إلى خط النظام:
+    /// Arial على ويندوز و Noto Sans Arabic داخل حاوية لينكس.
     /// </summary>
-    private static readonly string ArabicFont =
-        Environment.GetEnvironmentVariable("PDF_FONT")
-        ?? (OperatingSystem.IsWindows() ? "Arial" : "Noto Sans Arabic");
+    public ExportService(IWebHostEnvironment env, ILogger<ExportService> logger)
+    {
+        var explicitFont = Environment.GetEnvironmentVariable("PDF_FONT");
+        var fallback = OperatingSystem.IsWindows() ? "Arial" : "Noto Sans Arabic";
+
+        try
+        {
+            var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
+            var path = Path.Combine(webRoot, "lib", "cairo", "pdf", "Cairo-Variable.ttf");
+
+            if (File.Exists(path))
+            {
+                using var stream = File.OpenRead(path);
+                QuestPDF.Drawing.FontManager.RegisterFont(stream);
+                ArabicFont = "Cairo";
+                logger.LogInformation("تم تسجيل خط Cairo لتوليد ملفات PDF.");
+            }
+            else
+            {
+                ArabicFont = explicitFont ?? fallback;
+                logger.LogWarning("ملف خط Cairo غير موجود في {Path} — سيُستخدم {Font}.", path, ArabicFont);
+            }
+        }
+        catch (Exception ex)
+        {
+            // تسجيل الخط ليس حرجاً — التقارير تعمل بخط النظام
+            ArabicFont = explicitFont ?? fallback;
+            logger.LogWarning(ex, "تعذّر تسجيل خط Cairo — سيُستخدم {Font}.", ArabicFont);
+        }
+    }
 
     public byte[] ToExcel(string sheetTitle, IReadOnlyList<ExportColumn> columns, IEnumerable<string?[]> rows)
     {

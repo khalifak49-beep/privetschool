@@ -34,10 +34,12 @@ body.landing {
     margin: 0;
     background: var(--l-bg);
     color: var(--l-ink);
-    font-family: "Segoe UI", "Tahoma", "Dubai", "Cairo", system-ui, sans-serif;
-    line-height: 1.8;
+    font-family: 'Cairo', 'Cairo Fallback', "Segoe UI", "Tahoma", system-ui, sans-serif;
+    line-height: 1.85;
     overflow-x: hidden;
     -webkit-tap-highlight-color: rgba(15, 157, 143, .14);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .landing img, .landing svg { max-width: 100%; height: auto; }

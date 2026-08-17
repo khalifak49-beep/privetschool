@@ -154,17 +154,25 @@
 
 * { box-sizing: border-box; }
 
-html { font-size: 15px; }
+html {
+    font-size: 15px;
+    /* النص على macOS يُرسم أثقل من المقصود — تُضبط مرة واحدة على الجذر */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
 body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: "Segoe UI", "Tahoma", "Dubai", "Cairo", system-ui, -apple-system, sans-serif;
+    font-family: 'Cairo', 'Cairo Fallback', "Segoe UI", "Tahoma", system-ui, -apple-system, sans-serif;
     font-size: .95rem;
-    line-height: 1.65;
+    line-height: 1.7;   /* Cairo يحتاج فسحة أكبر قليلاً من Segoe UI */
     -webkit-font-smoothing: antialiased;
 }
+
+/* Cairo متغيّر، فتُستخدم أوزان دقيقة بدل قفزات 400/700 فقط */
+h1, h2, h3, h4, h5, h6 { line-height: 1.35; letter-spacing: -.01em; }
 
 a { text-decoration: none; }
 
