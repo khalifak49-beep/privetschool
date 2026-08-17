@@ -77,7 +77,7 @@
                                     <td class="num fs-sm">@ViewHelpers.Time(l.StartTime) — @ViewHelpers.Time(l.EndTime)</td>
                                     <td>
                                         <a class="btn btn-sm btn-outline-primary"
-                                           asp-controller="Attendance" asp-action="Index" asp-area="" asp-route-sectionId="@l.SectionId">
+                                           asp-controller="Attendance" asp-action="Index" asp-area="" asp-route-sectionId="@l.SectionId" aria-label="تسجيل حضور الشعبة">
                                             <i class="bi bi-check2-square"></i>
                                         </a>
                                     </td>
@@ -113,7 +113,7 @@
                                     <td class="num">@s.Students</td>
                                     <td>
                                         <a class="btn btn-sm btn-light"
-                                           asp-controller="Students" asp-action="Index" asp-area="" asp-route-sectionId="@s.SectionId">
+                                           asp-controller="Students" asp-action="Index" asp-area="" asp-route-sectionId="@s.SectionId" aria-label="عرض طلاب الشعبة">
                                             <i class="bi bi-list-ul"></i>
                                         </a>
                                     </td>

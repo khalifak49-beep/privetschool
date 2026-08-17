@@ -214,7 +214,7 @@
                                 {
                                     <form asp-action="UnlinkGuardian" method="post" class="d-inline">
                                         <input type="hidden" name="linkId" value="@g.LinkId" />
-                                        <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء ربط ولي الأمر بالطالب؟">
+                                        <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء ربط ولي الأمر بالطالب؟" aria-label="إلغاء ربط ولي الأمر">
                                             <i class="bi bi-link-45deg"></i>
                                         </button>
                                     </form>
@@ -444,7 +444,7 @@
                                 {
                                     <form asp-action="DeleteNote" method="post">
                                         <input type="hidden" name="id" value="@n.Id" />
-                                        <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه الملاحظة؟"><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه الملاحظة؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                     </form>
                                 }
                             </div>
@@ -517,12 +517,12 @@
                                     <td class="num fs-sm">@ViewHelpers.Date(d.UploadedAt)</td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <a class="btn btn-sm btn-light" href="@d.FilePath" target="_blank"><i class="bi bi-download"></i></a>
+                                            <a class="btn btn-sm btn-light" href="@d.FilePath" target="_blank" aria-label="تنزيل المستند"><i class="bi bi-download"></i></a>
                                             @if (User.Can(Permissions.StudentsDocuments))
                                             {
                                                 <form asp-action="DeleteDocument" method="post" class="d-inline">
                                                     <input type="hidden" name="id" value="@d.Id" />
-                                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا المستند؟"><i class="bi bi-trash"></i></button>
+                                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا المستند؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                                 </form>
                                             }
                                         </div>

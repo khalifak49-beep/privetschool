@@ -96,13 +96,13 @@
                         {
                             <div class="d-flex gap-1">
                                 <button class="btn btn-sm btn-light"
-                                        onclick='openSub(@Html.Raw(Json.Serialize(new { s.Id, s.StudentId, s.StudentName, s.RouteId, s.MonthlyFee, StartDate = s.StartDate.ToString("yyyy-MM-dd"), s.IsActive })))'>
+                                        onclick='openSub(@Html.Raw(Json.Serialize(new { s.Id, s.StudentId, s.StudentName, s.RouteId, s.MonthlyFee, StartDate = s.StartDate.ToString("yyyy-MM-dd"), s.IsActive })))' aria-label="تعديل">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <form asp-action="DeleteSubscription" method="post">
                                     <input type="hidden" name="id" value="@s.Id" />
                                     <input type="hidden" name="routeId" value="@Model.RouteId" />
-                                    <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء اشتراك هذا الطالب؟"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء اشتراك هذا الطالب؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                 </form>
                             </div>
                         }

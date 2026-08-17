@@ -131,10 +131,10 @@
                     </td>
                     <td>
                         <div class="d-flex gap-1">
-                            <a class="btn btn-sm btn-light" asp-action="Details" asp-route-id="@e.Id"><i class="bi bi-eye"></i></a>
+                            <a class="btn btn-sm btn-light" asp-action="Details" asp-route-id="@e.Id" aria-label="عرض التفاصيل"><i class="bi bi-eye"></i></a>
                             @if (User.Can(Permissions.EmployeesEdit))
                             {
-                                <a class="btn btn-sm btn-light" asp-action="Edit" asp-route-id="@e.Id"><i class="bi bi-pencil"></i></a>
+                                <a class="btn btn-sm btn-light" asp-action="Edit" asp-route-id="@e.Id" aria-label="تعديل"><i class="bi bi-pencil"></i></a>
                             }
                         </div>
                     </td>

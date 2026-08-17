@@ -18,7 +18,7 @@
 
     --l-ink: #10203f;
     --l-body: #566385;
-    --l-mute: #8b96ad;
+    --l-mute: #6c778d;   /* أغمق من #8b96ad ليحقق 4.5:1 فوق الأبيض */
     --l-line: #e6eaf2;
     --l-bg: #ffffff;
     --l-soft: #f4f7fd;
@@ -369,7 +369,7 @@ body.landing {
 }
 
 .tl-time { font-size: .8rem; font-weight: 800; color: var(--l-teal); font-variant-numeric: tabular-nums; }
-.tl-item h4 { font-size: 1rem; font-weight: 700; margin: .1rem 0 .2rem; color: var(--l-navy); }
+.tl-item h3 { font-size: 1rem; font-weight: 700; margin: .1rem 0 .2rem; color: var(--l-navy); }
 .tl-item p { color: var(--l-body); font-size: .88rem; margin: 0; }
 
 /* ===================== دعوة ===================== */
@@ -393,7 +393,7 @@ body.landing {
 /* ===================== التذييل ===================== */
 .foot { background: var(--l-navy); color: #b9c8e8; padding: 3.4rem 0 1.6rem; }
 .foot-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 2.2rem; }
-.foot h4 { color: #fff; font-size: .98rem; font-weight: 800; margin: 0 0 .9rem; }
+.foot h3 { color: #fff; font-size: .98rem; font-weight: 800; margin: 0 0 .9rem; }
 .foot p, .foot a, .foot li { color: #92a6cc; font-size: .88rem; }
 .foot a:hover { color: #4fd1c5; }
 .foot ul { list-style: none; padding: 0; margin: 0; }

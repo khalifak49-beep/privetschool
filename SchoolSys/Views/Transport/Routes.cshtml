@@ -46,12 +46,12 @@
                                 <i class="bi bi-geo-alt"></i>
                             </button>
                             <button class="btn btn-sm btn-light"
-                                    onclick='openRoute(@Html.Raw(Json.Serialize(new { r.Id, r.Code, r.Name, r.BusId, r.Description, r.MonthlyFee, r.IsActive })))'>
+                                    onclick='openRoute(@Html.Raw(Json.Serialize(new { r.Id, r.Code, r.Name, r.BusId, r.Description, r.MonthlyFee, r.IsActive })))' aria-label="تعديل">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <form asp-action="DeleteRoute" method="post">
                                 <input type="hidden" name="id" value="@r.Id" />
-                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف خط السير ومحطاته؟"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف خط السير ومحطاته؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                             </form>
                         </div>
                     }

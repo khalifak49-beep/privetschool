@@ -53,8 +53,8 @@
                 </select>
             </div>
             <div class="col-md-2 d-flex gap-1">
-                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
-                <a asp-action="Index" class="btn btn-sm btn-light"><i class="bi bi-x-lg"></i></a>
+                <button class="btn btn-sm btn-primary flex-grow-1" aria-label="تطبيق التصفية"><i class="bi bi-funnel"></i></button>
+                <a asp-action="Index" class="btn btn-sm btn-light" aria-label="مسح الفلاتر"><i class="bi bi-x-lg"></i></a>
             </div>
         </form>
     </div>
@@ -122,10 +122,10 @@
                             </a>
                             @if (User.Can(Permissions.HomeworkManage))
                             {
-                                <a class="btn btn-sm btn-light" asp-action="Edit" asp-route-id="@h.Id"><i class="bi bi-pencil"></i></a>
+                                <a class="btn btn-sm btn-light" asp-action="Edit" asp-route-id="@h.Id" aria-label="تعديل"><i class="bi bi-pencil"></i></a>
                                 <form asp-action="Delete" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@h.Id" />
-                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف الواجب وجميع تسليماته؟"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف الواجب وجميع تسليماته؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                 </form>
                             }
                         </div>

@@ -96,7 +96,7 @@
                             <form asp-action="RemoveAssignment" method="post">
                                 <input type="hidden" name="id" value="@a.Id" />
                                 <input type="hidden" name="sectionId" value="@Model.SectionId" />
-                                <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء هذا الإسناد؟"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء هذا الإسناد؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                             </form>
                         }
                     </td>

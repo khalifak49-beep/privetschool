@@ -90,7 +90,7 @@
                         {
                             <form asp-action="DeleteMessage" method="post">
                                 <input type="hidden" name="recipientRowId" value="@m.RecipientRowId" />
-                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف الرسالة؟"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف الرسالة؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                             </form>
                         }
                     </td>

@@ -69,12 +69,12 @@
                     <td>
                         <div class="d-flex gap-1">
                             <button class="btn btn-sm btn-light"
-                                    onclick='openFee(@Html.Raw(Json.Serialize(new { f.Id, f.Name, f.Description, f.DefaultAmount, f.GradeId, f.IsMandatory, f.IsActive, f.AcademicYearId })))'>
+                                    onclick='openFee(@Html.Raw(Json.Serialize(new { f.Id, f.Name, f.Description, f.DefaultAmount, f.GradeId, f.IsMandatory, f.IsActive, f.AcademicYearId })))' aria-label="تعديل">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <form asp-action="DeleteFeeItem" method="post">
                                 <input type="hidden" name="id" value="@f.Id" />
-                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا البند؟"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا البند؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                             </form>
                         </div>
                     </td>

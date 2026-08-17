@@ -62,7 +62,8 @@
                 <thead>
                 <tr>
                     <th style="width:40px">
-                        <input type="checkbox" class="form-check-input" data-check-all=".inst-check" />
+                        <input type="checkbox" class="form-check-input" data-check-all=".inst-check"
+                               aria-label="تحديد كل الأقساط" />
                     </th>
                     <th>الطالب</th>
                     <th>الشعبة</th>
@@ -83,7 +84,9 @@
                 {
                     <tr>
                         <td>
-                            <input type="checkbox" class="form-check-input inst-check" name="installmentIds" value="@r.InstallmentId" />
+                            <input type="checkbox" class="form-check-input inst-check" name="installmentIds"
+                                   value="@r.InstallmentId"
+                                   aria-label="تحديد قسط @r.Name للطالب @r.StudentName" />
                         </td>
                         <td>
                             <a asp-controller="Students" asp-action="Details" asp-route-id="@r.StudentId" class="fw-semibold text-reset">@r.StudentName</a>

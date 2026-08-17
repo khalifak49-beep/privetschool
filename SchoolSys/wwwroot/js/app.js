@@ -18,6 +18,42 @@
     });
     backdrop?.addEventListener('click', closeSidebar);
 
+    // ------------------ ترقية دلالات التبويبات ------------------
+    // Bootstrap لا يضيف role="tab" تلقائياً؛ بدونه لا يعمل التنقل بالأسهم
+    // ولا تُعلن قارئات الشاشة أنها تبويبات. نضيفها هنا مرة واحدة لكل الصفحات.
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function (btn) {
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
+
+        const li = btn.closest('li');
+        if (li) li.setAttribute('role', 'presentation');
+
+        const list = btn.closest('.nav-tabs, .nav-pills');
+        if (list && !list.hasAttribute('role')) list.setAttribute('role', 'tablist');
+
+        const target = btn.getAttribute('data-bs-target');
+        if (!target || !target.startsWith('#')) return;
+
+        const id = target.slice(1);
+        btn.setAttribute('aria-controls', id);
+        if (!btn.id) btn.id = 'tabbtn-' + id;
+
+        const pane = document.getElementById(id);
+        if (pane) {
+            pane.setAttribute('role', 'tabpanel');
+            pane.setAttribute('aria-labelledby', btn.id);
+            if (!pane.hasAttribute('tabindex')) pane.setAttribute('tabindex', '0');
+        }
+    });
+
+    // إبقاء aria-selected متزامناً مع التبويب النشط
+    document.addEventListener('shown.bs.tab', function (e) {
+        const list = e.target.closest('.nav-tabs, .nav-pills');
+        list?.querySelectorAll('[role="tab"]').forEach(function (t) {
+            t.setAttribute('aria-selected', t === e.target ? 'true' : 'false');
+        });
+    });
+
     // ------------------ تأكيد الحذف ------------------
     document.addEventListener('click', function (e) {
         const el = e.target.closest('[data-confirm]');
@@ -55,12 +91,21 @@
         const map = { success: 'text-bg-success', danger: 'text-bg-danger', warning: 'text-bg-warning', info: 'text-bg-primary' };
         const el = document.createElement('div');
         el.className = 'toast align-items-center border-0 ' + (map[tone] || map.info);
-        el.setAttribute('role', 'alert');
+
+        // الأخطاء وحدها عاجلة؛ بقية الإشعارات لا يجب أن تقاطع قارئ الشاشة
+        const urgent = tone === 'danger';
+        el.setAttribute('role', urgent ? 'alert' : 'status');
+        el.setAttribute('aria-live', urgent ? 'assertive' : 'polite');
+        el.setAttribute('aria-atomic', 'true');
+
         el.innerHTML =
             '<div class="d-flex"><div class="toast-body">' + message + '</div>' +
-            '<button type="button" class="btn-close btn-close-white me-auto m-auto ms-2" data-bs-dismiss="toast"></button></div>';
+            '<button type="button" class="btn-close btn-close-white me-auto m-auto ms-2" ' +
+            'data-bs-dismiss="toast" aria-label="إغلاق التنبيه"></button></div>';
         host.appendChild(el);
-        const t = new bootstrap.Toast(el, { delay: 5000 });
+
+        // التنبيهات التي تحمل خطأ تبقى حتى يُغلقها المستخدم
+        const t = new bootstrap.Toast(el, { autohide: !urgent, delay: 6000 });
         t.show();
         el.addEventListener('hidden.bs.toast', function () { el.remove(); });
     };
@@ -142,6 +187,11 @@
 
             connection.on('ReceiveNotification', function (n) {
                 window.showToast(escapeHtml(n.title), n.severity);
+
+                // إعلان مستقل لقارئات الشاشة عبر منطقة ثابتة (أوثق من إدراج عنصر جديد)
+                const live = document.getElementById('liveStatus');
+                if (live) live.textContent = 'إشعار جديد: ' + n.title;
+
                 loadNotifications();
             });
 

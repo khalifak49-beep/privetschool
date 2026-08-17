@@ -65,7 +65,7 @@
                                 @if (canManage)
                                 {
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-light" onclick='openYear(@Html.Raw(Json.Serialize(new { y.Id, y.Name, StartDate = y.StartDate.ToString("yyyy-MM-dd"), EndDate = y.EndDate.ToString("yyyy-MM-dd"), y.IsClosed })))'>
+                                        <button class="btn btn-sm btn-light" onclick='openYear(@Html.Raw(Json.Serialize(new { y.Id, y.Name, StartDate = y.StartDate.ToString("yyyy-MM-dd"), EndDate = y.EndDate.ToString("yyyy-MM-dd"), y.IsClosed })))' aria-label="تعديل">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         @if (!y.IsCurrent)
@@ -120,14 +120,14 @@
                                 @if (canManage)
                                 {
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-light" onclick='openTerm(@Html.Raw(Json.Serialize(new { t.Id, t.Name, t.SeqNo, t.AcademicYearId, StartDate = t.StartDate.ToString("yyyy-MM-dd"), EndDate = t.EndDate.ToString("yyyy-MM-dd") })))'>
+                                        <button class="btn btn-sm btn-light" onclick='openTerm(@Html.Raw(Json.Serialize(new { t.Id, t.Name, t.SeqNo, t.AcademicYearId, StartDate = t.StartDate.ToString("yyyy-MM-dd"), EndDate = t.EndDate.ToString("yyyy-MM-dd") })))' aria-label="تعديل">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         @if (!t.IsCurrent)
                                         {
                                             <form asp-action="SetCurrentTerm" method="post">
                                                 <input type="hidden" name="id" value="@t.Id" />
-                                                <button class="btn btn-sm btn-light" data-confirm="تعيين هذا الفصل كفصل حالي؟"><i class="bi bi-check2-circle"></i></button>
+                                                <button class="btn btn-sm btn-light" data-confirm="تعيين هذا الفصل كفصل حالي؟" aria-label="تعيين كالحالي"><i class="bi bi-check2-circle"></i></button>
                                             </form>
                                         }
                                     </div>
@@ -167,10 +167,10 @@
                                 @if (canManage)
                                 {
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-light" onclick='openStage(@Html.Raw(Json.Serialize(new { s.Id, s.Name, s.SeqNo, s.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-light" onclick='openStage(@Html.Raw(Json.Serialize(new { s.Id, s.Name, s.SeqNo, s.IsActive })))' aria-label="تعديل"><i class="bi bi-pencil"></i></button>
                                         <form asp-action="DeleteStage" method="post">
                                             <input type="hidden" name="id" value="@s.Id" />
-                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه المرحلة؟"><i class="bi bi-trash"></i></button>
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه المرحلة؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
                                 }
@@ -210,10 +210,10 @@
                                 @if (canManage)
                                 {
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-light" onclick='openGrade(@Html.Raw(Json.Serialize(new { g.Id, g.Name, g.SeqNo, g.StageId, g.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-light" onclick='openGrade(@Html.Raw(Json.Serialize(new { g.Id, g.Name, g.SeqNo, g.StageId, g.IsActive })))' aria-label="تعديل"><i class="bi bi-pencil"></i></button>
                                         <form asp-action="DeleteGrade" method="post">
                                             <input type="hidden" name="id" value="@g.Id" />
-                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا الصف؟"><i class="bi bi-trash"></i></button>
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا الصف؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
                                 }
@@ -261,10 +261,10 @@
                                     <a class="btn btn-sm btn-light" asp-controller="Students" asp-action="Index" asp-route-sectionId="@s.Id" title="طلاب الشعبة"><i class="bi bi-people"></i></a>
                                     @if (canManage)
                                     {
-                                        <button class="btn btn-sm btn-light" onclick='openSection(@Html.Raw(Json.Serialize(new { s.Id, s.Name, s.GradeId, s.Capacity, s.Room, s.HomeroomTeacherId, s.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-light" onclick='openSection(@Html.Raw(Json.Serialize(new { s.Id, s.Name, s.GradeId, s.Capacity, s.Room, s.HomeroomTeacherId, s.IsActive })))' aria-label="تعديل"><i class="bi bi-pencil"></i></button>
                                         <form asp-action="DeleteSection" method="post">
                                             <input type="hidden" name="id" value="@s.Id" />
-                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه الشعبة؟"><i class="bi bi-trash"></i></button>
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه الشعبة؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                         </form>
                                     }
                                 </div>
@@ -306,10 +306,10 @@
                                 @if (canManage)
                                 {
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-light" onclick='openSubject(@Html.Raw(Json.Serialize(new { s.Id, s.Code, s.Name, s.StageId, s.MaxScore, s.PassScore, s.WeeklyPeriods, s.IsActive })))'><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-light" onclick='openSubject(@Html.Raw(Json.Serialize(new { s.Id, s.Code, s.Name, s.StageId, s.MaxScore, s.PassScore, s.WeeklyPeriods, s.IsActive })))' aria-label="تعديل"><i class="bi bi-pencil"></i></button>
                                         <form asp-action="DeleteSubject" method="post">
                                             <input type="hidden" name="id" value="@s.Id" />
-                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه المادة؟"><i class="bi bi-trash"></i></button>
+                                            <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذه المادة؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
                                 }

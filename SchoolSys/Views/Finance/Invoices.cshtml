@@ -62,8 +62,8 @@
                 </select>
             </div>
             <div class="col-md-2 d-flex gap-1">
-                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
-                <a asp-action="Invoices" class="btn btn-sm btn-light"><i class="bi bi-x-lg"></i></a>
+                <button class="btn btn-sm btn-primary flex-grow-1" aria-label="تطبيق التصفية"><i class="bi bi-funnel"></i></button>
+                <a asp-action="Invoices" class="btn btn-sm btn-light" aria-label="مسح الفلاتر"><i class="bi bi-x-lg"></i></a>
             </div>
         </form>
     </div>
@@ -127,7 +127,7 @@
                         }
                     </td>
                     <td>
-                        <a class="btn btn-sm btn-light" asp-action="InvoiceDetails" asp-route-id="@i.Id"><i class="bi bi-eye"></i></a>
+                        <a class="btn btn-sm btn-light" asp-action="InvoiceDetails" asp-route-id="@i.Id" aria-label="عرض التفاصيل"><i class="bi bi-eye"></i></a>
                     </td>
                 </tr>
             }

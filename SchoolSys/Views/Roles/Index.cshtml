@@ -68,14 +68,14 @@
                         @if (canManage)
                         {
                             <button class="btn btn-sm btn-light"
-                                    onclick='openRole(@Html.Raw(Json.Serialize(new { r.Id, r.Name, r.DisplayName, r.Description, r.IsSystemRole })))'>
+                                    onclick='openRole(@Html.Raw(Json.Serialize(new { r.Id, r.Name, r.DisplayName, r.Description, r.IsSystemRole })))' aria-label="تعديل">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             @if (!r.IsSystemRole)
                             {
                                 <form asp-action="Delete" method="post">
                                     <input type="hidden" name="id" value="@r.Id" />
-                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا الدور؟"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا الدور؟" aria-label="حذف"><i class="bi bi-trash"></i></button>
                                 </form>
                             }
                         }

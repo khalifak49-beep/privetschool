@@ -99,7 +99,7 @@
                         <td>
                             @if (!string.IsNullOrEmpty(e.FilePath))
                             {
-                                <a class="btn btn-sm btn-light" href="@e.FilePath" target="_blank"><i class="bi bi-file-earmark"></i></a>
+                                <a class="btn btn-sm btn-light" href="@e.FilePath" target="_blank" aria-label="عرض ملف التسليم"><i class="bi bi-file-earmark"></i></a>
                             }
                             else if (!string.IsNullOrEmpty(e.AnswerText))
                             {

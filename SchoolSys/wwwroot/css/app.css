@@ -27,6 +27,25 @@
     --purple: #7c3aed;
     --purple-100: #ede9fe;
 
+    /* ------------------------------------------------------------------
+       ألوان النص فوق الأسطح الملوّنة الفاتحة.
+       الألوان أعلاه مخصّصة للتعبئة الصلبة (أشرطة التقدم، النقاط، الأيقونات)،
+       وهي لا تحقق تباين 4.5:1 كنص فوق خلفياتها الفاتحة. هذه نسخ أغمق
+       بنفس الصبغة تماماً — التباين يستجيب للإضاءة لا للصبغة.
+       ------------------------------------------------------------------ */
+    --ok-text: #00822a;
+    --warn-text: #b35400;
+    --danger-text: #d1131b;
+    --info-text: #0072b4;
+    --accent-text: #067b70;
+    --purple-text: #6d28d9;
+    --brand-text: #1b3a80;
+
+    /* نسخ صالحة كنص فوق الأسطح البيضاء (للمبالغ والحالات داخل الجداول) */
+    --ok-on-surface: #00872f;
+    --warn-on-surface: #b95900;
+    --danger-on-surface: #c81e1e;
+
     /* الأسطح والنصوص */
     --bg: #f4f6fb;
     --surface: #ffffff;
@@ -35,7 +54,7 @@
     --line-strong: #d3dae7;
     --text: #16233c;
     --text-2: #5a6883;
-    --text-3: #8b96ad;
+    --text-3: #677187;
 
     /* القياسات */
     --radius: 14px;
@@ -48,6 +67,89 @@
     --shadow-sm: 0 2px 8px rgba(16, 30, 60, .07);
     --shadow-md: 0 8px 24px rgba(16, 30, 60, .09);
     --shadow-lg: 0 18px 48px rgba(16, 30, 60, .14);
+
+    /* لون حلقة التركيز — يتغيّر داخل الأسطح الداكنة */
+    --focus: #1b3a80;
+    --focus-contrast: #ffffff;
+}
+
+/* =====================================================================
+   التركيز بلوحة المفاتيح
+   حلقة واضحة لكل عنصر تفاعلي. نستخدم :focus-visible فيظهر للوحة المفاتيح
+   دون أن يزعج مستخدم الفأرة، ونضيف حلقة بيضاء خلفه ليبقى مرئياً فوق
+   الأزرار الملوّنة والأسطح الداكنة على حد سواء.
+   ===================================================================== */
+:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.user-chip:focus-visible,
+.page-link:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.form-check-input:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--focus-contrast);
+}
+
+/* Bootstrap يضع outline:0 على .nav-link و .dropdown-item عند التركيز،
+   وتخصيصه أعلى من قاعدتنا العامة — لذا نعيد الحلقة صراحةً لهذه العناصر.
+   الإزاحة سالبة لتُرسم داخل العنصر فلا تقصّها حاوية القائمة. */
+.nav-link:focus-visible,
+.dropdown-item:focus-visible,
+.mobile-nav a:focus-visible,
+.mobile-nav button:focus-visible,
+.filter-toggle:focus-visible,
+.sidebar-close:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: -3px;
+}
+
+/* الأسطح الداكنة: القائمة الجانبية وأقسام الهبوط — حلقة فاتحة لتبقى مرئية */
+.app-sidebar :focus-visible,
+.hero :focus-visible,
+.cta :focus-visible,
+.foot :focus-visible {
+    --focus: #7dd3fc;
+    --focus-contrast: rgba(11, 31, 75, .85);
+    outline: 3px solid #7dd3fc;
+    outline-offset: -3px;
+}
+
+/* في وضع الألوان القسرية بويندوز نترك المتصفح يرسم المؤشر */
+@media (forced-colors: active) {
+    :focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 2px;
+    }
+    .btn:focus-visible, .icon-btn:focus-visible { box-shadow: none; }
+}
+
+/* رابط تخطّي التنقّل — أول عنصر يصله مستخدم لوحة المفاتيح */
+.skip-link {
+    position: fixed;
+    top: .5rem;
+    inset-inline-start: 50%;
+    transform: translate(50%, -180%);
+    z-index: 1100;
+    background: var(--brand-800);
+    color: #fff;
+    padding: .7rem 1.4rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: .9rem;
+    box-shadow: var(--shadow-lg);
+    transition: transform .18s ease;
+}
+
+.skip-link:focus-visible {
+    transform: translate(50%, 0);
+    color: #fff;
 }
 
 * { box-sizing: border-box; }
@@ -132,7 +234,7 @@ a { text-decoration: none; }
 .nav-group-title {
     font-size: .7rem;
     letter-spacing: .04em;
-    color: #7387b5;
+    color: #798ebc;              /* أفتح من السابق ليحقق 4.5:1 فوق القائمة الداكنة */
     font-weight: 700;
     padding: 1rem .75rem .35rem;
     text-transform: none;
@@ -383,13 +485,14 @@ a { text-decoration: none; }
 .stat-card .label { color: var(--text-2); font-size: .84rem; font-weight: 500; }
 .stat-card .trend { font-size: .76rem; font-weight: 600; margin-top: .25rem; }
 
-.tone-brand { background: var(--brand-100); color: var(--brand-700); }
-.tone-accent { background: var(--accent-100); color: var(--accent-dark); }
-.tone-ok { background: var(--ok-100); color: var(--ok); }
-.tone-warn { background: var(--warn-100); color: var(--warn); }
-.tone-danger { background: var(--danger-100); color: var(--danger); }
-.tone-info { background: var(--info-100); color: var(--info); }
-.tone-purple { background: var(--purple-100); color: var(--purple); }
+/* النص يستخدم النسخ الداكنة لتحقيق 4.5:1 فوق الخلفية الفاتحة لكل حالة */
+.tone-brand { background: var(--brand-100); color: var(--brand-text); }
+.tone-accent { background: var(--accent-100); color: var(--accent-text); }
+.tone-ok { background: var(--ok-100); color: var(--ok-text); }
+.tone-warn { background: var(--warn-100); color: var(--warn-text); }
+.tone-danger { background: var(--danger-100); color: var(--danger-text); }
+.tone-info { background: var(--info-100); color: var(--info-text); }
+.tone-purple { background: var(--purple-100); color: var(--purple-text); }
 
 /* ===================== الجداول ===================== */
 .table-wrap {
@@ -456,8 +559,9 @@ a { text-decoration: none; }
 .btn-primary:hover, .btn-primary:focus { background: var(--brand-800); border-color: var(--brand-800); }
 .btn-outline-primary { color: var(--brand-700); border-color: var(--line-strong); }
 .btn-outline-primary:hover { background: var(--brand-700); border-color: var(--brand-700); }
-.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
-.btn-accent:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+/* خلفية أغمق من --accent ليحقق نص الزر الأبيض تباين 4.5:1 */
+.btn-accent { background: #008578; border-color: #008578; color: #fff; }
+.btn-accent:hover, .btn-accent:focus { background: #006b60; border-color: #006b60; color: #fff; }
 .btn-light { background: var(--surface); border-color: var(--line); color: var(--text-2); }
 .btn-light:hover { background: var(--brand-050); color: var(--brand-700); border-color: var(--brand-100); }
 
@@ -608,6 +712,17 @@ a { text-decoration: none; }
     .stat-card .ico { width: 42px; height: 42px; font-size: 1.15rem; }
     .user-chip .u-meta { display: none; }
 }
+
+/* -----------------------------------------------------------------
+   تصحيح أدوات ألوان Bootstrap.
+   قيمها الافتراضية لا تصلح كنص فوق الأسطح البيضاء:
+   text-warning (#ffc107) يعطي 1.63:1 فقط، و text-success 4.53:1 بالكاد.
+   نستبدلها بنسخ من نفس الصبغة تحقق 4.5:1 على الأقل.
+   ----------------------------------------------------------------- */
+.text-success { color: var(--ok-on-surface) !important; }
+.text-warning { color: var(--warn-on-surface) !important; }
+.text-danger { color: var(--danger-on-surface) !important; }
+.text-info { color: var(--info-text) !important; }
 
 /* أدوات مساعدة */
 .text-muted-2 { color: var(--text-2) !important; }

@@ -81,7 +81,7 @@
                                 {
                                     <form asp-action="DeleteInvoiceLine" method="post">
                                         <input type="hidden" name="id" value="@l.Id" />
-                                        <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا البند؟"><i class="bi bi-x"></i></button>
+                                        <button class="btn btn-sm btn-light text-danger" data-confirm="حذف هذا البند؟" aria-label="حذف"><i class="bi bi-x"></i></button>
                                     </form>
                                 }
                             </td>
@@ -106,7 +106,7 @@
                                 {
                                     <form asp-action="DeleteDiscount" method="post">
                                         <input type="hidden" name="id" value="@d.Id" />
-                                        <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء هذا الخصم؟"><i class="bi bi-x"></i></button>
+                                        <button class="btn btn-sm btn-light text-danger" data-confirm="إلغاء هذا الخصم؟" aria-label="حذف"><i class="bi bi-x"></i></button>
                                     </form>
                                 }
                             </td>
