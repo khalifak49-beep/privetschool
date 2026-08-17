@@ -449,6 +449,15 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
    --------------------------------------------------------------- */
 @media (hover: none) and (pointer: coarse) {
     .app-sidebar .nav-link { padding: .7rem .75rem; }
+    .app-sidebar .nav-group-head { padding: .7rem .75rem; }
+
+    /* الفروع تحتاج هدف لمس مريحاً دون أن تفقد إزاحة التفرّع */
+    .app-sidebar .nav-group-body .nav-link {
+        padding-block: .62rem;
+        padding-inline-start: 2.35rem;
+        padding-inline-end: .75rem;
+    }
+
     .form-check-label { padding-inline-start: .2rem; }
 
     /* أهداف لمس مريحة على كل الأجهزة اللمسية بما فيها الأجهزة اللوحية */

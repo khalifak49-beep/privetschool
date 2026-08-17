@@ -269,6 +269,7 @@ a { text-decoration: none; }
    ===================================================================== */
 .nav-group { margin-bottom: 2px; }
 
+/* الطبقة الأولى: رؤوس المجموعات والروابط المستقلة — نص فاتح محايد وأثقل */
 .nav-group-head {
     display: flex;
     align-items: center;
@@ -276,11 +277,11 @@ a { text-decoration: none; }
     width: 100%;
     background: none;
     border: 0;
-    color: #b3c2e0;
-    padding: .58rem .75rem;
+    color: #dbe5f7;              /* 10.77:1 فوق أفتح نقطة في تدرّج القائمة */
+    padding: .6rem .75rem;
     border-radius: 10px;
-    font-size: .89rem;
-    font-weight: 600;
+    font-size: .94rem;
+    font-weight: 700;
     text-align: start;
     transition: background .15s, color .15s;
 }
@@ -321,39 +322,75 @@ a { text-decoration: none; }
     min-height: 0;
 }
 
-/* روابط داخل مجموعة: إزاحة بسيطة وخط رفيع يوضّح التفرّع */
-.nav-group-body .nav-link {
-    padding-inline-start: 2.1rem;
-    font-size: .85rem;
+/* ---------------------------------------------------------------
+   الطبقة الثانية: الفروع.
+   لونها تركوازي مشتقّ من لون الهوية وحجمها أصغر، فتُقرأ فوراً كطبقة
+   تابعة لا كروابط مستقلّة. المحدِّد ثلاثي ليتغلّب على .app-sidebar
+   .nav-link مهما كان ترتيب الملف.
+   --------------------------------------------------------------- */
+.app-sidebar .nav-group-body .nav-link {
+    padding-inline-start: 2.35rem;
+    font-size: .8rem;            /* مقابل .94rem للأصل */
+    font-weight: 500;
+    color: #86c7c0;              /* 6.99:1 فوق أفتح نقطة في التدرّج */
+    margin-bottom: 1px;
+    position: relative;
+}
+
+.app-sidebar .nav-group-body .nav-link i { font-size: .92rem; width: 1.15rem; }
+
+.app-sidebar .nav-group-body .nav-link:hover {
+    color: #d5f2ee;
+    background: rgba(15, 157, 143, .16);
+}
+
+/* خط التفرّع الرأسي + شرطة أفقية لكل عنصر، بلون الفرع نفسه */
+.nav-group-body .ngb-inner {
     position: relative;
 }
 
 .nav-group-body .ngb-inner::before {
     content: "";
     position: absolute;
-    inset-inline-start: 1.35rem;
+    inset-inline-start: 1.5rem;
     width: 1px;
     top: .2rem;
-    bottom: .2rem;
-    background: rgba(255, 255, 255, .12);
+    bottom: .55rem;
+    background: rgba(134, 199, 192, .38);
 }
 
-.nav-group-body .ngb-inner { position: relative; }
+.app-sidebar .nav-group-body .nav-link::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 1.5rem;
+    top: 50%;
+    width: .5rem;
+    height: 1px;
+    background: rgba(134, 199, 192, .38);
+}
+
+/* العنصر النشط داخل الفرع: تُبرز شرطته بلون الهوية الكامل */
+.app-sidebar .nav-group-body .nav-link.active::after {
+    background: var(--accent);
+    height: 2px;
+}
 
 @media (prefers-reduced-motion: reduce) {
     .nav-group-body { transition: none; }
     .nav-group-head > .ngh-caret { transition: none; }
 }
 
+/* روابط المستوى الأول (لوحة التحكم، مركز التقارير، البوابات) تُطابق
+   رؤوس المجموعات حجماً ولوناً حتى تبقى الطبقتان اثنتين لا ثلاثاً */
 .app-sidebar .nav-link {
     display: flex;
     align-items: center;
     gap: .65rem;
-    color: #c3d0ea;
-    padding: .58rem .75rem;
+    color: #dbe5f7;
+    padding: .6rem .75rem;
     border-radius: 10px;
-    font-size: .89rem;
-    font-weight: 500;
+    font-size: .94rem;
+    font-weight: 600;
     margin-bottom: 2px;
     transition: background .15s, color .15s;
     position: relative;
